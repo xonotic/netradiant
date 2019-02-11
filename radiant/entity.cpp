@@ -47,6 +47,9 @@
 #include "qe3.h"
 #include "commands.h"
 
+#include "brushmanip.h"
+#include "patchmanip.h"
+
 #include "uilib/uilib.h"
 
 struct entity_globals_t
@@ -394,6 +397,18 @@ void Entity_createFromSelection( const char* name, const Vector3& origin ){
 		const char* model = misc_model_dialog(MainFrame_getWindow());
 		if ( model != 0 ) {
 			Node_getEntity( node )->setKeyValue( "model", model );
+		}
+	}
+
+	if ( string_compare_nocase_n( name, "trigger_", 8 ) == 0 && brushesSelected ){
+		const char* shader = g_pGameDescription->getKeyValue( "trigger_shader" );
+		if ( shader && *shader ){
+			Scene_PatchSetShader_Selected( GlobalSceneGraph(), shader );
+			Scene_BrushSetShader_Selected( GlobalSceneGraph(), shader );
+		}
+		else{
+			Scene_PatchSetShader_Selected( GlobalSceneGraph(), "textures/common/trigger" );
+			Scene_BrushSetShader_Selected( GlobalSceneGraph(), "textures/common/trigger" );
 		}
 	}
 }
