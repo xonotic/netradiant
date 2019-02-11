@@ -818,17 +818,11 @@ ui::Window SurfaceInspector::BuildDialog(){
 					ui::Widget label = ui::Label( "Width" );
 					label.show();
 					table.attach(label, {2, 3, 0, 1}, {GTK_FILL, 0});
-					g_signal_connect( G_OBJECT( button ), "clicked",
-									  G_CALLBACK( OnBtnFaceFitW ), 0 );
-					gtk_widget_set_usize( button, 60, -2 );
 				}
 				{
 					ui::Widget label = ui::Label( "Height" );
 					label.show();
 					table.attach(label, {3, 4, 0, 1}, {GTK_FILL, 0});
-					g_signal_connect( G_OBJECT( button ), "clicked",
-									  G_CALLBACK( OnBtnFaceFitH ), 0 );
-					gtk_widget_set_usize( button, 60, -2 );
 				}
 				{
 					ui::Widget button = ui::Button( "Axial" );
