@@ -1289,7 +1289,7 @@ void Brush_registerCommands(){
 	GlobalCommands_insert( "SplitSelected", makeCallbackF(SplitSelected), Accelerator( GDK_KEY_Return, (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "FlipClip", makeCallbackF(FlipClipper), Accelerator( GDK_KEY_Return, (GdkModifierType)GDK_CONTROL_MASK ) );
 
-	GlobalCommands_insert( "MakeDetail", makeCallbackF(Select_MakeDetail), Accelerator( 'D', (GdkModifierType)GDK_MOD1_MASK ) );
+	GlobalCommands_insert( "MakeDetail", makeCallbackF(Select_MakeDetail), Accelerator( 'M', (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "MakeStructural", makeCallbackF(Select_MakeStructural), Accelerator( 'S', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 }
 
