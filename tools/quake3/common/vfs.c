@@ -52,7 +52,10 @@
 #include "vfs.h"
 #include <minizip/unzip.h>
 #include <glib.h>
+#define BAD_MINIZ
+#ifndef BAD_MINIZ
 #include "miniz.h"
+#endif
 
 typedef struct
 {
@@ -493,6 +496,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 
 
 qboolean vfsPackFile( const char *filename, const char *packname ){
+#ifndef BAD_MINIZ
 	int i;
 	char tmp[NAME_MAX], fixed[NAME_MAX];
 	GSList *lst;
@@ -574,4 +578,7 @@ qboolean vfsPackFile( const char *filename, const char *packname ){
 	}
 
 	return qfalse;
+#else
+		Error( "Disabled because of miniz issue" );
+#endif
 }
