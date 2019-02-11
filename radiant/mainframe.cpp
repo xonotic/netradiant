@@ -605,8 +605,10 @@ ui::Window BuildDialog(){
 
 PathsDialog g_PathsDialog;
 
+bool g_strEnginePath_was_empty_1st_start = false;
+
 void EnginePath_verify(){
-	if ( !file_exists( g_strEnginePath.c_str() ) ) {
+	if ( !file_exists( g_strEnginePath.c_str() ) || g_strEnginePath_was_empty_1st_start ) {
 		g_PathsDialog.Create();
 		g_PathsDialog.DoModal();
 		g_PathsDialog.Destroy();
@@ -3515,7 +3517,10 @@ void MainFrame_Construct(){
 	GlobalPreferenceSystem().registerPreference( "YZWnd", make_property<WindowPositionTracker_String>(g_posYZWnd) );
 	GlobalPreferenceSystem().registerPreference( "XZWnd", make_property<WindowPositionTracker_String>(g_posXZWnd) );
 
+	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
+	if ( g_strEnginePath.empty() )
 	{
+		g_strEnginePath_was_empty_1st_start = true;
 		const char* ENGINEPATH_ATTRIBUTE =
 #if GDEF_OS_WINDOWS
 			"enginepath_win32"
@@ -3530,9 +3535,8 @@ void MainFrame_Construct(){
 		StringOutputStream path( 256 );
 		path << DirectoryCleaned( g_pGameDescription->getRequiredKeyValue( ENGINEPATH_ATTRIBUTE ) );
 		g_strEnginePath = path.c_str();
+		GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
 	}
-
-	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
 
 	GlobalPreferenceSystem().registerPreference( "DisableEnginePath", make_property_string( g_disableEnginePath ) );
 	GlobalPreferenceSystem().registerPreference( "DisableHomePath", make_property_string( g_disableHomePath ) );
