@@ -70,6 +70,9 @@
 #include "url.h"
 #include "cmdlib.h"
 
+#include "qerplugin.h"
+#include "os/file.h"
+
 
 
 // =============================================================================
@@ -671,12 +674,13 @@ EMessageBoxReturn DoTextureLayout( float *fx, float *fy ){
 // master window widget
 static ui::Window text_editor{ui::null};
 static ui::Widget text_widget{ui::null}; // slave, text widget from the gtk editor
+static GtkTextBuffer* text_buffer_;
 
 static gint editor_delete( ui::Widget widget, gpointer data ){
-	if ( ui::alert( widget.window(), "Close the shader editor ?", "Radiant", ui::alert_type::YESNO, ui::alert_icon::Question ) == ui::alert_response::NO ) {
+/*	if ( ui::alert( widget.window(), "Close the shader editor ?", "Radiant", ui::alert_type::YESNO, ui::alert_icon::Question ) == ui::alert_response::NO ) {
 		return TRUE;
 	}
-
+*/
 	text_editor.hide();
 
 	return TRUE;
@@ -684,23 +688,33 @@ static gint editor_delete( ui::Widget widget, gpointer data ){
 
 static void editor_save( ui::Widget widget, gpointer data ){
 	FILE *f = fopen( (char*)g_object_get_data( G_OBJECT( data ), "filename" ), "w" );
-	gpointer text = g_object_get_data( G_OBJECT( data ), "text" );
+	//gpointer text = g_object_get_data( G_OBJECT( data ), "text" );
 
 	if ( f == 0 ) {
 		ui::alert( ui::Widget::from(data).window(), "Error saving file !" );
 		return;
 	}
 
-	char *str = gtk_editable_get_chars( GTK_EDITABLE( text ), 0, -1 );
+	/* Obtain iters for the start and end of points of the buffer */
+	GtkTextIter start;
+	GtkTextIter end;
+	gtk_text_buffer_get_start_iter (text_buffer_, &start);
+	gtk_text_buffer_get_end_iter (text_buffer_, &end);
+
+	/* Get the entire buffer text. */
+	char *str = gtk_text_buffer_get_text (text_buffer_, &start, &end, FALSE);
+
+	//char *str = gtk_editable_get_chars( GTK_EDITABLE( text ), 0, -1 );
 	fwrite( str, 1, strlen( str ), f );
 	fclose( f );
+	g_free (str);
 }
 
 static void editor_close( ui::Widget widget, gpointer data ){
-	if ( ui::alert( text_editor.window(), "Close the shader editor ?", "Radiant", ui::alert_type::YESNO, ui::alert_icon::Question ) == ui::alert_response::NO ) {
+/*	if ( ui::alert( text_editor.window(), "Close the shader editor ?", "Radiant", ui::alert_type::YESNO, ui::alert_icon::Question ) == ui::alert_response::NO ) {
 		return;
 	}
-
+*/
 	text_editor.hide();
 }
 
@@ -709,7 +723,7 @@ static void CreateGtkTextEditor(){
 
 	dlg.connect( "delete_event",
 					  G_CALLBACK( editor_delete ), 0 );
-	gtk_window_set_default_size( dlg, 600, 300 );
+	gtk_window_set_default_size( dlg, 400, 300 );
 
 	auto vbox = ui::VBox( FALSE, 5 );
 	vbox.show();
@@ -750,7 +764,7 @@ static void CreateGtkTextEditor(){
 	text_widget = text;
 }
 
-static void DoGtkTextEditor( const char* filename, guint cursorpos ){
+static void DoGtkTextEditor( const char* filename, guint cursorpos, int length ){
 	if ( !text_editor ) {
 		CreateGtkTextEditor(); // build it the first time we need it
 
@@ -775,7 +789,7 @@ static void DoGtkTextEditor( const char* filename, guint cursorpos ){
 		gtk_window_set_title( text_editor, filename );
 
 		auto text_buffer = gtk_text_view_get_buffer(ui::TextView::from(text_widget));
-		gtk_text_buffer_set_text( text_buffer, (char*)buf, len );
+		gtk_text_buffer_set_text( text_buffer, (char*)buf, length );
 
 		old_filename = g_object_get_data( G_OBJECT( text_editor ), "filename" );
 		if ( old_filename ) {
@@ -799,12 +813,14 @@ static void DoGtkTextEditor( const char* filename, guint cursorpos ){
 			// character offset, not byte offset
 			gtk_text_buffer_get_iter_at_offset( text_buffer, &text_iter, cursorpos );
 			gtk_text_buffer_place_cursor( text_buffer, &text_iter );
+			gtk_text_view_scroll_to_iter( GTK_TEXT_VIEW( text_widget ), &text_iter, 0, TRUE, 0, 0);
 		}
 
 #if GDEF_OS_WINDOWS
 		gtk_widget_queue_draw( text_widget );
 #endif
 
+		text_buffer_ = text_buffer;
 		free( buf );
 		fclose( f );
 	}
@@ -998,18 +1014,55 @@ EMessageBoxReturn DoShaderInfoDlg( const char* name, const char* filename, const
 
 #if GDEF_OS_WINDOWS
 // use the file associations to open files instead of builtin Gtk editor
-bool g_TextEditor_useWin32Editor = true;
+bool g_TextEditor_useWin32Editor = false;
 #else
 // custom shader editor
 bool g_TextEditor_useCustomEditor = false;
 CopiedString g_TextEditor_editorCommand( "" );
 #endif
 
-void DoTextEditor( const char* filename, int cursorpos ){
+void DoTextEditor( const char* filename, int cursorpos, int length ){
 #if GDEF_OS_WINDOWS
 	if ( g_TextEditor_useWin32Editor ) {
-		globalOutputStream() << "opening file '" << filename << "' (line " << cursorpos << " info ignored)\n";
-		ShellExecute( (HWND)GDK_WINDOW_HWND( gtk_widget_get_window( MainFrame_getWindow() ) ), "open", filename, 0, 0, SW_SHOW );
+		StringOutputStream path( 256 );
+		StringOutputStream modpath( 256 );
+		const char* gamename = GlobalRadiant().getGameName();
+		const char* basegame = GlobalRadiant().getRequiredGameDescriptionKeyValue( "basegame" );
+		const char* enginePath = GlobalRadiant().getEnginePath();
+		path << enginePath << basegame << '/' << filename;
+		modpath << enginePath << gamename << '/' << filename;
+		if ( file_exists( modpath.c_str() ) ){
+			globalOutputStream() << "opening file '" << modpath.c_str() << "' (line " << cursorpos << " info ignored)\n";
+			ShellExecute( (HWND)GDK_WINDOW_HWND( gtk_widget_get_window( MainFrame_getWindow() ) ), "open", modpath.c_str(), 0, 0, SW_SHOW );
+		}
+		else if ( file_exists( path.c_str() ) ){
+			globalOutputStream() << "opening file '" << path.c_str() << "' (line " << cursorpos << " info ignored)\n";
+			ShellExecute( (HWND)GDK_WINDOW_HWND( gtk_widget_get_window( MainFrame_getWindow() ) ), "open", path.c_str(), 0, 0, SW_SHOW );
+		}
+		else{
+			globalOutputStream() << "Failed to open '" << filename << "\n";
+		}
+		return;
+	}
+	else{
+		StringOutputStream path( 256 );
+		StringOutputStream modpath( 256 );
+		const char* gamename = GlobalRadiant().getGameName();
+		const char* basegame = GlobalRadiant().getRequiredGameDescriptionKeyValue( "basegame" );
+		const char* enginePath = GlobalRadiant().getEnginePath();
+		path << enginePath << basegame << '/' << filename;
+		modpath << enginePath << gamename << '/' << filename;
+		if ( file_exists( modpath.c_str() ) ){
+			globalOutputStream() << "opening file '" << modpath.c_str() << "' (line " << cursorpos << " info ignored)\n";
+			DoGtkTextEditor( modpath.c_str(), cursorpos, length );
+		}
+		else if ( file_exists( path.c_str() ) ){
+			globalOutputStream() << "opening file '" << path.c_str() << "' (line " << cursorpos << " info ignored)\n";
+			DoGtkTextEditor( path.c_str(), cursorpos, length );
+		}
+		else{
+			globalOutputStream() << "Failed to open '" << filename << "\n";
+		}
 		return;
 	}
 #else
@@ -1029,7 +1082,7 @@ void DoTextEditor( const char* filename, int cursorpos ){
 			return;
 		}
 	}
-#endif
 
-	DoGtkTextEditor( filename, cursorpos );
+	DoGtkTextEditor( filename, cursorpos, length );
+#endif
 }

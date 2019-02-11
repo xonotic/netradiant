@@ -386,7 +386,7 @@ typedef struct
 bspShader_t;
 
 
-/* planes x^1 is allways the opposite of plane x */
+/* planes x^1 is always the opposite of plane x */
 
 typedef struct
 {
@@ -400,7 +400,7 @@ typedef struct
 {
 	int planeNum;
 	int children[ 2 ];              /* negative numbers are -(leafs+1), not nodes */
-	int mins[ 3 ];                  /* for frustom culling */
+	int mins[ 3 ];                  /* for frustum culling */
 	int maxs[ 3 ];
 }
 bspNode_t;
@@ -2322,6 +2322,8 @@ Q_EXTERN qboolean debugAxis Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugCluster Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugOrigin Q_ASSIGN( qfalse );
 Q_EXTERN qboolean lightmapBorder Q_ASSIGN( qfalse );
+//1=warn; 0=warn if lmsize>128
+Q_EXTERN int debugSampleSize Q_ASSIGN( 0 );
 
 /* longest distance across the map */
 Q_EXTERN float maxMapDistance Q_ASSIGN( 0 );

@@ -39,7 +39,7 @@ EMessageBoxReturn DoLightIntensityDlg( int *intensity );
 EMessageBoxReturn DoShaderTagDlg( CopiedString *tag, const char* title );
 EMessageBoxReturn DoShaderInfoDlg( const char* name, const char* filename, const char* title );
 EMessageBoxReturn DoTextureLayout( float *fx, float *fy );
-void DoTextEditor( const char* filename, int cursorpos );
+void DoTextEditor( const char* filename, int cursorpos, int length );
 
 void DoProjectSettings();
 

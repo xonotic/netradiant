@@ -1937,6 +1937,7 @@ LatchedValue<int> g_Layout_viewStyle( 0, "Window Layout" );
 LatchedValue<bool> g_Layout_enableDetachableMenus( true, "Detachable Menus" );
 LatchedValue<bool> g_Layout_enablePatchToolbar( true, "Patch Toolbar" );
 LatchedValue<bool> g_Layout_enablePluginToolbar( true, "Plugin Toolbar" );
+LatchedValue<bool> g_Layout_enableFilterToolbar( true, "Filter Toolbar" );
 
 
 ui::MenuItem create_file_menu(){
@@ -2927,6 +2928,37 @@ void MainFrame::Create(){
 	if ( !g_Layout_enablePluginToolbar.m_value ) {
 		plugin_toolbar.hide();
 	}
+
+	if ( g_Layout_enableFilterToolbar.m_value ) {
+		auto space = [&]() {
+			auto btn = gtk_separator_tool_item_new();
+				gtk_widget_show(GTK_WIDGET(btn));
+				gtk_container_add(GTK_CONTAINER(plugin_toolbar), GTK_WIDGET(btn));
+		};
+
+		space();
+		toolbar_append_toggle_button( plugin_toolbar, "World (ALT + 1)", "f-world.bmp", "FilterWorldBrushes" );
+		toolbar_append_toggle_button( plugin_toolbar, "Details (CTRL + D)", "f-details.bmp", "FilterDetails" );
+		toolbar_append_toggle_button( plugin_toolbar, "Structural (CTRL + SHIFT + D)", "f-structural.bmp", "FilterStructural" );
+		toolbar_append_toggle_button( plugin_toolbar, "Patches (CTRL + P)", "patch_wireframe.png", "FilterPatches" );
+		space();
+		toolbar_append_toggle_button( plugin_toolbar, "Areaportals (ALT + 3)", "f-areaportal.bmp", "FilterAreaportals" );
+		toolbar_append_toggle_button( plugin_toolbar, "Translucent (ALT + 4)", "f-translucent.bmp", "FilterTranslucent" );
+		toolbar_append_toggle_button( plugin_toolbar, "Liquids (ALT + 5)", "f-liquids.bmp", "FilterLiquids" );
+		toolbar_append_toggle_button( plugin_toolbar, "Caulk (ALT + 6)", "f-caulk.bmp", "FilterCaulk" );
+		toolbar_append_toggle_button( plugin_toolbar, "Clips (ALT + 7)", "f-clip.bmp", "FilterClips" );
+		toolbar_append_toggle_button( plugin_toolbar, "HintsSkips (CTRL + H)", "f-hint.bmp", "FilterHintsSkips" );
+		//toolbar_append_toggle_button( plugin_toolbar, "Paths (ALT + 8)", "texture_lock.bmp", "FilterPaths" );
+		space();
+		toolbar_append_toggle_button( plugin_toolbar, "Entities (ALT + 2)", "f-entities.bmp", "FilterEntities" );
+		toolbar_append_toggle_button( plugin_toolbar, "Lights (ALT + 0)", "lightinspector.png", "FilterLights" );
+		toolbar_append_toggle_button( plugin_toolbar, "Models (SHIFT + M)", "f-models.bmp", "FilterModels" );
+		toolbar_append_toggle_button( plugin_toolbar, "Triggers (CTRL + SHIFT + T)", "f-triggers.bmp", "FilterTriggers" );
+		toolbar_append_toggle_button( plugin_toolbar, "Decals (SHIFT + D)", "f-decals.bmp", "FilterDecals" );
+		space();
+		toolbar_append_button( plugin_toolbar, "InvertFilters", "f-invert.bmp", "InvertFilters" );
+		toolbar_append_button( plugin_toolbar, "ResetFilters", "f-reset.bmp", "ResetFilters" );
+	}
 	vbox.pack_start( plugin_toolbar, FALSE, FALSE, 0 );
 
 	ui::Widget main_statusbar = create_main_statusbar(reinterpret_cast<ui::Widget *>(m_pStatusLabel));
@@ -3326,6 +3358,10 @@ void Layout_constructPreferences( PreferencesPage& page ){
 		"", "Plugin Toolbar",
 		make_property( g_Layout_enablePluginToolbar )
 		);
+	page.appendCheckBox(
+		"", "Filter Toolbar",
+		make_property( g_Layout_enableFilterToolbar )
+		);
 }
 
 void Layout_constructPage( PreferenceGroup& group ){
@@ -3466,6 +3502,7 @@ void MainFrame_Construct(){
 	GlobalPreferenceSystem().registerPreference( "DetachableMenus", make_property_string( g_Layout_enableDetachableMenus.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "PatchToolBar", make_property_string( g_Layout_enablePatchToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "PluginToolBar", make_property_string( g_Layout_enablePluginToolbar.m_latched ) );
+	GlobalPreferenceSystem().registerPreference( "FilterToolBar", make_property_string( g_Layout_enableFilterToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "QE4StyleWindows", make_property_string( g_Layout_viewStyle.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "XYHeight", make_property_string( g_layout_globals.nXYHeight ) );
 	GlobalPreferenceSystem().registerPreference( "XYWidth", make_property_string( g_layout_globals.nXYWidth ) );
@@ -3514,6 +3551,7 @@ void MainFrame_Construct(){
 	g_Layout_enableDetachableMenus.useLatched();
 	g_Layout_enablePatchToolbar.useLatched();
 	g_Layout_enablePluginToolbar.useLatched();
+	g_Layout_enableFilterToolbar.useLatched();
 
 	Layout_registerPreferencesPage();
 	Paths_registerPreferencesPage();
