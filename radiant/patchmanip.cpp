@@ -1009,10 +1009,10 @@ void DoPatchDeformDlg(){
 	gtk_window_add_accel_group( window, accel );
 
 	{
-		GtkHBox* hbox = create_dialog_hbox( 4, 4 );
+		auto hbox = create_dialog_hbox( 4, 4 );
 		gtk_container_add( GTK_CONTAINER( window ), GTK_WIDGET( hbox ) );
 		{
-			GtkTable* table = create_dialog_table( 2, 2, 4, 4 );
+			auto table = create_dialog_table( 2, 2, 4, 4 );
 			gtk_box_pack_start( GTK_BOX( hbox ), GTK_WIDGET( table ), TRUE, TRUE, 0 );
 			{
 				GtkLabel* label = GTK_LABEL( gtk_label_new( "Max deform:" ) );
@@ -1035,7 +1035,7 @@ void DoPatchDeformDlg(){
 		}
 		{
 			auto vbox = create_dialog_vbox( 4 );
-			gtk_box_pack_start( GTK_BOX( hbox ), GTK_WIDGET( vbox ), TRUE, TRUE, 0 );
+			hbox.pack_start( vbox, FALSE, FALSE, 0 );
 			{
 				auto button = create_dialog_button( "OK", G_CALLBACK( dialog_button_ok ), &dialog );
 				vbox.pack_start( button, FALSE, FALSE, 0 );
