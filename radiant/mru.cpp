@@ -221,27 +221,27 @@ void MRU_constructMenu( ui::Menu menu ){
 	{
 		auto item = create_menu_item_with_mnemonic( menu, "_5", LoadMRUCaller( g_load_mru5 ) );
 		item.hide();
-		MRU_AddWidget( item, 3 );
+		MRU_AddWidget( item, 4 );
 	}
 	{
 		auto item = create_menu_item_with_mnemonic( menu, "_6", LoadMRUCaller( g_load_mru6 ) );
 		item.hide();
-		MRU_AddWidget( item, 3 );
+		MRU_AddWidget( item, 5 );
 	}
 	{
 		auto item = create_menu_item_with_mnemonic( menu, "_7", LoadMRUCaller( g_load_mru7 ) );
 		item.hide();
-		MRU_AddWidget( item, 3 );
+		MRU_AddWidget( item, 6 );
 	}
 	{
 		auto item = create_menu_item_with_mnemonic( menu, "_8", LoadMRUCaller( g_load_mru8 ) );
 		item.hide();
-		MRU_AddWidget( item, 3 );
+		MRU_AddWidget( item, 7 );
 	}
 	{
 		auto item = create_menu_item_with_mnemonic( menu, "_9", LoadMRUCaller( g_load_mru9 ) );
 		item.hide();
-		MRU_AddWidget( item, 3 );
+		MRU_AddWidget( item, 8 );
 	}
 }
 
