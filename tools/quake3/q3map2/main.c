@@ -423,7 +423,7 @@ int pk3BSPMain( int argc, char **argv ){
 	epair_t *ep;
 	for ( ep = entities[0].epairs; ep != NULL; ep = ep->next )
 	{
-		if ( !strnicmp( ep->key, "vertexremapshader", 17 ) ) {
+		if ( !Q_strncasecmp( ep->key, "vertexremapshader", 17 ) ) {
 			sscanf( ep->value, "%*[^;] %*[;] %s", pk3Shaders[pk3ShadersN] );
 			res2list( pk3Shaders, &pk3ShadersN );
 		}
