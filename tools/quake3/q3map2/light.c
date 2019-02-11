@@ -2254,6 +2254,18 @@ int LightMain( int argc, char **argv ){
 			i++;
 		}
 
+		else if ( !strcmp( argv[ i ], "-vertexscale" ) ) {
+			f = atof( argv[ i + 1 ] );
+			vertexglobalscale *= f;
+			Sys_Printf( "Vertexlight scaled by %f to %f\n", f, vertexglobalscale );
+			i++;
+		}
+
+		else if ( !strcmp( argv[ i ], "-nolm" ) ) {
+			nolm = qtrue;
+			Sys_Printf( "No lightmaps yo\n" );
+		}
+
 		else if ( !strcmp( argv[ i ], "-bouncescale" ) ) {
 			f = atof( argv[ i + 1 ] );
 			bounceScale *= f;
@@ -2756,8 +2768,15 @@ int LightMain( int argc, char **argv ){
 			Sys_Printf( "Lightmaps sample scale set to %d\n", sampleScale );
 		}
 		else if ( !strcmp( argv[ i ], "-novertex" ) ) {
-			noVertexLighting = qtrue;
-			Sys_Printf( "Disabling vertex lighting\n" );
+			noVertexLighting = 1;
+			if ( ( atof( argv[ i + 1 ] ) != 0 ) && ( atof( argv[ i + 1 ] )) < 1 ) {
+				noVertexLighting = ( atof( argv[ i + 1 ] ) );
+				i++;
+				Sys_Printf( "Setting vertex lighting globally to %d\n", noVertexLighting );
+			}
+			else{
+				Sys_Printf( "Disabling vertex lighting\n" );
+			}
 		}
 		else if ( !strcmp( argv[ i ], "-nogrid" ) ) {
 			noGridLighting = qtrue;
@@ -2792,9 +2811,11 @@ int LightMain( int argc, char **argv ){
 				lightAngleHL = ( atoi( argv[ i + 1 ] ) != 0 );
 				if ( lightAngleHL ) {
 					Sys_Printf( "Enabling half lambert light angle attenuation\n" );
+					i++;
 				}
 				else{
 					Sys_Printf( "Disabling half lambert light angle attenuation\n" );
+					i++;
 				}
 			}
 			i++;

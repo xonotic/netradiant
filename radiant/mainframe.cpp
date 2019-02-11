@@ -167,7 +167,7 @@ class VFSModuleObserver : public ModuleObserver
 public:
 void realise(){
 	VFS_Init();
-}
+	}
 
 void unrealise(){
 	VFS_Shutdown();
@@ -187,7 +187,7 @@ void VFS_Destroy(){
 // Home Paths
 
 #if GDEF_OS_WINDOWS
-															#include <shlobj.h>
+#include <shlobj.h>
 #include <objbase.h>
 const GUID qFOLDERID_SavedGames = {0x4C5C32FF, 0xBB9D, 0x43b0, {0xB5, 0xB4, 0x2D, 0x72, 0xE5, 0x4E, 0xAA, 0xA4}};
 #define qREFKNOWNFOLDERID GUID
@@ -546,7 +546,7 @@ void Paths_constructPreferences( PreferencesPage& page ){
 	page.appendCheckBox(
 		"", "Do not use Engine Path",
 		g_disableEnginePath
-		);
+						  );
 
 	page.appendCheckBox(
 		"", "Do not use Home Path",
@@ -571,7 +571,7 @@ void Paths_constructPreferences( PreferencesPage& page ){
 			case 4:
 			page.appendPathEntry( label.c_str(), true, make_property<PakPath4>( g_strPakPath[i] ) );
 			break;
-		}
+}
 	}
 }
 

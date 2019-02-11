@@ -431,6 +431,16 @@ void SurfaceInspector_FitTexture(){
 	Select_FitTexture( getSurfaceInspector().m_fitHorizontal, getSurfaceInspector().m_fitVertical );
 }
 
+void SurfaceInspector_FitTextureW(){
+	UndoableCommand undo( "textureAutoFitW" );
+	Select_FitTextureW( getSurfaceInspector().m_fitHorizontal, getSurfaceInspector().m_fitVertical );
+}
+
+void SurfaceInspector_FitTextureH(){
+	UndoableCommand undo( "textureAutoFitH" );
+	Select_FitTextureH( getSurfaceInspector().m_fitHorizontal, getSurfaceInspector().m_fitVertical );
+}
+
 static void OnBtnPatchdetails( ui::Widget widget, gpointer data ){
 	Patch_CapTexture();
 }
@@ -480,6 +490,18 @@ static void OnBtnFaceFit( ui::Widget widget, gpointer data ){
 	getSurfaceInspector().exportData();
 	SurfaceInspector_FitTexture();
 }
+
+static void OnBtnFaceFitW( GtkWidget *widget, gpointer data ){
+	getSurfaceInspector().exportData();
+	SurfaceInspector_FitTextureW();
+}
+
+static void OnBtnFaceFitH( GtkWidget *widget, gpointer data ){
+	getSurfaceInspector().exportData();
+	SurfaceInspector_FitTextureH();
+}
+
+
 
 typedef const char* FlagName;
 
@@ -796,11 +818,17 @@ ui::Window SurfaceInspector::BuildDialog(){
 					ui::Widget label = ui::Label( "Width" );
 					label.show();
 					table.attach(label, {2, 3, 0, 1}, {GTK_FILL, 0});
+					g_signal_connect( G_OBJECT( button ), "clicked",
+									  G_CALLBACK( OnBtnFaceFitW ), 0 );
+					gtk_widget_set_usize( button, 60, -2 );
 				}
 				{
 					ui::Widget label = ui::Label( "Height" );
 					label.show();
 					table.attach(label, {3, 4, 0, 1}, {GTK_FILL, 0});
+					g_signal_connect( G_OBJECT( button ), "clicked",
+									  G_CALLBACK( OnBtnFaceFitH ), 0 );
+					gtk_widget_set_usize( button, 60, -2 );
 				}
 				{
 					ui::Widget button = ui::Button( "Axial" );

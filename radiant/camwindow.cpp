@@ -949,27 +949,27 @@ void CamWnd_registerCommands( CamWnd& camwnd ){
 							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyUp>( camwnd.getCamera() )
 							);
 
-	GlobalKeyEvents_insert( "CameraFreeMoveForward", Accelerator( GDK_KEY_Up ),
+	GlobalKeyEvents_insert( "CameraFreeMoveForward", Accelerator( 'W' ),
 							FreeMoveCameraMoveForwardKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveForwardKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveBack", Accelerator( GDK_KEY_Down ),
+	GlobalKeyEvents_insert( "CameraFreeMoveBack", Accelerator( 'S' ),
 							FreeMoveCameraMoveBackKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveBackKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveLeft", Accelerator( GDK_KEY_Left ),
+	GlobalKeyEvents_insert( "CameraFreeMoveLeft", Accelerator( 'A' ),
 							FreeMoveCameraMoveLeftKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveLeftKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveRight", Accelerator( GDK_KEY_Right ),
+	GlobalKeyEvents_insert( "CameraFreeMoveRight", Accelerator( 'D' ),
 							FreeMoveCameraMoveRightKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveRightKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveUp", Accelerator( 'D' ),
+	GlobalKeyEvents_insert( "CameraFreeMoveUp", Accelerator( GDK_period ),
 							FreeMoveCameraMoveUpKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveUpKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveDown", Accelerator( 'C' ),
+	GlobalKeyEvents_insert( "CameraFreeMoveDown", Accelerator( GDK_comma ),
 							FreeMoveCameraMoveDownKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveDownKeyUpCaller( camwnd.getCamera() )
 							);
@@ -1053,20 +1053,20 @@ struct CamWnd_Move_Discrete {
 	}
 
 	static void Import_(CamWnd &camwnd, bool value) {
-		if (g_camwindow_globals_private.m_bCamDiscrete) {
-			CamWnd_Move_Discrete_Disable(camwnd);
+	if ( g_camwindow_globals_private.m_bCamDiscrete ) {
+		CamWnd_Move_Discrete_Disable( camwnd );
 		} else {
-			CamWnd_Move_Disable(camwnd);
-		}
-
-		g_camwindow_globals_private.m_bCamDiscrete = value;
-
-		if (g_camwindow_globals_private.m_bCamDiscrete) {
-			CamWnd_Move_Discrete_Enable(camwnd);
-		} else {
-			CamWnd_Move_Enable(camwnd);
-		}
+		CamWnd_Move_Disable( camwnd );
 	}
+
+	g_camwindow_globals_private.m_bCamDiscrete = value;
+
+	if ( g_camwindow_globals_private.m_bCamDiscrete ) {
+		CamWnd_Move_Discrete_Enable( camwnd );
+		} else {
+		CamWnd_Move_Enable( camwnd );
+	}
+}
 };
 
 
@@ -1774,22 +1774,22 @@ struct RenderMode {
 
 	static void Import(int value) {
 		switch (value) {
-			case 0:
-				CamWnd_SetMode(cd_wire);
-				break;
-			case 1:
-				CamWnd_SetMode(cd_solid);
-				break;
-			case 2:
-				CamWnd_SetMode(cd_texture);
-				break;
-			case 3:
-				CamWnd_SetMode(cd_lighting);
-				break;
-			default:
-				CamWnd_SetMode(cd_texture);
-		}
+	case 0:
+		CamWnd_SetMode( cd_wire );
+		break;
+	case 1:
+		CamWnd_SetMode( cd_solid );
+		break;
+	case 2:
+		CamWnd_SetMode( cd_texture );
+		break;
+	case 3:
+		CamWnd_SetMode( cd_lighting );
+		break;
+	default:
+		CamWnd_SetMode( cd_texture );
 	}
+}
 };
 
 void Camera_constructPreferences( PreferencesPage& page ){
@@ -1893,15 +1893,15 @@ void CamWnd_Construct(){
 	GlobalShortcuts_insert( "CameraStrafeRight", Accelerator( GDK_KEY_period ) );
 	GlobalShortcuts_insert( "CameraStrafeLeft", Accelerator( GDK_KEY_comma ) );
 
-	GlobalShortcuts_insert( "CameraUp", Accelerator( 'D' ) );
-	GlobalShortcuts_insert( "CameraDown", Accelerator( 'C' ) );
-	GlobalShortcuts_insert( "CameraAngleUp", Accelerator( 'A' ) );
-	GlobalShortcuts_insert( "CameraAngleDown", Accelerator( 'Z' ) );
+	GlobalShortcuts_insert( "CameraUp", accelerator_null() );
+	GlobalShortcuts_insert( "CameraDown", accelerator_null() );
+	GlobalShortcuts_insert( "CameraAngleUp", accelerator_null() );
+	GlobalShortcuts_insert( "CameraAngleDown", accelerator_null() );
 
-	GlobalShortcuts_insert( "CameraFreeMoveForward", Accelerator( GDK_KEY_Up ) );
-	GlobalShortcuts_insert( "CameraFreeMoveBack", Accelerator( GDK_KEY_Down ) );
-	GlobalShortcuts_insert( "CameraFreeMoveLeft", Accelerator( GDK_KEY_Left ) );
-	GlobalShortcuts_insert( "CameraFreeMoveRight", Accelerator( GDK_KEY_Right ) );
+	GlobalShortcuts_insert( "CameraFreeMoveForward", Accelerator( GDK_Up ) );
+	GlobalShortcuts_insert( "CameraFreeMoveBack", Accelerator( GDK_Down ) );
+	GlobalShortcuts_insert( "CameraFreeMoveLeft", Accelerator( GDK_Left ) );
+	GlobalShortcuts_insert( "CameraFreeMoveRight", Accelerator( GDK_Right ) );
 
 	GlobalToggles_insert( "ShowStats", makeCallbackF(ShowStatsToggle), ToggleItem::AddCallbackCaller( g_show_stats ) );
 
