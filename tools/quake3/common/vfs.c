@@ -259,7 +259,7 @@ void vfsInitDirectory( const char *path ){
 
 
 // lists all .shader files
-void vfsListShaderFiles( char list[512][64], int *num ){
+void vfsListShaderFiles( char* list, int *num ){
 	//char filename[PATH_MAX];
 	char *dirlist;
 	GDir *dir;
@@ -287,9 +287,9 @@ void vfsListShaderFiles( char list[512][64], int *num ){
 				}
 
 				for ( k = 0; k < *num; k++ ){
-					if ( !Q_stricmp( list[k], dirlist ) ) goto shISdouplicate;
+					if ( !Q_stricmp( list + k*65, dirlist ) ) goto shISdouplicate;
 				}
-				strcpy( list[*num], dirlist );
+				strcpy( list + (*num)*65, dirlist );
 				(*num)++;
 shISdouplicate:
 				g_free( dirlist );
@@ -314,9 +314,9 @@ shISdouplicate:
 		ext++;
 
 		for ( k = 0; k < *num; k++ ){
-			if ( !Q_stricmp( list[k], ext ) ) goto shISdouplicate2;
+			if ( !Q_stricmp( list + k*65, ext ) ) goto shISdouplicate2;
 		}
-		strcpy( list[*num], ext );
+		strcpy( list + (*num)*65, ext );
 		(*num)++;
 shISdouplicate2:
 		continue;
