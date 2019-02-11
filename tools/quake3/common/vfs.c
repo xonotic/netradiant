@@ -287,7 +287,7 @@ void vfsListShaderFiles( char list[512][64], int *num ){
 				}
 
 				for ( k = 0; k < *num; k++ ){
-					if ( !stricmp( list[k], dirlist ) ) goto shISdouplicate;
+					if ( !Q_stricmp( list[k], dirlist ) ) goto shISdouplicate;
 				}
 				strcpy( list[*num], dirlist );
 				(*num)++;
@@ -314,7 +314,7 @@ shISdouplicate:
 		ext++;
 
 		for ( k = 0; k < *num; k++ ){
-			if ( !stricmp( list[k], ext ) ) goto shISdouplicate2;
+			if ( !Q_stricmp( list[k], ext ) ) goto shISdouplicate2;
 		}
 		strcpy( list[*num], ext );
 		(*num)++;
