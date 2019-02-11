@@ -29,26 +29,13 @@
 #include "brushmanip.h"
 #include "brushnode.h"
 #include "grid.h"
-/*
-void Face_makeBrush( Face& face, const Brush& brush, brush_vector_t& out, float offset ){
-	if ( face.contributes() ) {
-		out.push_back( new Brush( brush ) );
-		Face* newFace = out.back()->addFace( face );
-		if ( newFace != 0 ) {
-			newFace->flipWinding();
-			newFace->getPlane().offset( offset );
-			newFace->planeChanged();
-		}
-	}
-}
-*/
 
 void Face_makeBrush( Face& face, const Brush& brush, brush_vector_t& out, float offset ){
 	if ( face.contributes() ) {
 		out.push_back( new Brush( brush ) );
-		//face.getPlane().offset( -offset );
-		//face.planeChanged();
 		Face* newFace = out.back()->addFace( face );
+		face.getPlane().offset( -offset );
+		face.planeChanged();
 		if ( newFace != 0 ) {
 			newFace->flipWinding();
 			newFace->getPlane().offset( offset );
@@ -57,7 +44,7 @@ void Face_makeBrush( Face& face, const Brush& brush, brush_vector_t& out, float 
 	}
 }
 
-void Face_makeRoom( Face &face, const Brush &brush, brush_vector_t &out, float offset ){
+void Face_extrude( Face& face, const Brush& brush, brush_vector_t& out, float offset ){
 	if ( face.contributes() ) {
 		face.getPlane().offset( offset );
 		out.push_back( new Brush( brush ) );
@@ -70,27 +57,39 @@ void Face_makeRoom( Face &face, const Brush &brush, brush_vector_t &out, float o
 	}
 }
 
-void Brush_makeHollow( const Brush &brush, brush_vector_t &out, float offset ){
-	Brush_forEachFace( brush, [&]( Face &face ) {
-		Face_makeBrush( face, brush, out, offset );
-	} );
-}
 
-void Brush_makeRoom( const Brush &brush, brush_vector_t &out, float offset ){
-	Brush_forEachFace( brush, [&]( Face &face ) {
-		Face_makeRoom( face, brush, out, offset );
-	} );
+class FaceMakeBrush
+{
+const Brush& brush;
+brush_vector_t& out;
+float offset;
+bool room;
+public:
+FaceMakeBrush( const Brush& brush, brush_vector_t& out, float offset, bool room )
+	: brush( brush ), out( out ), offset( offset ), room( room ){
+}
+void operator()( Face& face ) const {
+	if( room ){
+		Face_extrude( face, brush, out, offset );
+	}
+	else{
+		Face_makeBrush( face, brush, out, offset );
+	}
+}
+};
+
+void Brush_makeHollow( const Brush& brush, brush_vector_t& out, float offset, bool room ){
+	Brush_forEachFace( brush, FaceMakeBrush( brush, out, offset, room ) );
 }
 
 class BrushHollowSelectedWalker : public scene::Graph::Walker
 {
 float m_offset;
-bool m_makeRoom;
+bool room;
 public:
-BrushHollowSelectedWalker( float offset, bool makeRoom )
-	: m_offset( offset ), m_makeRoom( makeRoom ){
+BrushHollowSelectedWalker( float offset, bool room )
+	: m_offset( offset ), room( room ){
 }
-
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
 	if ( path.top().get().visible() ) {
 		Brush* brush = Node_getBrush( path.top() );
@@ -98,15 +97,7 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			 && Instance_getSelectable( instance )->isSelected()
 			 && path.size() > 1 ) {
 			brush_vector_t out;
-
-			if ( m_makeRoom ) {
-				Brush_makeRoom(* brush, out, m_offset );
-			}
-			else
-			{
-				Brush_makeHollow(* brush, out, m_offset );
-			}
-
+			Brush_makeHollow( *brush, out, m_offset, room );
 			for ( brush_vector_t::const_iterator i = out.begin(); i != out.end(); ++i )
 			{
 				( *i )->removeEmptyFaces();
@@ -161,8 +152,8 @@ void post( const scene::Path& path, scene::Instance& instance ) const {
 }
 };
 
-void Scene_BrushMakeHollow_Selected( scene::Graph& graph, bool makeRoom ){
-	GlobalSceneGraph().traverse( BrushHollowSelectedWalker( GetGridSize(), makeRoom ) );
+void Scene_BrushMakeHollow_Selected( scene::Graph& graph, bool room ){
+	GlobalSceneGraph().traverse( BrushHollowSelectedWalker( GetGridSize(), room ) );
 	GlobalSceneGraph().traverse( BrushDeleteSelected() );
 }
 
@@ -181,7 +172,7 @@ void CSG_MakeHollow( void ){
 }
 
 void CSG_MakeRoom( void ){
-	UndoableCommand undo( "brushRoom" );
+	UndoableCommand undo( "makeRoom" );
 
 	Scene_BrushMakeHollow_Selected( GlobalSceneGraph(), true );
 

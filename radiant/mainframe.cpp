@@ -2456,8 +2456,8 @@ void Select_constructToolbar( ui::Toolbar toolbar ){
 void CSG_constructToolbar( ui::Toolbar toolbar ){
 	toolbar_append_button( toolbar, "CSG Subtract (SHIFT + U)", "selection_csgsubtract.png", "CSGSubtract" );
 	toolbar_append_button( toolbar, "CSG Merge (CTRL + U)", "selection_csgmerge.png", "CSGMerge" );
-	toolbar_append_button( toolbar, "Make Hollow", "selection_makehollow.png", "CSGMakeHollow" );
-	toolbar_append_button( toolbar, "Make Room", "selection_makeroom.png", "CSGMakeRoom" );
+	toolbar_append_button( toolbar, "Make Hollow", "selection_makehollow.png", "CSGHollow" );
+	toolbar_append_button( toolbar, "Make Room", "selection_makeroom.png", "CSGRoom" );
 }
 
 void ComponentModes_constructToolbar( ui::Toolbar toolbar ){
@@ -2994,42 +2994,37 @@ void MainFrame::Create(){
 
 	if ( CurrentStyle() == eRegular || CurrentStyle() == eRegularLeft ) {
 		{
-			ui::Widget vsplit = ui::VPaned(ui::New);
-			m_vSplit = vsplit;
-			vbox.pack_start( vsplit, TRUE, TRUE, 0 );
-			vsplit.show();
-
-			// console
-			ui::Widget console_window = Console_constructWindow( window );
-			gtk_paned_pack2( GTK_PANED( vsplit ), console_window, FALSE, TRUE );
-
+			ui::Widget hsplit = ui::HPaned(ui::New);
+			m_vSplit = hsplit;
+			vbox.pack_start( hsplit, TRUE, TRUE, 0 );
+			hsplit.show();
 			{
-				ui::Widget hsplit = ui::HPaned(ui::New);
-				hsplit.show();
-				m_hSplit = hsplit;
-				gtk_paned_add1( GTK_PANED( vsplit ), hsplit );
+				ui::Widget vsplit = ui::VPaned(ui::New);
+				vsplit.show();
+				m_vSplit = vsplit;
+				ui::Widget vsplit2 = ui::VPaned(ui::New);
+				vsplit2.show();
+				m_vSplit = vsplit2;
+				if ( CurrentStyle() == eRegular ){
+					gtk_paned_add1( GTK_PANED( hsplit ), vsplit );
+					gtk_paned_add2( GTK_PANED( hsplit ), vsplit2 );
+				}
+				else{
+					gtk_paned_add2( GTK_PANED( hsplit ), vsplit );
+					gtk_paned_add1( GTK_PANED( hsplit ), vsplit2 );
+				}
 
+				// console
+				ui::Widget console_window = Console_constructWindow( window );
+				gtk_paned_pack2( GTK_PANED( vsplit ), console_window, FALSE, TRUE );
+				
 				// xy
 				m_pXYWnd = new XYWnd();
 				m_pXYWnd->SetViewType( XY );
 				ui::Widget xy_window = ui::Widget(create_framed_widget( m_pXYWnd->GetWidget( ) ));
 
+				gtk_paned_add1( GTK_PANED( vsplit ), xy_window );
 				{
-					ui::Widget vsplit2 = ui::VPaned(ui::New);
-					vsplit2.show();
-					m_vSplit2 = vsplit2;
-
-					if ( CurrentStyle() == eRegular ) {
-						gtk_paned_add1( GTK_PANED( hsplit ), xy_window );
-						gtk_paned_add2( GTK_PANED( hsplit ), vsplit2 );
-					}
-					else
-					{
-						gtk_paned_add1( GTK_PANED( hsplit ), vsplit2 );
-						gtk_paned_add2( GTK_PANED( hsplit ), xy_window );
-					}
-
-
 					// camera
 					m_pCamWnd = NewCamWnd();
 					GlobalCamera_setCamWnd( *m_pCamWnd );
@@ -3465,8 +3460,8 @@ void MainFrame_Construct(){
 
 	GlobalCommands_insert( "CSGSubtract", makeCallbackF(CSG_Subtract), Accelerator( 'U', (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "CSGMerge", makeCallbackF(CSG_Merge), Accelerator( 'U', (GdkModifierType) GDK_CONTROL_MASK ) );
-	GlobalCommands_insert( "CSGMakeHollow", makeCallbackF(CSG_MakeHollow) );
-	GlobalCommands_insert( "CSGMakeRoom", makeCallbackF(CSG_MakeRoom) );
+	GlobalCommands_insert( "CSGHollow", makeCallbackF(CSG_MakeHollow) );
+	GlobalCommands_insert( "CSGRoom", makeCallbackF(CSG_MakeRoom) );
 
 	Grid_registerCommands();
 

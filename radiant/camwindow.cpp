@@ -91,7 +91,7 @@ struct camwindow_globals_private_t
 		m_nAngleSpeed( 3 ),
 		m_bCamInverseMouse( false ),
 		m_bCamDiscrete( true ),
-		m_bCubicClipping( true ),
+		m_bCubicClipping( false ),
 		m_showStats( true ),
 		m_nStrafeMode( 0 ){
 	}
@@ -173,7 +173,7 @@ struct camera_t
 		color( 0, 0, 0 ),
 		movementflags( 0 ),
 		m_keymove_handler( 0 ),
-		fieldOfView( 90.0f ),
+		fieldOfView( 110.0f ),
 		m_mouseMove( motionDelta, this ),
 		m_view( view ),
 		m_update( update ){
@@ -1666,7 +1666,7 @@ void Camera_ToggleFarClip(){
 
 
 void CamWnd_constructToolbar( ui::Toolbar toolbar ){
-	toolbar_append_toggle_button( toolbar, "Cubic clip the camera view (\\)", "view_cubicclipping.png", "ToggleCubicClip" );
+	toolbar_append_toggle_button( toolbar, "Cubic clip the camera view (Ctrl + \\)", "view_cubicclipping.png", "ToggleCubicClip" );
 }
 
 void CamWnd_registerShortcuts(){

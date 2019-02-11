@@ -174,6 +174,7 @@ typedef ReferenceCaller<TextureGroups, void(const char*), TextureGroups_addShade
 void TextureGroups_addDirectory( TextureGroups& groups, const char* directory ){
 	groups.insert( directory );
 }
+
 typedef ReferenceCaller<TextureGroups, void(const char*), TextureGroups_addDirectory> TextureGroupsAddDirectoryCaller;
 
 class DeferredAdjustment
@@ -324,42 +325,80 @@ bool m_searchedTags;
 bool m_tags;
 // The uniform size (in pixels) that textures are resized to when m_resizeTextures is true.
 int m_uniformTextureSize;
+int m_uniformTextureMinSize;
 
 // Return the display width of a texture in the texture browser
-int getTextureWidth( qtexture_t* tex ){
-	int width;
+/*void getTextureWH( qtexture_t* tex, int *width, int *height ){
 	if ( !g_TextureBrowser_fixedSize ) {
 		// Don't use uniform size
-		width = (int)( tex->width * ( (float)m_textureScale / 100 ) );
+		*width = (int)( tex->width * ( (float)m_textureScale / 100 ) );
+		*height = (int)( tex->height * ( (float)m_textureScale / 100 ) );
+
 	}
-	else if
-	( tex->width >= tex->height ) {
+	else if	( tex->width >= tex->height ) {
 		// Texture is square, or wider than it is tall
-		width = m_uniformTextureSize;
+		if ( tex->width >= m_uniformTextureSize ){
+			*width = m_uniformTextureSize;
+			*height = (int)( m_uniformTextureSize * ( (float)tex->height / tex->width ) );
+		}
+		else if ( tex->width <= m_uniformTextureMinSize ){
+			*width = m_uniformTextureMinSize;
+			*height = (int)( m_uniformTextureMinSize * ( (float)tex->height / tex->width ) );
+		}
+		else {
+			*width = tex->width;
+			*height = tex->height;
+		}
 	}
 	else {
-		// Otherwise, preserve the texture's aspect ratio
-		width = (int)( m_uniformTextureSize * ( (float)tex->width / tex->height ) );
+		// Texture taller than it is wide
+		if ( tex->height >= m_uniformTextureSize ){
+			*height = m_uniformTextureSize;
+			*width = (int)( m_uniformTextureSize * ( (float)tex->width / tex->height ) );
+		}
+		else if ( tex->height <= m_uniformTextureMinSize ){
+			*height = m_uniformTextureMinSize;
+			*width = (int)( m_uniformTextureMinSize * ( (float)tex->width / tex->height ) );
+		}
+		else {
+			*width = tex->width;
+			*height = tex->height;
+		}
 	}
-	return width;
 }
 
-// Return the display height of a texture in the texture browser
-int getTextureHeight( qtexture_t* tex ){
-	int height;
-	if ( !g_TextureBrowser_fixedSize ) {
+*/
+void getTextureWH( qtexture_t* tex, int *width, int *height ){
 		// Don't use uniform size
-		height = (int)( tex->height * ( (float)m_textureScale / 100 ) );
+		*width = (int)( tex->width * ( (float)m_textureScale / 100 ) );
+		*height = (int)( tex->height * ( (float)m_textureScale / 100 ) );
+
+	if ( g_TextureBrowser_fixedSize ){
+		int W = *width;
+		int H = *height;
+		if	( W >= H ) {
+			// Texture is square, or wider than it is tall
+			if ( W >= m_uniformTextureSize ){
+				*width = m_uniformTextureSize;
+				*height = m_uniformTextureSize * H / W;
+			}
+			else if ( W <= m_uniformTextureMinSize ){
+				*width = m_uniformTextureMinSize;
+				*height = m_uniformTextureMinSize * H / W;
+			}
+		}
+		else {
+			// Texture taller than it is wide
+			if ( H >= m_uniformTextureSize ){
+				*height = m_uniformTextureSize;
+				*width = m_uniformTextureSize * W / H;
+			}
+			else if ( H <= m_uniformTextureMinSize ){
+				*height = m_uniformTextureMinSize;
+				*width = m_uniformTextureMinSize * W / H;
+			}
+		}
 	}
-	else if ( tex->height >= tex->width ) {
-		// Texture is square, or taller than it is wide
-		height = m_uniformTextureSize;
-	}
-	else {
-		// Otherwise, preserve the texture's aspect ratio
-		height = (int)( m_uniformTextureSize * ( (float)tex->height / tex->width ) );
-	}
-	return height;
 }
 
 TextureBrowser() :
@@ -384,7 +423,8 @@ TextureBrowser() :
 	m_rmbSelected( false ),
 	m_searchedTags( false ),
 	m_tags( false ),
-	m_uniformTextureSize( 96 ){
+	m_uniformTextureSize( 160 ),
+	m_uniformTextureMinSize( 48 ){
 }
 };
 
@@ -485,8 +525,8 @@ void Texture_StartPos( TextureLayout& layout ){
 void Texture_NextPos( TextureBrowser& textureBrowser, TextureLayout& layout, qtexture_t* current_texture, int *x, int *y ){
 	qtexture_t* q = current_texture;
 
-	int nWidth = textureBrowser.getTextureWidth( q );
-	int nHeight = textureBrowser.getTextureHeight( q );
+	int nWidth, nHeight;
+	textureBrowser.getTextureWH( q, &nWidth, &nHeight );
 	if ( layout.current_x + nWidth > textureBrowser.width - 8 && layout.current_row ) { // go to the next row unless the texture is the first on the row
 		layout.current_x = 8;
 		layout.current_y -= layout.current_row + TextureBrowser_fontHeight( textureBrowser ) + 4;
@@ -607,7 +647,9 @@ void TextureBrowser_evaluateHeight( TextureBrowser& textureBrowser ){
 
 			int x, y;
 			Texture_NextPos( textureBrowser, layout, shader->getTexture(), &x, &y );
-			textureBrowser.m_nTotalHeight = std::max( textureBrowser.m_nTotalHeight, abs( layout.current_y ) + TextureBrowser_fontHeight( textureBrowser ) + textureBrowser.getTextureHeight( shader->getTexture() ) + 4 );
+			int nWidth, nHeight;
+			textureBrowser.getTextureWH( shader->getTexture(), &nWidth, &nHeight );
+			textureBrowser.m_nTotalHeight = std::max( textureBrowser.m_nTotalHeight, abs( layout.current_y ) + TextureBrowser_fontHeight( textureBrowser ) + nHeight + 4 );
 		}
 	}
 }
@@ -1030,8 +1072,8 @@ IShader* Texture_At( TextureBrowser& textureBrowser, int mx, int my ){
 			break;
 		}
 
-		int nWidth = textureBrowser.getTextureWidth( q );
-		int nHeight = textureBrowser.getTextureHeight( q );
+		int nWidth, nHeight;
+		textureBrowser.getTextureWH( q, &nWidth, &nHeight );
 		if ( mx > x && mx - x < nWidth
 			 && my < y && y - my < nHeight + TextureBrowser_fontHeight( textureBrowser ) ) {
 			return shader;
@@ -1167,8 +1209,8 @@ void Texture_Draw( TextureBrowser& textureBrowser ){
 			break;
 		}
 
-		int nWidth = textureBrowser.getTextureWidth( q );
-		int nHeight = textureBrowser.getTextureHeight( q );
+		int nWidth, nHeight;
+		textureBrowser.getTextureWH( q, &nWidth, &nHeight );
 
 		if ( y != last_y ) {
 			last_y = y;
@@ -1320,6 +1362,11 @@ void TextureBrowser_setUniformSize( TextureBrowser& textureBrowser, std::size_t 
 	TextureBrowser_queueDraw( textureBrowser );
 }
 
+void TextureBrowser_setUniformMinSize( TextureBrowser& textureBrowser, std::size_t scale ){
+	textureBrowser.m_uniformTextureMinSize = scale;
+
+	TextureBrowser_queueDraw( textureBrowser );
+}
 
 void TextureBrowser_MouseWheel( TextureBrowser& textureBrowser, bool bUp ){
 	int originy = TextureBrowser_getOriginY( textureBrowser );
@@ -1624,6 +1671,8 @@ void TreeView_onRowActivated( ui::TreeView treeview, ui::TreePath path, ui::Tree
 		ScopeDisableScreenUpdates disableScreenUpdates( dirName, "Loading Textures" );
 		TextureBrowser_ShowDirectory( GlobalTextureBrowser(), dirName );
 		TextureBrowser_queueDraw( GlobalTextureBrowser() );
+		//deactivate, so SPACE and RETURN wont be broken for 2d
+		gtk_window_set_focus( GTK_WINDOW( gtk_widget_get_toplevel( GTK_WIDGET( treeview ) ) ), NULL );
 	}
 }
 
@@ -2615,6 +2664,17 @@ struct UniformTextureSize {
 	}
 };
 
+struct UniformTextureMinSize {
+	static void Export(const TextureBrowser &self, const Callback<void(int)> &returnz) {
+		returnz(g_TextureBrowser.m_uniformTextureMinSize);
+	}
+
+	static void Import(TextureBrowser &self, int value) {
+		if (value > 16)
+			TextureBrowser_setUniformSize(self, value);
+	}
+};
+
 void TextureBrowser_constructPreferences( PreferencesPage& page ){
 	page.appendCheckBox(
 		"", "Texture scrollbar",
@@ -2628,18 +2688,15 @@ void TextureBrowser_constructPreferences( PreferencesPage& page ){
 			make_property<TextureScale>(GlobalTextureBrowser())
 			);
 	}
-	page.appendSpinner(
-		"Texture Thumbnail Size",
-		GlobalTextureBrowser().m_uniformTextureSize,
-		GlobalTextureBrowser().m_uniformTextureSize,
-		16, 8192
-	);
+	page.appendSpinner( "Thumbnails Max Size", GlobalTextureBrowser().m_uniformTextureSize, GlobalTextureBrowser().m_uniformTextureSize, 16, 8192 );
+	page.appendSpinner( "Thumbnails Min Size", GlobalTextureBrowser().m_uniformTextureMinSize, GlobalTextureBrowser().m_uniformTextureMinSize, 16, 8192 );
 	page.appendEntry( "Mousewheel Increment", GlobalTextureBrowser().m_mouseWheelScrollIncrement );
 	{
 		const char* startup_shaders[] = { "None", TextureBrowser_getComonShadersName() };
 		page.appendCombo( "Load Shaders at Startup", reinterpret_cast<int&>( GlobalTextureBrowser().m_startupShaders ), STRING_ARRAY_RANGE( startup_shaders ) );
 	}
 }
+
 void TextureBrowser_constructPage( PreferenceGroup& group ){
 	PreferencesPage page( group.createPage( "Texture Browser", "Texture Browser Preferences" ) );
 	TextureBrowser_constructPreferences( page );
@@ -2677,6 +2734,7 @@ void TextureBrowser_Construct(){
 
 	GlobalPreferenceSystem().registerPreference( "TextureScale", make_property_string<TextureScale>(g_TextureBrowser) );
 	GlobalPreferenceSystem().registerPreference( "UniformTextureSize", make_property_string<UniformTextureSize>(g_TextureBrowser) );
+	GlobalPreferenceSystem().registerPreference( "UniformTextureMinSize", make_property_string<UniformTextureMinSize>(g_TextureBrowser) );
 	GlobalPreferenceSystem().registerPreference( "TextureScrollbar", make_property_string<TextureBrowser_ShowScrollbar>(GlobalTextureBrowser()));
 	GlobalPreferenceSystem().registerPreference( "ShowShaders", make_property_string( GlobalTextureBrowser().m_showShaders ) );
 	GlobalPreferenceSystem().registerPreference( "ShowShaderlistOnly", make_property_string( g_TextureBrowser_shaderlistOnly ) );

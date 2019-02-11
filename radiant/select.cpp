@@ -892,6 +892,9 @@ struct RotateDialog
 static gboolean rotatedlg_apply( ui::Widget widget, RotateDialog* rotateDialog ){
 	Vector3 eulerXYZ;
 
+	gtk_spin_button_update ( rotateDialog->x );
+	gtk_spin_button_update ( rotateDialog->y );
+	gtk_spin_button_update ( rotateDialog->z );
 	eulerXYZ[0] = static_cast<float>( gtk_spin_button_get_value( rotateDialog->x ) );
 	eulerXYZ[1] = static_cast<float>( gtk_spin_button_get_value( rotateDialog->y ) );
 	eulerXYZ[2] = static_cast<float>( gtk_spin_button_get_value( rotateDialog->z ) );
@@ -916,6 +919,7 @@ static gboolean rotatedlg_cancel( ui::Widget widget, RotateDialog* rotateDialog 
 
 static gboolean rotatedlg_ok( ui::Widget widget, RotateDialog* rotateDialog ){
 	rotatedlg_apply( widget, rotateDialog );
+//	rotatedlg_cancel( widget, rotateDialog );
 	rotateDialog->window.hide();
 	return TRUE;
 }
@@ -1056,6 +1060,7 @@ static gboolean scaledlg_cancel( ui::Widget widget, ScaleDialog* scaleDialog ){
 
 static gboolean scaledlg_ok( ui::Widget widget, ScaleDialog* scaleDialog ){
 	scaledlg_apply( widget, scaleDialog );
+	//scaledlg_cancel( widget, scaleDialog );
 	scaleDialog->window.hide();
 	return TRUE;
 }

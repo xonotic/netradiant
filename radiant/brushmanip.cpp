@@ -1308,8 +1308,8 @@ void Brush_constructMenu( ui::Menu menu ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( menu_in_menu );
 		}
-		create_menu_item_with_mnemonic( menu_in_menu, "Make _Hollow", "CSGMakeHollow" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Make _Room", "CSGMakeRoom" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Make _Hollow", "CSGHollow" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Make _Room", "CSGRoom" );
 		create_menu_item_with_mnemonic( menu_in_menu, "CSG _Subtract", "CSGSubtract" );
 		create_menu_item_with_mnemonic( menu_in_menu, "CSG _Merge", "CSGMerge" );
 	}
