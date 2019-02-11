@@ -1415,7 +1415,7 @@ void SurfaceInspector_registerPreferencesPage(){
 }
 
 void SurfaceInspector_registerCommands(){
-	GlobalCommands_insert( "FitTexture", makeCallbackF(SurfaceInspector_FitTexture), Accelerator( 'B', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalCommands_insert( "FitTexture", makeCallbackF(SurfaceInspector_FitTexture), Accelerator( 'F', (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "SurfaceInspector", makeCallbackF(SurfaceInspector_toggleShown), Accelerator( 'S' ) );
 
 	GlobalCommands_insert( "FaceCopyTexture", makeCallbackF(SelectedFaces_copyTexture) );

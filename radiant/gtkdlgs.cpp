@@ -334,7 +334,7 @@ void ProjectSettingsDialog_ok( ProjectSettingsDialog& dialog ){
 }
 
 void DoProjectSettings(){
-	if ( ConfirmModified( "Edit Project Settings" ) ) {
+	//if ( ConfirmModified( "Edit Project Settings" ) ) {
 		ModalDialog modal;
 		ProjectSettingsDialog dialog;
 
@@ -345,7 +345,7 @@ void DoProjectSettings(){
 		}
 
 		window.destroy();
-	}
+	//}
 }
 
 // =============================================================================
@@ -637,13 +637,13 @@ EMessageBoxReturn DoTextureLayout( float *fx, float *fy ){
 			}
 		}
 	}
-	
+
 	// Initialize with last used values
 	char buf[16];
-	
+
 	sprintf( buf, "%f", last_used_texture_layout_scale_x );
 	x.text( buf );
-	
+
 	sprintf( buf, "%f", last_used_texture_layout_scale_y );
 	y.text( buf );
 
@@ -654,7 +654,7 @@ EMessageBoxReturn DoTextureLayout( float *fx, float *fy ){
 	if ( ret == eIDOK ) {
 		*fx = static_cast<float>( atof( gtk_entry_get_text( x ) ) );
 		*fy = static_cast<float>( atof( gtk_entry_get_text( y ) ) );
-	
+
 		// Remember last used values
 		last_used_texture_layout_scale_x = *fx;
 		last_used_texture_layout_scale_y = *fy;

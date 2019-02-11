@@ -616,6 +616,10 @@ void PatchPreferences_construct(){
 void Patch_registerCommands(){
 	GlobalCommands_insert( "InvertCurveTextureX", makeCallbackF(Patch_FlipTextureX), Accelerator( 'I', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 	GlobalCommands_insert( "InvertCurveTextureY", makeCallbackF(Patch_FlipTextureY), Accelerator( 'I', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalCommands_insert( "IncPatchColumn", makeCallbackF(Patch_InsertInsertColumn), Accelerator( GDK_KP_Add, (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "IncPatchRow", makeCallbackF(Patch_InsertInsertRow), Accelerator( GDK_KP_Add, (GdkModifierType)GDK_CONTROL_MASK ) );
+	GlobalCommands_insert( "DecPatchColumn", makeCallbackF(Patch_DeleteLastColumn), Accelerator( GDK_KP_Subtract, (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "DecPatchRow", makeCallbackF(Patch_DeleteLastRow), Accelerator( GDK_KP_Subtract, (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "NaturalizePatch", makeCallbackF(Patch_NaturalTexture), Accelerator( 'N', (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "PatchCylinder", makeCallbackF(Patch_Cylinder) );
 	GlobalCommands_insert( "PatchDenseCylinder", makeCallbackF(Patch_DenseCylinder) );
@@ -671,12 +675,12 @@ void Patch_constructMenu( ui::Menu menu ){
 	create_menu_item_with_mnemonic( menu, "End cap", "PatchEndCap" );
 	create_menu_item_with_mnemonic( menu, "Bevel", "PatchBevel" );
 	{
-		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "More End caps, Bevels" );
-		if ( g_Layout_enableDetachableMenus.m_value ) {
-			menu_tearoff( menu_in_menu );
-		}
-		create_menu_item_with_mnemonic( menu_in_menu, "Square Endcap", "PatchSquareBevel" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Square Bevel", "PatchSquareEndcap" );
+//		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "More End caps, Bevels" );
+//		if ( g_Layout_enableDetachableMenus.m_value ) {
+//			menu_tearoff( menu_in_menu );
+//		}
+		create_menu_item_with_mnemonic( menu, "Square Endcap", "PatchSquareBevel" );
+		create_menu_item_with_mnemonic( menu, "Square Bevel", "PatchSquareEndcap" );
 	}
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Cone", "PatchCone" );
@@ -716,23 +720,37 @@ void Patch_constructMenu( ui::Menu menu ){
 			menu_tearoff( menu_in_menu );
 		}
 		create_menu_item_with_mnemonic( menu_in_menu, "Invert", "InvertCurve" );
-		auto menu_3 = create_sub_menu_with_mnemonic( menu_in_menu, "Re-disperse" );
-		if ( g_Layout_enableDetachableMenus.m_value ) {
-			menu_tearoff( menu_3 );
-		}
-		create_menu_item_with_mnemonic( menu_3, "Rows", "RedisperseRows" );
-		create_menu_item_with_mnemonic( menu_3, "Columns", "RedisperseCols" );
-		auto menu_4 = create_sub_menu_with_mnemonic( menu_in_menu, "Smooth" );
-		if ( g_Layout_enableDetachableMenus.m_value ) {
-			menu_tearoff( menu_4 );
-		}
-		create_menu_item_with_mnemonic( menu_4, "Rows", "SmoothRows" );
-		create_menu_item_with_mnemonic( menu_4, "Columns", "SmoothCols" );
+//		auto menu_3 = create_sub_menu_with_mnemonic( menu_in_menu, "Re-disperse" );
+//		if ( g_Layout_enableDetachableMenus.m_value ) {
+//			menu_tearoff( menu_3 );
+//		}
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu, "Rows", "RedisperseRows" );
+		create_menu_item_with_mnemonic( menu, "Columns", "RedisperseCols" );
+//		auto menu_4 = create_sub_menu_with_mnemonic( menu_in_menu, "Smooth" );
+//		if ( g_Layout_enableDetachableMenus.m_value ) {
+//			menu_tearoff( menu_4 );
+//		}
+		create_menu_item_with_mnemonic( menu, "Rows", "SmoothRows" );
+		create_menu_item_with_mnemonic( menu, "Columns", "SmoothCols" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Transpose", "MatrixTranspose" );
+
 	}
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Cap Selection", "CapCurrentCurve" );
 	create_menu_item_with_mnemonic( menu, "Cycle Cap Texture", "CycleCapTexturePatch" );
+	menu_separator( menu );
+	{
+		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Texture" );
+		if ( g_Layout_enableDetachableMenus.m_value ) {
+			menu_tearoff( menu_in_menu );
+		}
+		create_menu_item_with_mnemonic( menu_in_menu, "Cycle Projection", "CycleCapTexturePatch" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Naturalize", "NaturalizePatch" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Invert X", "InvertCurveTextureX" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Invert Y", "InvertCurveTextureY" );
+
+	}
 	menu_separator( menu );
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Overlay" );

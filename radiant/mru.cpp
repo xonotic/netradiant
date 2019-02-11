@@ -34,14 +34,14 @@
 #include "map.h"
 #include "qe3.h"
 
-const int MRU_MAX = 4;
+#define MRU_MAX 9
 namespace {
 GtkMenuItem *MRU_items[MRU_MAX];
 std::size_t MRU_used;
 typedef CopiedString MRU_filename_t;
 MRU_filename_t MRU_filenames[MRU_MAX];
 typedef const char* MRU_key_t;
-MRU_key_t MRU_keys[MRU_MAX] = { "File0", "File1", "File2", "File3" };
+MRU_key_t MRU_keys[MRU_MAX] = { "File0", "File1", "File2", "File3", "File4", "File5", "File6", "File7", "File8" };
 }
 
 inline const char* MRU_GetText( std::size_t index ){
@@ -191,6 +191,11 @@ LoadMRU g_load_mru1( 1 );
 LoadMRU g_load_mru2( 2 );
 LoadMRU g_load_mru3( 3 );
 LoadMRU g_load_mru4( 4 );
+LoadMRU g_load_mru5( 5 );
+LoadMRU g_load_mru6( 6 );
+LoadMRU g_load_mru7( 7 );
+LoadMRU g_load_mru8( 8 );
+LoadMRU g_load_mru9( 9 );
 
 void MRU_constructMenu( ui::Menu menu ){
 	{
@@ -210,6 +215,31 @@ void MRU_constructMenu( ui::Menu menu ){
 	}
 	{
 		auto item = create_menu_item_with_mnemonic( menu, "_4", LoadMRUCaller( g_load_mru4 ) );
+		item.hide();
+		MRU_AddWidget( item, 3 );
+	}
+	{
+		auto item = create_menu_item_with_mnemonic( menu, "_5", LoadMRUCaller( g_load_mru5 ) );
+		item.hide();
+		MRU_AddWidget( item, 3 );
+	}
+	{
+		auto item = create_menu_item_with_mnemonic( menu, "_6", LoadMRUCaller( g_load_mru6 ) );
+		item.hide();
+		MRU_AddWidget( item, 3 );
+	}
+	{
+		auto item = create_menu_item_with_mnemonic( menu, "_7", LoadMRUCaller( g_load_mru7 ) );
+		item.hide();
+		MRU_AddWidget( item, 3 );
+	}
+	{
+		auto item = create_menu_item_with_mnemonic( menu, "_8", LoadMRUCaller( g_load_mru8 ) );
+		item.hide();
+		MRU_AddWidget( item, 3 );
+	}
+	{
+		auto item = create_menu_item_with_mnemonic( menu, "_9", LoadMRUCaller( g_load_mru9 ) );
 		item.hide();
 		MRU_AddWidget( item, 3 );
 	}
