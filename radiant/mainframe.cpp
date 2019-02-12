@@ -2948,6 +2948,11 @@ void MainFrame::Create(){
 		}
 	}
 
+	/*GtkToolbar* plugin_toolbar = create_plugin_toolbar();
+	if ( !g_Layout_enablePluginToolbar.m_value ) {
+		gtk_widget_hide( GTK_WIDGET( plugin_toolbar ) );
+	}*/
+
 	ui::Widget main_statusbar = create_main_statusbar(reinterpret_cast<ui::Widget *>(m_pStatusLabel));
 	vbox.pack_end(main_statusbar, FALSE, TRUE, 2);
 
