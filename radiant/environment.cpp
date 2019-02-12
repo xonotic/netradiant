@@ -265,14 +265,14 @@ void environment_init( int argc, char const* argv[] ){
 
 #include <windows.h>
 
-char openCmdMap[260];
+char* openCmdMap;
 
 void cmdMap(){
-	openCmdMap[0] = '\0';
+	openCmdMap = NULL;
 	for ( int i = 1; i < g_argc; ++i )
 	{
 		if ( !stricmp( g_argv[i] + strlen(g_argv[i]) - 4, ".map" ) ){
-			strcpy( openCmdMap, g_argv[i] );
+			openCmdMap = g_argv[i];
 		}
 	}
 }

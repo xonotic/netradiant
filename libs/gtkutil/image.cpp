@@ -44,6 +44,7 @@ GdkPixbuf* pixbuf_new_from_file_with_mask( const char* filename ){
 	}
 	else
 	{
+		//GdkPixbuf* rgba = gdk_pixbuf_add_alpha( rgb, TRUE, 255, 0, 255 ); //pink to alpha
 		GdkPixbuf* rgba = gdk_pixbuf_add_alpha( rgb, FALSE, 255, 0, 255 );
 		g_object_unref( rgb );
 		return rgba;

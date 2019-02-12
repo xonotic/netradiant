@@ -210,7 +210,7 @@ PathEntry PathEntry_new(){
 
 	// browse button
 	auto button = ui::Button(ui::New);
-	button_set_icon( button, "ellipsis.bmp" );
+	button_set_icon( button, "ellipsis.png" );
 	button.show();
 	hbox.pack_end(button, FALSE, FALSE, 0);
 
