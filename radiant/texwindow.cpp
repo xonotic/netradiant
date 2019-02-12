@@ -1526,6 +1526,8 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 		}
 	}
 	else if ( event->type == GDK_2BUTTON_PRESS ) {
+		#define GARUX_DISABLE_2BUTTON
+		#ifndef GARUX_DISABLE_2BUTTON
 		const char* sh = textureBrowser->shader.c_str();
 		char* dir = strrchr( sh, '/' );
 		if( dir != NULL ){
@@ -1540,6 +1542,7 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 				}
 			}
 		}
+		#endif
 	}
 	else if ( event->type == GDK_3BUTTON_PRESS ) {
 		ScopeDisableScreenUpdates disableScreenUpdates( TextureBrowser_getComonShadersDir(), "Loading Textures" );
