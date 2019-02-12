@@ -232,8 +232,8 @@ inline bool Tokeniser_getFloat( Tokeniser& tokeniser, float& f ){
 	if ( token != 0 && string_parse_float( token, f ) ) {
 		return true;
 	}
-	#define DISABLE_QNAN_FALLBACK
-	#ifndef DISABLE_QNAN_FALLBACK
+	#define GARUX_DISABLE_QNAN_FALLBACK
+	#ifndef GARUX_DISABLE_QNAN_FALLBACK
 	//fallback for 1.#IND 1.#INF 1.#QNAN cases, happening sometimes after rotating & often scaling with tex lock in BP mode
 	else if ( token != 0 && strstr( token, ".#" ) ) {
 		globalErrorStream() << "Warning: " << Unsigned( tokeniser.getLine() ) << ":" << Unsigned( tokeniser.getColumn() ) << ": expected parse problem at '" << token << "': wanted '#number'\nProcessing anyway\n";
