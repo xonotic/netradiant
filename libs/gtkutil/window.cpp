@@ -29,6 +29,12 @@
 inline void CHECK_RESTORE( ui::Widget w ){
 	if ( gpointer_to_int( g_object_get_data( G_OBJECT( w ), "was_mapped" ) ) != 0 ) {
 		w.show();
+		/* workaround for gtk 2.24 issue: not displayed glwidget after min/restore */
+		GtkWidget* glwidget = GTK_WIDGET( g_object_get_data( G_OBJECT( w ), "glwidget" ) );
+		if ( glwidget ){
+			gtk_widget_hide( glwidget );
+			gtk_widget_show( glwidget );
+		}
 	}
 }
 
@@ -90,6 +96,23 @@ ui::Window create_floating_window( const char* title, ui::Window parent ){
 		connect_floating_window_destroy_present( window, parent );
 		g_object_set_data( G_OBJECT( window ), "floating_handler", gint_to_pointer( connect_floating( parent, window ) ) );
 		window.connect( "destroy", G_CALLBACK( destroy_disconnect_floating ), parent );
+/*
+		//gtk_window_set_type_hint (window,GDK_WINDOW_TYPE_HINT_UTILITY);
+		//gtk_window_set_type_hint (window,GDK_WINDOW_TYPE_HINT_DIALOG);
+		gtk_window_set_keep_above ( window, TRUE );
+		GtkWidget* widget = GTK_WIDGET( window );
+		gtk_widget_realize ( widget );
+		GdkWindow* gdk_window = gtk_widget_get_window( widget );
+		//gdk_window_set_decorations ( gdk_window, (GdkWMDecoration)(GDK_DECOR_BORDER|GDK_DECOR_RESIZEH|GDK_DECOR_TITLE|GDK_DECOR_MENU|GDK_DECOR_MINIMIZE|GDK_DECOR_MAXIMIZE) );
+		//gdk_window_set_functions ( gdk_window, (GdkWMFunction)( GDK_FUNC_RESIZE|GDK_FUNC_MOVE|GDK_FUNC_MINIMIZE|GDK_FUNC_MAXIMIZE|GDK_FUNC_CLOSE ) );
+		//gdk_window_set_decorations ( gdk_window, (GdkWMDecoration)( GDK_DECOR_ALL ) );
+		//gdk_window_set_functions ( gdk_window, (GdkWMFunction)( GDK_FUNC_ALL ) );
+		//gdk_window_set_type_hint ( gdk_window, GDK_WINDOW_TYPE_HINT_DIALOG );
+		//gdk_window_set_type_hint ( gdk_window, GDK_WINDOW_TYPE_HINT_UTILITY );
+		//gdk_window_set_type_hint ( gdk_window, GDK_WINDOW_TYPE_HINT_NORMAL );
+		gdk_window_set_skip_taskbar_hint ( gdk_window, TRUE );
+		gdk_window_set_skip_pager_hint ( gdk_window, TRUE );
+*/
 	}
 
 	return window;

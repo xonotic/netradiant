@@ -56,4 +56,6 @@ void TextureBrowser_addShadersRealiseCallback( const SignalHandler& handler );
 
 void TextureBrowser_RefreshShaders();
 
+ui::Widget TextureBrowser_getGLWidget();
+
 #endif

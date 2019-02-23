@@ -30,6 +30,28 @@
 #include "debugging/debugging.h"
 #include "property.h"
 
+inline bool widget_is_visible( GtkWidget* widget ){
+	return GTK_WIDGET_VISIBLE( widget ) != FALSE;
+}
+
+inline void widget_set_visible( GtkWidget* widget, bool show ){
+	if ( show ) {
+		/* workaround for gtk 2.24 issue: not displayed glwidget after toggle */
+		GtkWidget* glwidget = GTK_WIDGET( g_object_get_data( G_OBJECT( widget ), "glwidget" ) );
+		if ( glwidget ){
+			//if ( widget_is_visible( glwidget ) )
+				//globalOutputStream() << "glwidget have been already visible :0\n"; /* is not hidden aswell, according to this */
+			gtk_widget_hide( glwidget );
+			gtk_widget_show( glwidget );
+		}
+		gtk_widget_show( widget );
+	}
+	else
+	{
+		gtk_widget_hide( widget );
+	}
+}
+
 class ToggleItem {
     Callback<void(const Callback<void(bool)> &)> m_exportCallback;
     typedef std::list<Callback<void(bool)>> ImportCallbacks;
