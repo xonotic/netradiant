@@ -29,12 +29,15 @@
 inline void CHECK_RESTORE( ui::Widget w ){
 	if ( gpointer_to_int( g_object_get_data( G_OBJECT( w ), "was_mapped" ) ) != 0 ) {
 		w.show();
+#define GARUX_GTK_WORKAROUND
+#ifndef GARUX_GTK_WORKAROUND
 		/* workaround for gtk 2.24 issue: not displayed glwidget after min/restore */
 		GtkWidget* glwidget = GTK_WIDGET( g_object_get_data( G_OBJECT( w ), "glwidget" ) );
 		if ( glwidget ){
 			gtk_widget_hide( glwidget );
 			gtk_widget_show( glwidget );
 		}
+#endif
 	}
 }
 

@@ -57,6 +57,8 @@ void Create( ui::Window parent );
 void Show(){
 	// workaround for strange gtk behaviour - modifying the contents of a window while it is not visible causes the window position to change without sending a configure_event
 	m_position_tracker.sync( m_window );
+#define GARUX_GTK_WORKAROUND
+#ifndef GARUX_GTK_WORKAROUND
 	/* workaround for gtk 2.24 issue: not displayed glwidget after toggle */
 	GtkWidget* glwidget = GTK_WIDGET( g_object_get_data( G_OBJECT( m_window ), "glwidget" ) );
 	if ( glwidget ){
@@ -65,6 +67,7 @@ void Show(){
 		gtk_widget_hide( glwidget );
 		gtk_widget_show( glwidget );
 	}
+#endif
 	m_window.show();
 }
 void Hide(){

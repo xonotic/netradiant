@@ -30,6 +30,8 @@
 #include "debugging/debugging.h"
 #include "property.h"
 
+#define GARUX_GTK_WORKAROUND
+#ifndef GARUX_GTK_WORKAROUND
 inline bool widget_is_visible( GtkWidget* widget ){
 	return GTK_WIDGET_VISIBLE( widget ) != FALSE;
 }
@@ -51,6 +53,7 @@ inline void widget_set_visible( GtkWidget* widget, bool show ){
 		gtk_widget_hide( widget );
 	}
 }
+#endif
 
 class ToggleItem {
     Callback<void(const Callback<void(bool)> &)> m_exportCallback;
