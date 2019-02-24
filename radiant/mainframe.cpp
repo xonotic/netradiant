@@ -101,7 +101,11 @@
 #include "referencecache.h"
 #include "texwindow.h"
 #include "filterbar.h"
+
+#define GARUX_DISABLE_GTKTHEME
+#ifndef GARUX_DISABLE_GTKTHEME
 #include "gtktheme.h"
+#endif
 
 
 struct layout_globals_t
@@ -1065,7 +1069,9 @@ ui::MenuItem create_colours_menu(){
 	create_menu_item_with_mnemonic( menu_3, "Black and Green", "ColorSchemeBlackAndGreen" );
 	create_menu_item_with_mnemonic( menu_3, "Maya/Max/Lightwave Emulation", "ColorSchemeYdnar" );
 
+#ifndef GARUX_DISABLE_GTKTHEME
 	create_menu_item_with_mnemonic( menu_in_menu, "GTK Theme...", "gtkThemeDlg" );
+#endif
 
 	menu_separator( menu_in_menu );
 
@@ -3467,7 +3473,9 @@ void MainFrame_Construct(){
 	GlobalToggles_insert( "MouseScale", makeCallbackF(ScaleMode), ToggleItem::AddCallbackCaller( g_scalemode_button ) );
 	GlobalToggles_insert( "MouseDrag", makeCallbackF(DragMode), ToggleItem::AddCallbackCaller( g_dragmode_button ), Accelerator( 'Q' ) );
 
+#ifndef GARUX_DISABLE_GTKTHEME
 	GlobalCommands_insert( "gtkThemeDlg", makeCallbackF(gtkThemeDlg) );
+#endif
 	GlobalCommands_insert( "ColorSchemeOriginal", makeCallbackF(ColorScheme_Original) );
 	GlobalCommands_insert( "ColorSchemeQER", makeCallbackF(ColorScheme_QER) );
 	GlobalCommands_insert( "ColorSchemeBlackAndGreen", makeCallbackF(ColorScheme_Black) );

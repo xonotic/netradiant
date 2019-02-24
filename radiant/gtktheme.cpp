@@ -6,6 +6,8 @@
     email                : ashaduri '@' gmail.com
  ***************************************************************************/
 
+#define GARUX_DISABLE_GTKTHEME
+#ifndef GARUX_DISABLE_GTKTHEME
 
 #include <iostream>
 #include <fstream>
@@ -752,3 +754,5 @@ void apply_theme(const std::string& theme_name, const std::string& font)
 
 
 }
+
+#endif // GARUX_DISABLE_GTKTHEME

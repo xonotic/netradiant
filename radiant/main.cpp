@@ -534,15 +534,16 @@ void user_shortcuts_save(){
 	SaveCommandMap( path.c_str() );
 }
 
+void add_local_rc_files(){
+#define GARUX_DISABLE_GTKTHEME
+#ifndef GARUX_DISABLE_GTKTHEME
 /* FIXME: HACK: not GTK3 compatible
  https://developer.gnome.org/gtk2/stable/gtk2-Resource-Files.html#gtk-rc-add-default-file
  https://developer.gnome.org/gtk3/stable/gtk3-Resource-Files.html#gtk-rc-add-default-file
  > gtk_rc_add_default_file has been deprecated since version 3.0 and should not be used in newly-written code.
  > Use GtkStyleContext with a custom GtkStyleProvider instead
 */
-void gtk_rc_add_default_file (const gchar *filename);
 
-void add_local_rc_files(){
 	{
 		StringOutputStream path( 512 );
 		path << AppPath_get() << ".gtkrc-2.0.radiant";
@@ -555,6 +556,7 @@ void add_local_rc_files(){
 		gtk_rc_add_default_file( path.c_str() );
 	}
 #endif
+#endif // GARUX_DISABLE_GTKTHEME
 }
 
 int main( int argc, char* argv[] ){
