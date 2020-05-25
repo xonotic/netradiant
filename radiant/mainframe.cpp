@@ -2217,6 +2217,9 @@ ui::MenuItem create_selection_menu(){
 		create_menu_item_with_mnemonic( menu_in_menu, "Rotate X", "RotateSelectionX" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Y", "RotateSelectionY" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Z", "RotateSelectionZ" );
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Clockwise", "RotateSelectionClockwise" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Anticlockwise", "RotateSelectionAnticlockwise" );
 	}
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Flip" );
@@ -2226,6 +2229,9 @@ ui::MenuItem create_selection_menu(){
 		create_menu_item_with_mnemonic( menu_in_menu, "Flip _X", "MirrorSelectionX" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Flip _Y", "MirrorSelectionY" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Flip _Z", "MirrorSelectionZ" );
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu_in_menu, "Flip Horizontally", "MirrorSelectionHorizontally" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Flip Vertically", "MirrorSelectionVertically" );
 	}
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Arbitrary rotation...", "ArbitraryRotation" );
@@ -2471,12 +2477,17 @@ void UndoRedo_constructToolbar( ui::Toolbar toolbar ){
 }
 
 void RotateFlip_constructToolbar( ui::Toolbar toolbar ){
-	toolbar_append_button( toolbar, "x-axis Flip", "brush_flipx.png", "MirrorSelectionX" );
-	toolbar_append_button( toolbar, "x-axis Rotate", "brush_rotatex.png", "RotateSelectionX" );
-	toolbar_append_button( toolbar, "y-axis Flip", "brush_flipy.png", "MirrorSelectionY" );
-	toolbar_append_button( toolbar, "y-axis Rotate", "brush_rotatey.png", "RotateSelectionY" );
-	toolbar_append_button( toolbar, "z-axis Flip", "brush_flipz.png", "MirrorSelectionZ" );
-	toolbar_append_button( toolbar, "z-axis Rotate", "brush_rotatez.png", "RotateSelectionZ" );
+//	toolbar_append_button( toolbar, "x-axis Flip", "brush_flipx.png", "MirrorSelectionX" );
+//	toolbar_append_button( toolbar, "x-axis Rotate", "brush_rotatex.png", "RotateSelectionX" );
+//	toolbar_append_button( toolbar, "y-axis Flip", "brush_flipy.png", "MirrorSelectionY" );
+//	toolbar_append_button( toolbar, "y-axis Rotate", "brush_rotatey.png", "RotateSelectionY" );
+//	toolbar_append_button( toolbar, "z-axis Flip", "brush_flipz.png", "MirrorSelectionZ" );
+//	toolbar_append_button( toolbar, "z-axis Rotate", "brush_rotatez.png", "RotateSelectionZ" );
+	toolbar_append_button( toolbar, "Flip Horizontally", "brush_flip_hor.png", "MirrorSelectionHorizontally" );
+	toolbar_append_button( toolbar, "Flip Vertically", "brush_flip_vert.png", "MirrorSelectionVertically" );
+
+	toolbar_append_button( toolbar, "Rotate Clockwise", "brush_rotate_clock.png", "RotateSelectionClockwise" );
+	toolbar_append_button( toolbar, "Rotate Anticlockwise", "brush_rotate_anti.png", "RotateSelectionAnticlockwise" );
 }
 
 void Select_constructToolbar( ui::Toolbar toolbar ){
@@ -2552,7 +2563,7 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 
 	ComponentModes_constructToolbar( toolbar );
 
-	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
+	if ( style != MainFrame::eSplit ) {
 		space();
 
 		XYWnd_constructToolbar( toolbar );
@@ -3562,18 +3573,14 @@ void MainFrame_Construct(){
 //	GlobalCommands_insert( "ShowHidden", FreeCaller<Select_ShowAllHidden>(), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
 //	GlobalCommands_insert( "HideSelected", FreeCaller<HideSelected>(), Accelerator( 'H' ) );
 
-	Hide_registerCommands();
+	Select_registerCommands();
 
 	GlobalToggles_insert( "DragVertices", makeCallbackF(SelectVertexMode), ToggleItem::AddCallbackCaller( g_vertexMode_button ), Accelerator( 'V' ) );
 	GlobalToggles_insert( "DragEdges", makeCallbackF(SelectEdgeMode), ToggleItem::AddCallbackCaller( g_edgeMode_button ), Accelerator( 'E' ) );
 	GlobalToggles_insert( "DragFaces", makeCallbackF(SelectFaceMode), ToggleItem::AddCallbackCaller( g_faceMode_button ), Accelerator( 'F' ) );
 
-	GlobalCommands_insert( "MirrorSelectionX", makeCallbackF(Selection_Flipx) );
-	GlobalCommands_insert( "RotateSelectionX", makeCallbackF(Selection_Rotatex) );
-	GlobalCommands_insert( "MirrorSelectionY", makeCallbackF(Selection_Flipy) );
-	GlobalCommands_insert( "RotateSelectionY", makeCallbackF(Selection_Rotatey) );
-	GlobalCommands_insert( "MirrorSelectionZ", makeCallbackF(Selection_Flipz) );
-	GlobalCommands_insert( "RotateSelectionZ", makeCallbackF(Selection_Rotatez) );
+	GlobalCommands_insert( "ArbitraryRotation", makeCallbackF(DoRotateDlg), Accelerator( 'R', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg), Accelerator( 'S', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 
 	GlobalCommands_insert( "ArbitraryRotation", makeCallbackF(DoRotateDlg) );
 	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg) );
