@@ -105,7 +105,7 @@ void FreezePointer::freeze_pointer(ui::Window window, ui::Widget widget, FreezeP
 	//gdk_window_set_cursor ( GTK_WIDGET( window )->window, cursor );
 	/*	is needed to fix activating neighbour widgets, that happens, if using upper one	*/
 	gtk_grab_add( widget );
-	weedjet = widget;
+	m_weedjet = widget;
 
 	gdk_cursor_unref( cursor );
 
@@ -128,16 +128,25 @@ void FreezePointer::freeze_pointer(ui::Window window, ui::Widget widget, FreezeP
 	handle_motion = window.connect( "motion_notify_event", G_CALLBACK( motion_delta ), this );
 }
 
-void FreezePointer::unfreeze_pointer(ui::Window window)
+void FreezePointer::unfreeze_pointer(ui::Window window, bool centerize )
 {
 	g_signal_handler_disconnect( G_OBJECT( window ), handle_motion );
 
 	m_function = 0;
 	m_data = 0;
 
-	Sys_SetCursorPos( window, recorded_x, recorded_y );
+	if ( centerize ){
+		Sys_SetCursorPos( window, center_x, center_y );
+	}
+	else{
+		Sys_SetCursorPos( window, recorded_x, recorded_y );
+	}
 
 //	gdk_window_set_cursor( GTK_WIDGET( window )->window, 0 );
 	gdk_pointer_ungrab( GDK_CURRENT_TIME );
-	gtk_grab_remove( weedjet );
+
+	if ( m_weedjet )
+	{
+		gtk_grab_remove( m_weedjet );
+	}
 }

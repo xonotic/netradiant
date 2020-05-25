@@ -110,7 +110,7 @@ class FreezePointer
 {
 unsigned int handle_motion;
 int recorded_x, recorded_y, last_x, last_y, center_x, center_y;
-ui::Widget weedjet{ui::null};
+ui::Widget m_weedjet{ui::null};
 typedef void ( *MotionDeltaFunction )( int x, int y, unsigned int state, void* data );
 MotionDeltaFunction m_function;
 void* m_data;
@@ -121,7 +121,7 @@ static gboolean motion_delta( ui::Window widget, GdkEventMotion *event, FreezePo
 
 void freeze_pointer( ui::Window window, ui::Widget widget, MotionDeltaFunction function, void* data );
 
-void unfreeze_pointer( ui::Window window );
+void unfreeze_pointer( ui::Window window, bool centerize );
 };
 
 #endif

@@ -585,3 +585,45 @@ qboolean vfsPackFile( const char *filename, const char *packname, const int comp
 		Error( "Disabled because of miniz issue" );
 #endif
 }
+
+qboolean vfsPackFile_Absolute_Path( const char *filepath, const char *filename, const char *packname, const int compLevel ){
+#ifndef GARUX_DISABLE_BAD_MINIZ
+	char tmp[NAME_MAX];
+	strcpy( tmp, filepath );
+	if ( access( tmp, R_OK ) == 0 ) {
+		if ( access( packname, R_OK ) == 0 ) {
+			mz_zip_archive zip;
+			memset( &zip, 0, sizeof(zip) );
+			mz_zip_reader_init_file( &zip, packname, 0 );
+			mz_zip_writer_init_from_reader( &zip, packname );
+
+			mz_bool success = MZ_TRUE;
+			success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
+			if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
+				Error( "Failed creating zip archive \"%s\"!\n", packname );
+			}
+			mz_zip_reader_end( &zip);
+			mz_zip_writer_end( &zip );
+		}
+		else{
+			mz_zip_archive zip;
+			memset( &zip, 0, sizeof(zip) );
+			if( !mz_zip_writer_init_file( &zip, packname, 0 ) ){
+				Error( "Failed creating zip archive \"%s\"!\n", packname );
+			}
+			mz_bool success = MZ_TRUE;
+			success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
+			if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
+				Error( "Failed creating zip archive \"%s\"!\n", packname );
+			}
+			mz_zip_writer_end( &zip );
+		}
+
+		return qtrue;
+	}
+
+	return qfalse;
+#else
+		Error( "Disabled because of miniz issue" );
+#endif
+}
