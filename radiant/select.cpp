@@ -878,21 +878,21 @@ void Selection_RotateAnticlockwise(){
 
 
 void Select_registerCommands(){
-	GlobalCommands_insert( "ShowHidden", FreeCaller<Select_ShowAllHidden>(), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalToggles_insert( "HideSelected", FreeCaller<HideSelected>(), ToggleItem::AddCallbackCaller( g_hidden_item ), Accelerator( 'H' ) );
+	GlobalCommands_insert( "ShowHidden", makeCallbackF( Select_ShowAllHidden ), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalToggles_insert( "HideSelected", makeCallbackF( HideSelected ), ToggleItem::AddCallbackCaller( g_hidden_item ), Accelerator( 'H' ) );
 
-	GlobalCommands_insert( "MirrorSelectionX", FreeCaller<Selection_Flipx>() );
-	GlobalCommands_insert( "RotateSelectionX", FreeCaller<Selection_Rotatex>() );
-	GlobalCommands_insert( "MirrorSelectionY", FreeCaller<Selection_Flipy>() );
-	GlobalCommands_insert( "RotateSelectionY", FreeCaller<Selection_Rotatey>() );
-	GlobalCommands_insert( "MirrorSelectionZ", FreeCaller<Selection_Flipz>() );
-	GlobalCommands_insert( "RotateSelectionZ", FreeCaller<Selection_Rotatez>() );
+	GlobalCommands_insert( "MirrorSelectionX", makeCallbackF( Selection_Flipx ) );
+	GlobalCommands_insert( "RotateSelectionX", makeCallbackF( Selection_Rotatex ) );
+	GlobalCommands_insert( "MirrorSelectionY", makeCallbackF( Selection_Flipy ) );
+	GlobalCommands_insert( "RotateSelectionY", makeCallbackF( Selection_Rotatey ) );
+	GlobalCommands_insert( "MirrorSelectionZ", makeCallbackF( Selection_Flipz ) );
+	GlobalCommands_insert( "RotateSelectionZ", makeCallbackF( Selection_Rotatez ) );
 
-	GlobalCommands_insert( "MirrorSelectionHorizontally", FreeCaller<Selection_FlipHorizontally>() );
-	GlobalCommands_insert( "MirrorSelectionVertically", FreeCaller<Selection_FlipVertically>() );
+	GlobalCommands_insert( "MirrorSelectionHorizontally", makeCallbackF( Selection_FlipHorizontally ) );
+	GlobalCommands_insert( "MirrorSelectionVertically", makeCallbackF( Selection_FlipVertically ) );
 
-	GlobalCommands_insert( "RotateSelectionClockwise", FreeCaller<Selection_RotateClockwise>() );
-	GlobalCommands_insert( "RotateSelectionAnticlockwise", FreeCaller<Selection_RotateAnticlockwise>() );
+	GlobalCommands_insert( "RotateSelectionClockwise", makeCallbackF( Selection_RotateClockwise ) );
+	GlobalCommands_insert( "RotateSelectionAnticlockwise", makeCallbackF( Selection_RotateAnticlockwise ) );
 }
 
 

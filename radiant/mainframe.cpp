@@ -3582,9 +3582,6 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ArbitraryRotation", makeCallbackF(DoRotateDlg), Accelerator( 'R', (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg), Accelerator( 'S', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 
-	GlobalCommands_insert( "ArbitraryRotation", makeCallbackF(DoRotateDlg) );
-	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg) );
-
 	GlobalCommands_insert( "BuildMenuCustomize", makeCallbackF(DoBuildMenu) );
 	GlobalCommands_insert( "Build_runRecentExecutedBuild", makeCallbackF(Build_runRecentExecutedBuild), Accelerator( GDK_F5 ) );
 
