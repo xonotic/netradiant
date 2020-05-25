@@ -2046,20 +2046,6 @@ ui::MenuItem create_edit_menu(){
 	return edit_menu_item;
 }
 
-void fill_view_xy_top_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "XY (Top) View", "ToggleView" );
-}
-
-
-void fill_view_yz_side_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "YZ (Side) View", "ToggleSideView" );
-}
-
-
-void fill_view_xz_front_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "XZ (Front) View", "ToggleFrontView" );
-}
-
 
 ui::Widget g_toggle_z_item{ui::null};
 ui::Widget g_toggle_console_item{ui::null};
@@ -2075,13 +2061,13 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 	}
 
 	if ( style == MainFrame::eFloating ) {
-		fill_view_camera_menu( menu );
-		fill_view_xy_top_menu( menu );
-		fill_view_yz_side_menu( menu );
-		fill_view_xz_front_menu( menu );
+		create_check_menu_item_with_mnemonic( menu, "Camera View", "ToggleCamera" );
+		create_check_menu_item_with_mnemonic( menu, "XY (Top) View", "ToggleView" );
+		create_check_menu_item_with_mnemonic( menu, "XZ (Front) View", "ToggleFrontView" );
+		create_check_menu_item_with_mnemonic( menu, "YZ (Side) View", "ToggleSideView" );
 	}
 	if ( style == MainFrame::eFloating || style == MainFrame::eSplit ) {
-		create_menu_item_with_mnemonic( menu, "Console View", "ToggleConsole" );
+		create_menu_item_with_mnemonic( menu, "Console", "ToggleConsole" );
 		create_menu_item_with_mnemonic( menu, "Texture Browser", "ToggleTextures" );
 		create_menu_item_with_mnemonic( menu, "Entity Inspector", "ToggleEntityInspector" );
 	}
@@ -2108,9 +2094,10 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		menu_separator( camera_menu );
 		create_menu_item_with_mnemonic( camera_menu, "Next leak spot", "NextLeakSpot" );
 		create_menu_item_with_mnemonic( camera_menu, "Previous leak spot", "PrevLeakSpot" );
-		menu_separator( camera_menu );
-		create_menu_item_with_mnemonic( camera_menu, "Look Through Selected", "LookThroughSelected" );
-		create_menu_item_with_mnemonic( camera_menu, "Look Through Camera", "LookThroughCamera" );
+		//cameramodel is not implemented in instances, thus useless
+//		menu_separator( camera_menu );
+//		create_menu_item_with_mnemonic( camera_menu, "Look Through Selected", "LookThroughSelected" );
+//		create_menu_item_with_mnemonic( camera_menu, "Look Through Camera", "LookThroughCamera" );
 	}
 	menu_separator( menu );
 	{
@@ -2121,9 +2108,12 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft || style == MainFrame::eFloating ) {
 			create_menu_item_with_mnemonic( orthographic_menu, "_Next (XY, YZ, XY)", "NextView" );
 			create_menu_item_with_mnemonic( orthographic_menu, "XY (Top)", "ViewTop" );
-			create_menu_item_with_mnemonic( orthographic_menu, "YZ", "ViewSide" );
-			create_menu_item_with_mnemonic( orthographic_menu, "XZ", "ViewFront" );
+			create_menu_item_with_mnemonic( orthographic_menu, "XZ (Front)", "ViewFront" );
+			create_menu_item_with_mnemonic( orthographic_menu, "YZ (Side)", "ViewSide" );
 			menu_separator( orthographic_menu );
+		}
+		else{
+			create_menu_item_with_mnemonic( orthographic_menu, "Center on Selected", "NextView" );
 		}
 
 		create_menu_item_with_mnemonic( orthographic_menu, "Center on Selected", "CenterXYView" );
