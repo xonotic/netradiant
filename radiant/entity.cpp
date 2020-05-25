@@ -610,7 +610,7 @@ void Entity_constructMenu( ui::Menu menu ){
 		create_menu_item_with_mnemonic( menu, "_KillConnect", "KillConnectSelection" );
 	}
 	create_menu_item_with_mnemonic( menu, "_Select Color...", "EntityColor" );
-	create_menu_item_with_mnemonic( menu, "_Normalize Color...", "NormalizeColor" );
+	create_menu_item_with_mnemonic( menu, "_Normalize Color", "NormalizeColor" );
 }
 
 

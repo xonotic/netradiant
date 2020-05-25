@@ -22,7 +22,6 @@
 #include "paned.h"
 
 #include <gtk/gtk.h>
-#include <uilib/uilib.h>
 
 #include "frame.h"
 
@@ -61,7 +60,7 @@ PanedState g_hpaned = { 0.5f, -1, };
 PanedState g_vpaned1 = { 0.5f, -1, };
 PanedState g_vpaned2 = { 0.5f, -1, };
 
-ui::HPaned create_split_views( ui::Widget topleft, ui::Widget topright, ui::Widget botleft, ui::Widget botright ){
+ui::Widget create_split_views( ui::Widget topleft, ui::Widget topright, ui::Widget botleft, ui::Widget botright, ui::Widget& vsplit1, ui::Widget& vsplit2 ){
 	auto hsplit = ui::HPaned(ui::New);
 	hsplit.show();
 
@@ -70,25 +69,27 @@ ui::HPaned create_split_views( ui::Widget topleft, ui::Widget topright, ui::Widg
 
 	{
 		auto vsplit = ui::VPaned(ui::New);
-		gtk_paned_add1( GTK_PANED( hsplit ), vsplit  );
-		vsplit.show();
+		vsplit1 = vsplit;
+		gtk_paned_add1( GTK_PANED( hsplit ), GTK_WIDGET( vsplit ) );
+		gtk_widget_show( GTK_WIDGET( vsplit ) );
 
 		vsplit.connect( "size_allocate", G_CALLBACK( vpaned_allocate ), &g_vpaned1 );
 		vsplit.connect( "notify::position", G_CALLBACK( paned_position ), &g_vpaned1 );
 
-		gtk_paned_add1( GTK_PANED( vsplit ), create_framed_widget( topleft  ) );
-		gtk_paned_add2( GTK_PANED( vsplit ), create_framed_widget( topright  ) );
+		gtk_paned_add1( GTK_PANED( vsplit ), GTK_WIDGET( create_framed_widget( topleft ) ) );
+		gtk_paned_add2( GTK_PANED( vsplit ), GTK_WIDGET( create_framed_widget( botleft ) ) );
 	}
 	{
 		auto vsplit = ui::VPaned(ui::New);
-		gtk_paned_add2( GTK_PANED( hsplit ), vsplit  );
-		vsplit.show();
+		vsplit2 = vsplit;
+		gtk_paned_add2( GTK_PANED( hsplit ), GTK_WIDGET( vsplit ) );
+		gtk_widget_show( GTK_WIDGET( vsplit ) );
 
 		vsplit.connect( "size_allocate", G_CALLBACK( vpaned_allocate ), &g_vpaned2 );
 		vsplit.connect( "notify::position", G_CALLBACK( paned_position ), &g_vpaned2 );
 
-		gtk_paned_add1( GTK_PANED( vsplit ), create_framed_widget( botleft  ) );
-		gtk_paned_add2( GTK_PANED( vsplit ), create_framed_widget( botright  ) );
+		gtk_paned_add1( GTK_PANED( vsplit ), GTK_WIDGET( create_framed_widget( topright ) ) );
+		gtk_paned_add2( GTK_PANED( vsplit ), GTK_WIDGET( create_framed_widget( botright ) ) );
 	}
 	return hsplit;
 }

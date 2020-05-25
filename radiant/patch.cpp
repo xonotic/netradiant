@@ -812,20 +812,20 @@ void Patch::InsertPoints( EMatrixMajor mt, bool bFirst ){
 		return;
 	}
 	if ( bFirst ) {
-		pos = height - 1;
+		pos = 2;
 	}
 	else
 	{
-		pos = 2;
+		pos = height - 1;
 	}
 
 	if ( pos >= height ) {
 		if ( bFirst ) {
-			pos = height - 1;
+			pos = 2;
 		}
 		else
 		{
-			pos = 2;
+			pos = height - 1;
 		}
 	}
 	else if ( pos == 0 ) {
@@ -956,19 +956,19 @@ void Patch::RemovePoints( EMatrixMajor mt, bool bFirst ){
 		return;
 	}
 	if ( bFirst ) {
-		pos = height - 3;
+		pos = 2;
 	}
 	else
 	{
-		pos = 2;
+		pos = height - 3;
 	}
 	if ( pos >= height ) {
 		if ( bFirst ) {
-			pos = height - 3;
+			pos = 2;
 		}
 		else
 		{
-			pos = 2;
+			pos = height - 3;
 		}
 	}
 	else if ( pos == 0 ) {

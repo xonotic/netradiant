@@ -19,11 +19,11 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <uilib/uilib.h>
-
 #if !defined( INCLUDED_GTKUTIL_PANED_H )
 #define INCLUDED_GTKUTIL_PANED_H
 
-ui::HPaned create_split_views( ui::Widget topleft, ui::Widget topright, ui::Widget botleft, ui::Widget botright );
+#include <uilib/uilib.h>
+
+ui::Widget create_split_views( ui::Widget topleft, ui::Widget botleft, ui::Widget topright, ui::Widget botright, ui::Widget& vsplit1, ui::Widget& vsplit2 );
 
 #endif
