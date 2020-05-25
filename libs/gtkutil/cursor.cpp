@@ -66,14 +66,14 @@ gboolean FreezePointer::motion_delta(ui::Window widget, GdkEventMotion *event, F
 	Sys_GetCursorPos( widget, &current_x, &current_y );
 	int dx = current_x - self->last_x;
 	int dy = current_y - self->last_y;
-	int ddx = current_x - self->recorded_x;
-	int ddy = current_y - self->recorded_y;
+	int ddx = current_x - self->center_x;
+	int ddy = current_y - self->center_y;
 	self->last_x = current_x;
 	self->last_y = current_y;
 	if ( dx != 0 || dy != 0 ) {
 		//globalOutputStream() << "motion x: " << dx << ", y: " << dy << "\n";
 		if (ddx < -32 || ddx > 32 || ddy < -32 || ddy > 32) {
-			Sys_SetCursorPos( widget, self->recorded_x, self->recorded_y );
+			Sys_SetCursorPos( widget, self->center_x, self->center_y );
 			self->last_x = self->recorded_x;
 			self->last_y = self->recorded_y;
 		}
@@ -82,7 +82,7 @@ gboolean FreezePointer::motion_delta(ui::Window widget, GdkEventMotion *event, F
 	return FALSE;
 }
 
-void FreezePointer::freeze_pointer(ui::Window window, FreezePointer::MotionDeltaFunction function, void *data)
+void FreezePointer::freeze_pointer(ui::Window window, ui::Widget widget, FreezePointer::MotionDeltaFunction function, void *data)
 {
 	ASSERT_MESSAGE( m_function == 0, "can't freeze pointer" );
 
@@ -96,17 +96,31 @@ void FreezePointer::freeze_pointer(ui::Window window, FreezePointer::MotionDelta
 														 | GDK_BUTTON_RELEASE_MASK
 														 | GDK_VISIBILITY_NOTIFY_MASK );
 
-	GdkCursor* cursor = create_blank_cursor();
+	//GdkCursor* cursor = create_blank_cursor();
+	GdkCursor* cursor = gdk_cursor_new( GDK_BLANK_CURSOR );
 	//GdkGrabStatus status =
+	/*	fixes cursor runaways during srsly quick drags in camera
+	drags with pressed buttons have no problem at all w/o this	*/
 	gdk_pointer_grab( gtk_widget_get_window(window), TRUE, mask, 0, cursor, GDK_CURRENT_TIME );
+	//gdk_window_set_cursor ( GTK_WIDGET( window )->window, cursor );
+	/*	is needed to fix activating neighbour widgets, that happens, if using upper one	*/
+	gtk_grab_add( widget );
+	weedjet = widget;
+
 	gdk_cursor_unref( cursor );
 
-	Sys_GetCursorPos( window, &recorded_x, &recorded_y );
+	Sys_GetCursorPos( window, &center_x, &center_y );
 
-	Sys_SetCursorPos( window, recorded_x, recorded_y );
+	/*	using center for tracking for max safety	*/
+	gdk_window_get_origin( GTK_WIDGET( widget )->window, &center_x, &center_y );
+	auto allocation = widget.dimensions();
+	center_y += allocation.height / 2;
+	center_x += allocation.width / 2;
 
-	last_x = recorded_x;
-	last_y = recorded_y;
+	Sys_SetCursorPos( window, center_x, center_y );
+
+	last_x = center_x;
+	last_y = center_y;
 
 	m_function = function;
 	m_data = data;
@@ -121,7 +135,9 @@ void FreezePointer::unfreeze_pointer(ui::Window window)
 	m_function = 0;
 	m_data = 0;
 
-	Sys_SetCursorPos( window, recorded_x, recorded_y );
+//	Sys_SetCursorPos( window, center_x, center_y );
 
 	gdk_pointer_ungrab( GDK_CURRENT_TIME );
+
+	gtk_grab_remove( weedjet );
 }

@@ -261,7 +261,7 @@ void FindTextureDialog_selectTexture( const char* name ){
 
 void FindTextureDialog_Construct(){
 	GlobalCommands_insert( "FindReplaceTextures", FindTextureDialog::ShowCaller() );
-	GlobalPreferenceSystem().registerPreference( "FindReplacehWnd", WindowPositionTrackerImportStringCaller( g_FindTextureDialog.m_position_tracker ), WindowPositionTrackerExportStringCaller( g_FindTextureDialog.m_position_tracker ) );
+	GlobalPreferenceSystem().registerPreference( "FindReplacehWnd",  make_property_string<WindowPositionTracker_String>( g_FindTextureDialog.m_position_tracker ) );
 }
 
 void FindTextureDialog_Destroy(){
