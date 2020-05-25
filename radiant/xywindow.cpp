@@ -363,7 +363,7 @@ struct xywindow_globals_private_t
 		d_showgrid( true ),
 
 		show_names( false ),
-		show_coordinates( true ),
+		show_coordinates( false ),
 		show_angles( true ),
 		show_outline( false ),
 		show_axis( true ),
@@ -735,21 +735,23 @@ Shader* XYWnd::m_state_selected = 0;
 void xy_update_xor_rectangle( XYWnd& self, rect_t area ){
 	if ( self.GetWidget().visible() ) {
 		rectangle_t rect = rectangle_from_area( area.min, area.max, self.Width(), self.Height() );
-		int nDim1 = ( self.GetViewType() == YZ ) ? 1 : 0;
-		int nDim2 = ( self.GetViewType() == XY ) ? 1 : 2;
-		rect.x /= self.Scale();
-		rect.y /= self.Scale();
-		rect.w /= self.Scale();
-		rect.h /= self.Scale();
-		rect.x += self.GetOrigin()[nDim1];
-		rect.y += self.GetOrigin()[nDim2];
+//		int nDim1 = ( self.GetViewType() == YZ ) ? 1 : 0;
+//		int nDim2 = ( self.GetViewType() == XY ) ? 1 : 2;
+//		rect.x /= self.Scale();
+//		rect.y /= self.Scale();
+//		rect.w /= self.Scale();
+//		rect.h /= self.Scale();
+//		rect.x += self.GetOrigin()[nDim1];
+//		rect.y += self.GetOrigin()[nDim2];
 		self.m_XORRectangle.set( rect );
 	}
 }
 
 gboolean xywnd_button_press( ui::Widget widget, GdkEventButton* event, XYWnd* xywnd ){
 	if ( event->type == GDK_BUTTON_PRESS ) {
-		g_pParentWnd->SetActiveXY( xywnd );
+		if( !xywnd->Active() ){
+			g_pParentWnd->SetActiveXY( xywnd );
+		}
 
 		xywnd->ButtonState_onMouseDown( buttons_for_event_button( event ) );
 
@@ -770,7 +772,9 @@ gboolean xywnd_button_release( ui::Widget widget, GdkEventButton* event, XYWnd* 
 gboolean xywnd_focus_in( ui::Widget widget, GdkEventFocus* event, XYWnd* xywnd ){
 	if ( event->type == GDK_FOCUS_CHANGE ) {
 		if ( event->in ) {
-			g_pParentWnd->SetActiveXY( xywnd );
+			if( !xywnd->Active() ){
+				g_pParentWnd->SetActiveXY( xywnd );
+			}
 		}
 	}
 	return FALSE;
@@ -784,6 +788,9 @@ void xywnd_motion( gdouble x, gdouble y, guint state, void* data ){
 }
 
 gboolean xywnd_wheel_scroll( ui::Widget widget, GdkEventScroll* event, XYWnd* xywnd ){
+	if( !xywnd->Active() ){
+		g_pParentWnd->SetActiveXY( xywnd );
+	}
 	if ( event->direction == GDK_SCROLL_UP ) {
 		xywnd->ZoomInWithMouse( (int)event->x, (int)event->y );
 	}
@@ -873,7 +880,7 @@ XYWnd::XYWnd() :
 
 	m_gl_widget.connect( "button_press_event", G_CALLBACK( xywnd_button_press ), this );
 	m_gl_widget.connect( "button_release_event", G_CALLBACK( xywnd_button_release ), this );
-	m_gl_widget.connect( "focus_in_event", G_CALLBACK( xywnd_focus_in ), this );
+	m_gl_widget.connect( "focus_in_event", G_CALLBACK( xywnd_focus_in ), this );	//works only in floating views layout
 	m_gl_widget.connect( "motion_notify_event", G_CALLBACK( DeferredMotion::gtk_motion ), &m_deferred_motion );
 
 	m_gl_widget.connect( "scroll_event", G_CALLBACK( xywnd_wheel_scroll ), this );
@@ -1595,8 +1602,14 @@ void XYWnd::XY_DrawAxis( void ){
 		const int w = ( m_nWidth / 2 / m_fScale );
 		const int h = ( m_nHeight / 2 / m_fScale );
 
-		const Vector3& colourX = ( m_viewType == YZ ) ? g_xywindow_globals.AxisColorY : g_xywindow_globals.AxisColorX;
-		const Vector3& colourY = ( m_viewType == XY ) ? g_xywindow_globals.AxisColorY : g_xywindow_globals.AxisColorZ;
+		Vector3 colourX = ( m_viewType == YZ ) ? g_xywindow_globals.AxisColorY : g_xywindow_globals.AxisColorX;
+		Vector3 colourY = ( m_viewType == XY ) ? g_xywindow_globals.AxisColorY : g_xywindow_globals.AxisColorZ;
+		if( !Active() ){
+			float grayX = vector3_dot( colourX, Vector3( 0.2989, 0.5870, 0.1140 ) );
+			float grayY = vector3_dot( colourY, Vector3( 0.2989, 0.5870, 0.1140 ) );
+			colourX[0] = colourX[1] = colourX[2] = grayX;
+			colourY[0] = colourY[1] = colourY[2] = grayY;
+		}
 
 		// draw two lines with corresponding axis colors to highlight current view
 		// horizontal line: nDim1 color
@@ -1625,6 +1638,105 @@ void XYWnd::XY_DrawAxis( void ){
 		GlobalOpenGL().drawChar( g_AxisName[nDim2] );
 		glRasterPos2f( -10 / m_fScale, 28 / m_fScale );
 		GlobalOpenGL().drawChar( g_AxisName[nDim2] );
+	}
+}
+
+void XYWnd::RenderActive( void ){
+	if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
+		if ( Map_Valid( g_map ) && ScreenUpdates_Enabled() ) {
+			GlobalOpenGL_debugAssertNoErrors();
+			glDrawBuffer( GL_FRONT );
+
+			if ( g_xywindow_globals_private.show_outline ) {
+				glMatrixMode( GL_PROJECTION );
+				glLoadIdentity();
+				glOrtho( 0, m_nWidth, 0, m_nHeight, 0, 1 );
+
+				glMatrixMode( GL_MODELVIEW );
+				glLoadIdentity();
+
+				if( !Active() ){ //sorta erase
+					glColor3fv( vector3_to_array( g_xywindow_globals.color_gridmajor ) );
+				}
+				// four view mode doesn't colorize
+				else if ( g_pParentWnd->CurrentStyle() == MainFrame::eSplit ) {
+					glColor3fv( vector3_to_array( g_xywindow_globals.color_viewname ) );
+				}
+				else
+				{
+					switch ( m_viewType )
+					{
+					case YZ:
+						glColor3fv( vector3_to_array( g_xywindow_globals.AxisColorX ) );
+						break;
+					case XZ:
+						glColor3fv( vector3_to_array( g_xywindow_globals.AxisColorY ) );
+						break;
+					case XY:
+						glColor3fv( vector3_to_array( g_xywindow_globals.AxisColorZ ) );
+						break;
+					}
+				}
+				glBegin( GL_LINE_LOOP );
+				glVertex2f( 0.5, 0.5 );
+				glVertex2f( m_nWidth - 0.5, 1 );
+				glVertex2f( m_nWidth - 0.5, m_nHeight - 0.5 );
+				glVertex2f( 0.5, m_nHeight - 0.5 );
+				glEnd();
+			}
+			// we do this part (the old way) only if show_axis is disabled
+			if ( !g_xywindow_globals_private.show_axis ) {
+				glMatrixMode( GL_PROJECTION );
+				glLoadIdentity();
+				glOrtho( 0, m_nWidth, 0, m_nHeight, 0, 1 );
+
+				glMatrixMode( GL_MODELVIEW );
+				glLoadIdentity();
+
+				if ( Active() ) {
+					glColor3fv( vector3_to_array( g_xywindow_globals.color_viewname ) );
+				}
+				else{
+					glColor4fv( vector4_to_array( Vector4( g_xywindow_globals.color_gridtext, 1.0f ) ) );
+				}
+
+				glDisable( GL_BLEND );
+				glRasterPos2f( 35, m_nHeight - 20 );
+
+				GlobalOpenGL().drawString( ViewType_getTitle( m_viewType ) );
+			}
+			else{
+				// clear
+				glViewport( 0, 0, m_nWidth, m_nHeight );
+				// set up viewpoint
+				glMatrixMode( GL_PROJECTION );
+				glLoadMatrixf( reinterpret_cast<const float*>( &m_projection ) );
+
+				glMatrixMode( GL_MODELVIEW );
+				glLoadIdentity();
+				glScalef( m_fScale, m_fScale, 1 );
+				int nDim1 = ( m_viewType == YZ ) ? 1 : 0;
+				int nDim2 = ( m_viewType == XY ) ? 1 : 2;
+				glTranslatef( -m_vOrigin[nDim1], -m_vOrigin[nDim2], 0 );
+
+				glDisable( GL_LINE_STIPPLE );
+				glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+				glDisableClientState( GL_NORMAL_ARRAY );
+				glDisableClientState( GL_COLOR_ARRAY );
+				glDisable( GL_TEXTURE_2D );
+				glDisable( GL_LIGHTING );
+				glDisable( GL_COLOR_MATERIAL );
+				glDisable( GL_DEPTH_TEST );
+				glDisable( GL_TEXTURE_1D );
+				glDisable( GL_BLEND );
+
+				XYWnd::XY_DrawAxis();
+			}
+
+			glDrawBuffer( GL_BACK );
+			GlobalOpenGL_debugAssertNoErrors();
+			glwidget_make_current( m_gl_widget );
+		}
 	}
 }
 
@@ -1795,16 +1907,19 @@ void XYWnd::XY_DrawGrid( void ) {
 			GlobalOpenGL().drawString( text );
 		}
 
+	}
+	// we do this part (the old way) only if show_axis is disabled
+	if ( !g_xywindow_globals_private.show_axis ) {
 		if ( Active() ) {
 			glColor3fv( vector3_to_array( g_xywindow_globals.color_viewname ) );
 		}
-
-		// we do this part (the old way) only if show_axis is disabled
-		if ( !g_xywindow_globals_private.show_axis ) {
-			glRasterPos2f( m_vOrigin[nDim1] - w + 35 / m_fScale, m_vOrigin[nDim2] + h - 20 / m_fScale );
-
-			GlobalOpenGL().drawString( ViewType_getTitle( m_viewType ) );
+		else{
+			glColor4fv( vector4_to_array( Vector4( g_xywindow_globals.color_gridtext, 1.0f ) ) );
 		}
+
+		glRasterPos2f( m_vOrigin[nDim1] - w + 35 / m_fScale, m_vOrigin[nDim2] + h - 20 / m_fScale );
+
+		GlobalOpenGL().drawString( ViewType_getTitle( m_viewType ) );
 	}
 
 	XYWnd::XY_DrawAxis();
@@ -2650,76 +2765,154 @@ EntityClassMenu g_EntityClassMenu;
 
 
 
-
+// Names
 void ShowNamesToggle(){
 	GlobalEntityCreator().setShowNames( !GlobalEntityCreator().getShowNames() );
+//	g_show_names.update();
 	XY_UpdateAllWindows();
 }
+
 typedef FreeCaller<void(), ShowNamesToggle> ShowNamesToggleCaller;
+
 void ShowNamesExport( const Callback<void(bool)> & importer ){
 	importer( GlobalEntityCreator().getShowNames() );
 }
+
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowNamesExport> ShowNamesExportCaller;
 
+// Angles
 void ShowAnglesToggle(){
 	GlobalEntityCreator().setShowAngles( !GlobalEntityCreator().getShowAngles() );
+//	g_show_angles.update();
 	XY_UpdateAllWindows();
 }
+
 typedef FreeCaller<void(), ShowAnglesToggle> ShowAnglesToggleCaller;
+
 void ShowAnglesExport( const Callback<void(bool)> & importer ){
 	importer( GlobalEntityCreator().getShowAngles() );
 }
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowAnglesExport> ShowAnglesExportCaller;
 
+// Blocks
 void ShowBlocksToggle(){
 	g_xywindow_globals_private.show_blocks ^= 1;
+//	g_show_blocks.update();
 	XY_UpdateAllWindows();
 }
+
 typedef FreeCaller<void(), ShowBlocksToggle> ShowBlocksToggleCaller;
+
 void ShowBlocksExport( const Callback<void(bool)> & importer ){
 	importer( g_xywindow_globals_private.show_blocks );
 }
+
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowBlocksExport> ShowBlocksExportCaller;
 
+// Coordinates
 void ShowCoordinatesToggle(){
 	g_xywindow_globals_private.show_coordinates ^= 1;
+//	g_show_coordinates.update();
 	XY_UpdateAllWindows();
 }
+
 typedef FreeCaller<void(), ShowCoordinatesToggle> ShowCoordinatesToggleCaller;
+
 void ShowCoordinatesExport( const Callback<void(bool)> & importer ){
 	importer( g_xywindow_globals_private.show_coordinates );
 }
+
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowCoordinatesExport> ShowCoordinatesExportCaller;
 
+// Outlines
 void ShowOutlineToggle(){
 	g_xywindow_globals_private.show_outline ^= 1;
+//	g_show_outline.update();
 	XY_UpdateAllWindows();
 }
+
 typedef FreeCaller<void(), ShowOutlineToggle> ShowOutlineToggleCaller;
+
 void ShowOutlineExport( const Callback<void(bool)> & importer ){
 	importer( g_xywindow_globals_private.show_outline );
 }
+
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowOutlineExport> ShowOutlineExportCaller;
 
+// Axes
 void ShowAxesToggle(){
 	g_xywindow_globals_private.show_axis ^= 1;
+//	g_show_axes.update();
 	XY_UpdateAllWindows();
 }
 typedef FreeCaller<void(), ShowAxesToggle> ShowAxesToggleCaller;
+
 void ShowAxesExport( const Callback<void(bool)> & importer ){
 	importer( g_xywindow_globals_private.show_axis );
 }
+
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowAxesExport> ShowAxesExportCaller;
 
+// Workzone
 void ShowWorkzoneToggle(){
 	g_xywindow_globals_private.d_show_work ^= 1;
+//	g_show_workzone.update();
 	XY_UpdateAllWindows();
 }
 typedef FreeCaller<void(), ShowWorkzoneToggle> ShowWorkzoneToggleCaller;
+
 void ShowWorkzoneExport( const Callback<void(bool)> & importer ){
 	importer( g_xywindow_globals_private.d_show_work );
 }
+
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowWorkzoneExport> ShowWorkzoneExportCaller;
+
+/*
+BoolExportCaller g_texdef_movelock_caller( g_brush_texturelock_enabled );
+ToggleItem g_texdef_movelock_item( g_texdef_movelock_caller );
+
+void Texdef_ToggleMoveLock(){
+	g_brush_texturelock_enabled = !g_brush_texturelock_enabled;
+	g_texdef_movelock_item.update();
+}
+*/
+
+// Size
+void ShowSizeToggle(){
+	g_xywindow_globals_private.m_bSizePaint = !g_xywindow_globals_private.m_bSizePaint;
+//	g_show_size_item.update();
+	XY_UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowSizeToggle> ShowSizeToggleCaller;
+void ShowSizeExport( const Callback<void(bool)> & importer ){
+	importer( g_xywindow_globals_private.m_bSizePaint );
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowSizeExport> ShowSizeExportCaller;
+
+// Crosshair
+void ShowCrosshairToggle(){
+	g_bCrossHairs ^= 1;
+//	g_show_crosshair_item.update();
+	XY_UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowCrosshairToggle> ShowCrosshairToggleCaller;
+void ShowCrosshairExport( const Callback<void(bool)> & importer ){
+	importer( g_bCrossHairs );
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowCrosshairExport> ShowCrosshairExportCaller;
+
+// Grid
+void ShowGridToggle(){
+	g_xywindow_globals_private.d_showgrid = !g_xywindow_globals_private.d_showgrid;
+//	g_show_grid_item.update();
+	XY_UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowGridTToggle> ShowGridTToggleCaller;
+void ShowGridTExport( const Callback<void(bool)> & importer ){
+	importer( g_xywindow_globals_private.d_showgrid );
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowSizeExport> ShowSizeExportCaller;
+
 
 ShowNamesExportCaller g_show_names_caller;
 Callback<void(const Callback<void(bool)> &)> g_show_names_callback( g_show_names_caller );
@@ -2749,7 +2942,24 @@ ShowWorkzoneExportCaller g_show_workzone_caller;
 Callback<void(const Callback<void(bool)> &)> g_show_workzone_callback( g_show_workzone_caller );
 ToggleItem g_show_workzone( g_show_workzone_callback );
 
+ShowSizeExportCaller g_show_size_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_size_callback( g_show_size_caller );
+ToggleItem g_show_size( g_show_size_callback );
+
+ShowCrosshairExportCaller g_show_crosshair_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_crosshair_callback( g_show_crosshair_caller );
+ToggleItem g_show_crosshair( g_show_crosshair_callback );
+
+ShowGridExportCaller g_show_grid_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_grid_callback( g_show_grid_caller );
+ToggleItem g_show_grid( g_show_grid_callback );
+
+
 void XYShow_registerCommands(){
+	GlobalToggles_insert( "ToggleSizePaint", FreeCaller<ToggleShowSizeInfo>(), ToggleItem::AddCallbackCaller( g_show_size_item ), Accelerator( 'J' ) );
+	GlobalToggles_insert( "ToggleCrosshairs", FreeCaller<ToggleShowCrosshair>(), ToggleItem::AddCallbackCaller( g_show_crosshair_item ), Accelerator( 'X', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalToggles_insert( "ToggleGrid", FreeCaller<ToggleShowGrid>(), ToggleItem::AddCallbackCaller( g_show_grid_item ), Accelerator( '0' ) );
+
 	GlobalToggles_insert( "ShowAngles", ShowAnglesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_angles ) );
 	GlobalToggles_insert( "ShowNames", ShowNamesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_names ) );
 	GlobalToggles_insert( "ShowBlocks", ShowBlocksToggleCaller(), ToggleItem::AddCallbackCaller( g_show_blocks ) );
@@ -2767,8 +2977,8 @@ void XYWnd_registerShortcuts(){
 
 
 void Orthographic_constructPreferences( PreferencesPage& page ){
-	page.appendCheckBox( "", "Solid selection boxes", g_xywindow_globals.m_bNoStipple );
-	page.appendCheckBox( "", "Display size info", g_xywindow_globals_private.m_bSizePaint );
+	page.appendCheckBox( "", "Solid selection boxes ( no stipple )", g_xywindow_globals.m_bNoStipple );
+	//page.appendCheckBox( "", "Display size info", g_xywindow_globals_private.m_bSizePaint );
 	page.appendCheckBox( "", "Chase mouse during drags", g_xywindow_globals_private.m_bChaseMouse );
 	page.appendCheckBox( "", "Update views on camera move", g_xywindow_globals_private.m_bCamXYUpdate );
 }
@@ -2808,9 +3018,9 @@ struct ToggleShown_Bool {
 
 
 void XYWindow_Construct(){
-	GlobalCommands_insert( "ToggleCrosshairs", makeCallbackF(ToggleShowCrosshair), Accelerator( 'X', (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalCommands_insert( "ToggleSizePaint", makeCallbackF(ToggleShowSizeInfo), Accelerator( 'J' ) );
-	GlobalCommands_insert( "ToggleGrid", makeCallbackF(ToggleShowGrid), Accelerator( '0' ) );
+//	GlobalCommands_insert( "ToggleCrosshairs", makeCallbackF(ToggleShowCrosshair), Accelerator( 'X', (GdkModifierType)GDK_SHIFT_MASK ) );
+//	GlobalCommands_insert( "ToggleSizePaint", makeCallbackF(ToggleShowSizeInfo), Accelerator( 'J' ) );
+//	GlobalCommands_insert( "ToggleGrid", makeCallbackF(ToggleShowGrid), Accelerator( '0' ) );
 
 	GlobalToggles_insert( "ToggleView", ToggleShown::ToggleCaller( g_xy_top_shown ), ToggleItem::AddCallbackCaller( g_xy_top_shown.m_item ), Accelerator( 'V', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 	GlobalToggles_insert( "ToggleSideView", ToggleShown::ToggleCaller( g_yz_side_shown ), ToggleItem::AddCallbackCaller( g_yz_side_shown.m_item ) );
@@ -2847,7 +3057,11 @@ void XYWindow_Construct(){
 	GlobalPreferenceSystem().registerPreference( "SI_Colors6", make_property_string( g_xywindow_globals.color_gridblock ) );
 	GlobalPreferenceSystem().registerPreference( "SI_Colors7", make_property_string( g_xywindow_globals.color_gridtext ) );
 	GlobalPreferenceSystem().registerPreference( "SI_Colors8", make_property_string( g_xywindow_globals.color_brushes ) );
-	GlobalPreferenceSystem().registerPreference( "SI_Colors14", make_property_string( g_xywindow_globals.color_gridmajor_alt ) );
+	GlobalPreferenceSystem().registerPreference( "SI_Colors9", make_property_string( g_xywindow_globals.color_viewname ) );
+	GlobalPreferenceSystem().registerPreference( "SI_Colors10", make_property_string( g_xywindow_globals.color_clipper ) );
+	GlobalPreferenceSystem().registerPreference( "SI_Colors11", make_property_string( g_xywindow_globals.color_selbrushes ) );
+
+
 
 
 	GlobalPreferenceSystem().registerPreference( "XZVIS", make_property_string<ToggleShown_Bool>( g_xz_front_shown ) );

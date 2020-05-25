@@ -36,13 +36,13 @@
 ui::Image new_plugin_image( const char* filename ){
 	{
 		StringOutputStream fullpath( 256 );
-		fullpath << GameToolsPath_get() << g_pluginsDir << "bitmaps/" << filename;
+		fullpath << AppPath_get() << g_pluginsDir << "bitmaps/" << filename;
 		if ( auto image = image_new_from_file_with_mask(fullpath.c_str()) ) return image;
 	}
 
 	{
 		StringOutputStream fullpath( 256 );
-		fullpath << AppPath_get() << g_pluginsDir << "bitmaps/" << filename;
+		fullpath << GameToolsPath_get() << g_pluginsDir << "bitmaps/" << filename;
 		if ( auto image = image_new_from_file_with_mask(fullpath.c_str()) ) return image;
 	}
 
@@ -133,6 +133,7 @@ ui::Toolbar create_plugin_toolbar(){
 	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
 	gtk_orientable_set_orientation( GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL );
 	gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
+//	gtk_toolbar_set_show_arrow( toolbar, TRUE );
 	toolbar.show();
 
 	g_plugin_toolbar = toolbar;

@@ -182,39 +182,50 @@ gboolean Structural_button_press( ui::Widget widget, GdkEventButton *event, gpoi
 	return FALSE;
 }
 
+gboolean Region_button_press( ui::Widget widget, GdkEventButton *event, gpointer data ){
+	if ( event->button == 3 && event->type == GDK_BUTTON_PRESS ) {
+		GlobalCommands_find( "RegionOff" ).m_callback();
+		ToggleActions = 0;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean Hide_button_press( GtkWidget *widget, GdkEventButton *event, gpointer data ){
+	if ( event->button == 3 && event->type == GDK_BUTTON_PRESS ) {
+		GlobalCommands_find( "ShowHidden" ).m_callback();
+		ToggleActions = 0;
+		return TRUE;
+	}
+	return FALSE;
+}
 
 ui::Toolbar create_filter_toolbar(){
-			auto filter_toolbar = ui::Toolbar::from( gtk_toolbar_new() );
-			gtk_orientable_set_orientation( GTK_ORIENTABLE(filter_toolbar), GTK_ORIENTATION_HORIZONTAL );
-			gtk_toolbar_set_style( filter_toolbar, GTK_TOOLBAR_ICONS );
-			filter_toolbar.show();
+			auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
+			gtk_orientable_set_orientation( GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL );
+			gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
+//			gtk_toolbar_set_show_arrow( toolbar, TRUE );
+			toolbar.show();
 
+			g_signal_connect( G_OBJECT( toolbar ), "enter_notify_event", G_CALLBACK( ToggleActions0 ), 0 );
 
-			auto space = [&]() {
-				auto btn = ui::ToolItem::from(gtk_separator_tool_item_new());
-					btn.show();
-					filter_toolbar.add(btn);
-			};
-
-			g_signal_connect( G_OBJECT( filter_toolbar ), "enter_notify_event", G_CALLBACK( ToggleActions0 ), 0 );
-
-			toolbar_append_toggle_button( filter_toolbar, "World (ALT + 1)", "f-world.png", "FilterWorldBrushes" );
+			toolbar_append_toggle_button( toolbar, "World (ALT + 1)", "f-world.png", "FilterWorldBrushes" );
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Structural (CTRL + SHIFT + D)\nRightClick: MakeStructural", "f-structural.png", "FilterStructural" );
+				auto button = toolbar_append_toggle_button( toolbar, "Structural (CTRL + SHIFT + D)\nRightClick: MakeStructural", "f-structural.png", "FilterStructural" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Structural_button_press ), 0 );
 			}
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Details (CTRL + D)\nRightClick: MakeDetail", "f-details.png", "FilterDetails" );
+				auto button = toolbar_append_toggle_button( toolbar, "Details (CTRL + D)\nRightClick: MakeDetail", "f-details.png", "FilterDetails" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Detail_button_press ), 0 );
 			}
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Func_Groups\nRightClick: create func_group", "f-funcgroups.png", "FilterFuncGroups" );
+				auto button = toolbar_append_toggle_button( toolbar, "Func_Groups\nRightClick: create func_group", "f-funcgroups.png", "FilterFuncGroups" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Func_Groups_button_press ), 0 );
 
-				toolbar_append_toggle_button( filter_toolbar, "Patches (CTRL + P)", "patch_wireframe.png", "FilterPatches" );
+				toolbar_append_toggle_button( toolbar, "Patches (CTRL + P)", "patch_wireframe.png", "FilterPatches" );
 			}
 
 			space();
@@ -224,45 +235,60 @@ ui::Toolbar create_filter_toolbar(){
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Areaportals_button_press ), 0 );
 			}
 
-			toolbar_append_toggle_button( filter_toolbar, "Translucent (ALT + 4)", "f-translucent.png", "FilterTranslucent" );
+			toolbar_append_toggle_button( toolbar, "Translucent (ALT + 4)", "f-translucent.png", "FilterTranslucent" );
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Liquids (ALT + 5)\nRightClick: toggle tex\n\twaterCaulk\n\tlavaCaulk\n\tslimeCaulk", "f-liquids.png", "FilterLiquids" );
+				auto button = toolbar_append_toggle_button( toolbar, "Liquids (ALT + 5)\nRightClick: toggle tex\n\twaterCaulk\n\tlavaCaulk\n\tslimeCaulk", "f-liquids.png", "FilterLiquids" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Liquids_button_press ), 0 );
 			}
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Caulk (ALT + 6)\nRightClick: tex Caulk", "f-caulk.png", "FilterCaulk" );
+				auto button = toolbar_append_toggle_button( toolbar, "Caulk (ALT + 6)\nRightClick: tex Caulk", "f-caulk.png", "FilterCaulk" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Caulk_button_press ), 0 );
 			}
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Clips (ALT + 7)\nRightClick: toggle tex\n\tplayerClip\n\tweapClip", "f-clip.png", "FilterClips" );
+				auto button = toolbar_append_toggle_button( toolbar, "Clips (ALT + 7)\nRightClick: toggle tex\n\tplayerClip\n\tweapClip", "f-clip.png", "FilterClips" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Clip_button_press ), 0 );
 			}
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "HintsSkips (CTRL + H)\nRightClick: toggle tex\n\thint\n\thintLocal\n\thintSkip", "f-hint.png", "FilterHintsSkips" );
+				auto button = toolbar_append_toggle_button( toolbar, "HintsSkips (CTRL + H)\nRightClick: toggle tex\n\thint\n\thintLocal\n\thintSkip", "f-hint.png", "FilterHintsSkips" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Hint_button_press ), 0 );
 			}
 
-			//toolbar_append_toggle_button( filter_toolbar, "Paths (ALT + 8)", "texture_lock.png", "FilterPaths" );
+			//toolbar_append_toggle_button( toolbar, "Paths (ALT + 8)", "texture_lock.png", "FilterPaths" );
 
 			space();
 
-			toolbar_append_toggle_button( filter_toolbar, "Entities (ALT + 2)", "f-entities.png", "FilterEntities" );
-			toolbar_append_toggle_button( filter_toolbar, "Lights (ALT + 0)", "f-lights.png", "FilterLights" );
-			toolbar_append_toggle_button( filter_toolbar, "Models (SHIFT + M)", "f-models.png", "FilterModels" );
+			toolbar_append_toggle_button( toolbar, "Entities (ALT + 2)", "f-entities.png", "FilterEntities" );
+			toolbar_append_toggle_button( toolbar, "Lights (ALT + 0)", "f-lights.png", "FilterLights" );
+			toolbar_append_toggle_button( toolbar, "Models (SHIFT + M)", "f-models.png", "FilterModels" );
 
 			{
 				auto button = toolbar_append_toggle_button( filter_toolbar, "Triggers (CTRL + SHIFT + T)\nRightClick: tex Trigger", "f-triggers.png", "FilterTriggers" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Trigger_button_press ), 0 );
 			}
 
-			//toolbar_append_toggle_button( filter_toolbar, "Decals (SHIFT + D)", "f-decals.png", "FilterDecals" );
-			space();
-			toolbar_append_button( filter_toolbar, "InvertFilters", "f-invert.png", "InvertFilters" );
+			//toolbar_append_toggle_button( toolbar, "Decals (SHIFT + D)", "f-decals.png", "FilterDecals" );
 
-			toolbar_append_button( filter_toolbar, "ResetFilters", "f-reset.png", "ResetFilters" );
-			return filter_toolbar;
+			space();
+
+			toolbar_append_button( toolbar, "InvertFilters", "f-invert.png", "InvertFilters" );
+
+			toolbar_append_button( toolbar, "ResetFilters", "f-reset.png", "ResetFilters" );
+
+			space();
+
+			{
+				auto button = toolbar_append_toggle_button( toolbar, "Region Set Selection (CTRL + SHIFT + R)\nRightClick: Region Off", "f-region.png", "RegionSetSelection" );
+				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Region_button_press ), 0 );
+			}
+
+			{
+				auto button = toolbar_append_toggle_button( toolbar, "Hide Selected (H)\nRightClick: Show Hidden (SHIFT + H)", "f-hide.png", "HideSelected" );
+				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Hide_button_press ), 0 );
+			}
+
+			return toolbar;
 }
