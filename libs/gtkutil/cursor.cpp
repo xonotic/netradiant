@@ -74,8 +74,8 @@ gboolean FreezePointer::motion_delta(ui::Window widget, GdkEventMotion *event, F
 		//globalOutputStream() << "motion x: " << dx << ", y: " << dy << "\n";
 		if (ddx < -32 || ddx > 32 || ddy < -32 || ddy > 32) {
 			Sys_SetCursorPos( widget, self->center_x, self->center_y );
-			self->last_x = self->recorded_x;
-			self->last_y = self->recorded_y;
+			self->last_x = self->center_x;
+			self->last_y = self->center_y;
 		}
 		self->m_function( dx, dy, event->state, self->m_data );
 	}
@@ -109,7 +109,7 @@ void FreezePointer::freeze_pointer(ui::Window window, ui::Widget widget, FreezeP
 
 	gdk_cursor_unref( cursor );
 
-	Sys_GetCursorPos( window, &center_x, &center_y );
+	Sys_GetCursorPos( window, &recorded_x, &recorded_y );
 
 	/*	using center for tracking for max safety	*/
 	gdk_window_get_origin( GTK_WIDGET( widget )->window, &center_x, &center_y );
@@ -135,9 +135,9 @@ void FreezePointer::unfreeze_pointer(ui::Window window)
 	m_function = 0;
 	m_data = 0;
 
-//	Sys_SetCursorPos( window, center_x, center_y );
+	Sys_SetCursorPos( window, recorded_x, recorded_y );
 
+//	gdk_window_set_cursor( GTK_WIDGET( window )->window, 0 );
 	gdk_pointer_ungrab( GDK_CURRENT_TIME );
-
 	gtk_grab_remove( weedjet );
 }
