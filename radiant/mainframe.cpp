@@ -122,11 +122,11 @@ struct layout_globals_t
 	layout_globals_t() :
 		m_position( -1, -1, 640, 480 ),
 
-		nXYHeight( 300 ),
-		nXYWidth( 300 ),
-		nCamWidth( 200 ),
-		nCamHeight( 200 ),
-		nState( GDK_WINDOW_STATE_MAXIMIZED ){
+		nXYHeight( 350 ),
+		nXYWidth( 600 ),
+		nCamWidth( 300 ),
+		nCamHeight( 210 ),
+		nState( 0 ){
 	}
 };
 
@@ -2266,6 +2266,7 @@ ui::MenuItem create_bsp_menu(){
 	}
 
 	create_menu_item_with_mnemonic( menu, "Customize...", "BuildMenuCustomize" );
+	create_menu_item_with_mnemonic( menu, "Run recent build", "Build_runRecentExecutedBuild" );
 
 	menu_separator( menu );
 
@@ -2307,6 +2308,7 @@ ui::MenuItem create_misc_menu(){
 	// http://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=394
 //  create_menu_item_with_mnemonic(menu, "_Print XY View", FreeCaller<void(), WXY_Print>());
 	create_menu_item_with_mnemonic( menu, "_Background select", makeCallbackF(WXY_BackgroundSelect) );
+	create_menu_item_with_mnemonic( menu, "Fullscreen", "Fullscreen" );
 	return misc_menu_item;
 }
 
@@ -3011,19 +3013,9 @@ void MainFrame::Create(){
 #if GDEF_OS_WINDOWS
 	if ( g_multimon_globals.m_bStartOnPrimMon ) {
 		PositionWindowOnPrimaryScreen( g_layout_globals.m_position );
-		window_set_position( window, g_layout_globals.m_position );
 	}
-	else
 #endif
-	if ( g_layout_globals.nState & GDK_WINDOW_STATE_MAXIMIZED ) {
-		gtk_window_maximize( window );
-		WindowPosition default_position( -1, -1, 640, 480 );
-		window_set_position( window, default_position );
-	}
-	else
-	{
-		window_set_position( window, g_layout_globals.m_position );
-	}
+	window_set_position( window, g_layout_globals.m_position );
 
 	m_window = window;
 
@@ -3047,23 +3039,23 @@ void MainFrame::Create(){
 				m_vSplit2 = vsplit2;
 
 				if ( CurrentStyle() == eRegular ){
-					gtk_paned_add1( GTK_PANED( hsplit ), vsplit );
-					gtk_paned_add2( GTK_PANED( hsplit ), vsplit2 );
+					gtk_paned_pack1( GTK_PANED( hsplit ), vsplit, TRUE, TRUE );
+					gtk_paned_pack2( GTK_PANED( hsplit ), vsplit2, TRUE, TRUE );
 				}
 				else{
-					gtk_paned_add2( GTK_PANED( hsplit ), vsplit );
-					gtk_paned_add1( GTK_PANED( hsplit ), vsplit2 );
+					gtk_paned_pack2( GTK_PANED( hsplit ), vsplit, TRUE, TRUE );
+					gtk_paned_pack1( GTK_PANED( hsplit ), vsplit2, TRUE, TRUE );
 				}
 
 				// console
 				ui::Widget console_window = Console_constructWindow( window );
-				gtk_paned_pack2( GTK_PANED( vsplit ), console_window, FALSE, TRUE );
+				gtk_paned_pack2( GTK_PANED( vsplit ), console_window, TRUE, TRUE );
 				
 				// xy
 				m_pXYWnd = new XYWnd();
 				m_pXYWnd->SetViewType( XY );
 				ui::Widget xy_window = ui::Widget(create_framed_widget( m_pXYWnd->GetWidget( ) ));
-				gtk_paned_add1( GTK_PANED( vsplit ), xy_window );
+				gtk_paned_pack1( GTK_PANED( vsplit ), xy_window, TRUE, TRUE );
 
 				{
 					// camera
@@ -3072,27 +3064,15 @@ void MainFrame::Create(){
 					CamWnd_setParent( *m_pCamWnd, window );
 					auto camera_window = create_framed_widget( CamWnd_getWidget( *m_pCamWnd ) );
 
-					gtk_paned_add1( GTK_PANED( vsplit2 ), camera_window  );
+					gtk_paned_pack1( GTK_PANED( vsplit2 ), GTK_WIDGET( camera_window ) , TRUE, TRUE);
 
 					// textures
 					auto texture_window = create_framed_widget( TextureBrowser_constructWindow( window ) );
 
-					gtk_paned_add2( GTK_PANED( vsplit2 ), texture_window  );
+					gtk_paned_pack2( GTK_PANED( vsplit2 ), GTK_WIDGET( texture_window ), TRUE, TRUE );
 				}
 			}
 		}
-
-		gtk_paned_set_position( GTK_PANED( m_vSplit ), g_layout_globals.nXYHeight );
-
-		if ( CurrentStyle() == eRegular ) {
-			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nXYWidth );
-		}
-		else
-		{
-			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nCamWidth );
-		}
-
-		gtk_paned_set_position( GTK_PANED( m_vSplit2 ), g_layout_globals.nCamHeight );
 	}
 	else if ( CurrentStyle() == eFloating ) {
 		{
@@ -3253,6 +3233,25 @@ void MainFrame::Create(){
 
 	EverySecondTimer_enable();
 
+	if ( g_layout_globals.nState & GDK_WINDOW_STATE_MAXIMIZED ) {
+		gtk_window_maximize( window );
+	}
+	if ( g_layout_globals.nState & GDK_WINDOW_STATE_FULLSCREEN ) {
+		gtk_window_fullscreen( window );
+	}
+	if ( !FloatingGroupDialog() ) {
+		gtk_paned_set_position( GTK_PANED( m_vSplit ), g_layout_globals.nXYHeight );
+
+		if ( CurrentStyle() == eRegular ) {
+			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nXYWidth );
+		}
+		else
+		{
+			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nCamWidth );
+		}
+
+		gtk_paned_set_position( GTK_PANED( m_vSplit2 ), g_layout_globals.nCamHeight );
+	}
 	//GlobalShortcuts_reportUnregistered();
 }
 
@@ -3271,7 +3270,9 @@ void MainFrame::SaveWindowInfo(){
 		g_layout_globals.nCamHeight = gtk_paned_get_position( GTK_PANED( m_vSplit2 ) );
 	}
 
-	g_layout_globals.m_position = m_position_tracker.getPosition();
+	if( gdk_window_get_state( GTK_WIDGET( m_window )->window ) == 0 ){
+		g_layout_globals.m_position = m_position_tracker.getPosition();
+	}
 
 	g_layout_globals.nState = gdk_window_get_state( gtk_widget_get_window(m_window ) );
 }
@@ -3435,6 +3436,26 @@ void Layout_registerPreferencesPage(){
 	PreferencesDialog_addInterfacePage( makeCallbackF(Layout_constructPage) );
 }
 
+void MainFrame_toggleFullscreen(){
+	GtkWindow* wnd = MainFrame_getWindow();
+	if( gdk_window_get_state( GTK_WIDGET( wnd )->window ) & GDK_WINDOW_STATE_FULLSCREEN ){
+		//some portion of buttsex, because gtk_window_unfullscreen doesn't work correctly after calling some modal window
+		bool maximize = ( gdk_window_get_state( GTK_WIDGET( wnd )->window ) & GDK_WINDOW_STATE_MAXIMIZED );
+		gtk_window_unfullscreen( wnd );
+		if( maximize ){
+			gtk_window_unmaximize( wnd );
+			gtk_window_maximize( wnd );
+		}
+		else{
+			gtk_window_move( wnd, g_layout_globals.m_position.x, g_layout_globals.m_position.y );
+			gtk_window_resize( wnd, g_layout_globals.m_position.w, g_layout_globals.m_position.h );
+		}
+	}
+	else{
+		gtk_window_fullscreen( wnd );
+	}
+}
+
 
 #include "preferencesystem.h"
 #include "stringio.h"
@@ -3496,6 +3517,7 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg) );
 
 	GlobalCommands_insert( "BuildMenuCustomize", makeCallbackF(DoBuildMenu) );
+	GlobalCommands_insert( "Build_runRecentExecutedBuild", makeCallbackF(Build_runRecentExecutedBuild), Accelerator( GDK_F5 ) );
 
 	GlobalCommands_insert( "FindBrush", makeCallbackF(DoFind) );
 
@@ -3532,6 +3554,8 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ChooseCameraSelectedBrushColor", makeCallback( g_ColoursMenu.m_selectedbrush3d ) );
 	GlobalCommands_insert( "ChooseClipperColor", makeCallback( g_ColoursMenu.m_clipper ) );
 	GlobalCommands_insert( "ChooseOrthoViewNameColor", makeCallback( g_ColoursMenu.m_viewname ) );
+
+	GlobalCommands_insert( "Fullscreen", makeCallbackF( MainFrame_toggleFullscreen ), Accelerator( GDK_F11 ) );
 
 
 	GlobalCommands_insert( "CSGSubtract", makeCallbackF(CSG_Subtract), Accelerator( 'U', (GdkModifierType)GDK_SHIFT_MASK ) );
