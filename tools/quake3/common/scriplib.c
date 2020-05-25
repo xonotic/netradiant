@@ -175,7 +175,7 @@ void UnGetToken( void ){
 
 qboolean EndOfScript( qboolean crossline ){
 	if ( !crossline ) {
-		Error( "Line %i is incomplete\n",scriptline );
+		Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 	}
 
 	if ( !strcmp( script->filename, "memory buffer" ) ) {
@@ -234,7 +234,7 @@ skipspace:
 		}
 		if ( *script->script_p++ == '\n' ) {
 			if ( !crossline ) {
-				Error( "Line %i is incomplete\n",scriptline );
+				Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 			}
 			script->line++;
 			scriptline = script->line;
@@ -249,7 +249,7 @@ skipspace:
 	if ( *script->script_p == ';' || *script->script_p == '#'
 		 || ( script->script_p[0] == '/' && script->script_p[1] == '/' ) ) {
 		if ( !crossline ) {
-			Error( "Line %i is incomplete\n",scriptline );
+			Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 		}
 		while ( *script->script_p++ != '\n' )
 			if ( script->script_p >= script->end_p ) {
@@ -263,7 +263,7 @@ skipspace:
 	// /* */ comments
 	if ( script->script_p[0] == '/' && script->script_p[1] == '*' ) {
 		if ( !crossline ) {
-			Error( "Line %i is incomplete\n",scriptline );
+			Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 		}
 		script->script_p += 2;
 		while ( script->script_p[0] != '*' && script->script_p[1] != '/' )
@@ -296,7 +296,7 @@ skipspace:
 				break;
 			}
 			if ( token_p == &token[MAXTOKEN] ) {
-				Error( "Token too large on line %i\n",scriptline );
+				Error( "Token too large on line %i\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 			}
 		}
 		script->script_p++;
@@ -309,7 +309,7 @@ skipspace:
 				break;
 			}
 			if ( token_p == &token[MAXTOKEN] ) {
-				Error( "Token too large on line %i\n",scriptline );
+				Error( "Token too large on line %i\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 			}
 		}
 	}
