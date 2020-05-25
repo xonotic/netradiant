@@ -2375,14 +2375,14 @@ void PatchInspector_registerShortcuts(){
 }
 
 void Patch_registerShortcuts(){
-//	command_connect_accelerator( "InvertCurveTextureX" );
-//	command_connect_accelerator( "InvertCurveTextureY" );
-//	command_connect_accelerator( "PatchInsertInsertColumn" );
-//	command_connect_accelerator( "PatchInsertInsertRow" );
-//	command_connect_accelerator( "PatchDeleteLastColumn" );
-//	command_connect_accelerator( "PatchDeleteLastRow" );
-//	command_connect_accelerator( "NaturalizePatch" );
-	//command_connect_accelerator("CapCurrentCurve");
+	command_connect_accelerator( "InvertCurveTextureX" );
+	command_connect_accelerator( "InvertCurveTextureY" );
+	command_connect_accelerator( "PatchInsertInsertColumn" );
+	command_connect_accelerator( "PatchInsertInsertRow" );
+	command_connect_accelerator( "PatchDeleteLastColumn" );
+	command_connect_accelerator( "PatchDeleteLastRow" );
+	command_connect_accelerator( "NaturalizePatch" );
+	command_connect_accelerator( "CapCurrentCurve");
 }
 
 void Manipulators_registerShortcuts(){
