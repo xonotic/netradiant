@@ -1028,6 +1028,7 @@ static gboolean CSGdlg_delete( GtkWidget *widget, GdkEventAny *event, CSGToolDia
 }
 
 void CSG_Tool(){
+	// FIXME: there is probably improvements to do less raw GTK stuff, more GTK wrapper
 	if ( !g_csgtool_dialog.allocated ) {
 		g_csgtool_dialog.allocated = true;
 		g_csgtool_dialog.window = MainFrame_getWindow().create_dialog_window( "CSG Tool", G_CALLBACK( CSGdlg_delete ), &g_csgtool_dialog );
