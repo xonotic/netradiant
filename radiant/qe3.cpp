@@ -92,7 +92,7 @@ void QE_InitVFS(){
 	// if we have a mod dir
 	if ( !string_equal( gamename, basegame ) ) {
 		// ~/.<gameprefix>/<fs_game>
-		if ( userRoot && !g_disableHomePath ) {
+		if ( userRoot && !string_equal( globalRoot, userRoot ) && !g_disableHomePath ) {
 			StringOutputStream userGamePath( 256 );
 			userGamePath << userRoot << gamename << '/';
 			GlobalFileSystem().initDirectory( userGamePath.c_str() );
@@ -107,7 +107,7 @@ void QE_InitVFS(){
 	}
 
 	// ~/.<gameprefix>/<fs_main>
-	if ( userRoot && !g_disableHomePath ) {
+	if ( userRoot && !string_equal( globalRoot, userRoot ) && !g_disableHomePath ) {
 		StringOutputStream userBasePath( 256 );
 		userBasePath << userRoot << basegame << '/';
 		GlobalFileSystem().initDirectory( userBasePath.c_str() );

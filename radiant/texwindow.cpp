@@ -1525,9 +1525,10 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 			}
 		}
 	}
-	else if ( event->type == GDK_2BUTTON_PRESS ) {
+	else if ( event->type == GDK_2BUTTON_PRESS && event->button == 1 ) {
 		#define GARUX_DISABLE_2BUTTON
 		#ifndef GARUX_DISABLE_2BUTTON
+		CopiedString texName = textureBrowser->shader;
 		const char* sh = textureBrowser->shader.c_str();
 		char* dir = strrchr( sh, '/' );
 		if( dir != NULL ){
@@ -1538,13 +1539,14 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 				if( *dir != '\0'){
 					ScopeDisableScreenUpdates disableScreenUpdates( dir, "Loading Textures" );
 					TextureBrowser_ShowDirectory( *textureBrowser, dir );
+					TextureBrowser_Focus( *textureBrowser, textureBrowser->shader.c_str() );
 					TextureBrowser_queueDraw( *textureBrowser );
 				}
 			}
 		}
 		#endif
 	}
-	else if ( event->type == GDK_3BUTTON_PRESS ) {
+	else if ( event->type == GDK_2BUTTON_PRESS && event->button == 3 ) {
 		ScopeDisableScreenUpdates disableScreenUpdates( TextureBrowser_getComonShadersDir(), "Loading Textures" );
 		TextureBrowser_ShowDirectory( *textureBrowser, TextureBrowser_getComonShadersDir() );
 		TextureBrowser_queueDraw( *textureBrowser );
