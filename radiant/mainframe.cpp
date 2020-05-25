@@ -1971,18 +1971,18 @@ ui::MenuItem create_file_menu(){
 #endif
 
 	create_menu_item_with_mnemonic( menu, "_Open...", "OpenMap" );
-
 	create_menu_item_with_mnemonic( menu, "_Import...", "ImportMap" );
+	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "_Save", "SaveMap" );
 	create_menu_item_with_mnemonic( menu, "Save _as...", "SaveMapAs" );
 	create_menu_item_with_mnemonic( menu, "_Export selected...", "ExportSelected" );
-	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Save re_gion...", "SaveRegion" );
+	menu_separator( menu );
 //	menu_separator( menu );
 //	create_menu_item_with_mnemonic( menu, "_Refresh models", "RefreshReferences" );
 //	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Pro_ject settings...", "ProjectSettings" );
-	menu_separator( menu );
+	//menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "_Pointfile...", "TogglePointfile" );
 	menu_separator( menu );
 	MRU_constructMenu( menu );
@@ -2430,9 +2430,16 @@ void SurfaceInspector_registerShortcuts(){
 }
 
 
+void TexBro_registerShortcuts(){
+	command_connect_accelerator( "FindReplaceTextures" );
+	command_connect_accelerator( "RefreshShaders" );
+	//refresh models
+	command_connect_accelerator( "RefreshReferences" );
+}
+
 void register_shortcuts(){
 //	PatchInspector_registerShortcuts();
-	Patch_registerShortcuts();
+	//Patch_registerShortcuts();
 	Grid_registerShortcuts();
 //	XYWnd_registerShortcuts();
 	CamWnd_registerShortcuts();
@@ -2442,6 +2449,7 @@ void register_shortcuts(){
 	SelectNudge_registerShortcuts();
 //	SnapToGrid_registerShortcuts();
 //	SelectByType_registerShortcuts();
+	TexBro_registerShortcuts();
 }
 
 void File_constructToolbar( ui::Toolbar toolbar ){
@@ -2471,8 +2479,8 @@ void Select_constructToolbar( ui::Toolbar toolbar ){
 void CSG_constructToolbar( ui::Toolbar toolbar ){
 	toolbar_append_button( toolbar, "CSG Subtract (SHIFT + U)", "selection_csgsubtract.png", "CSGSubtract" );
 	toolbar_append_button( toolbar, "CSG Merge (CTRL + U)", "selection_csgmerge.png", "CSGMerge" );
-	toolbar_append_button( toolbar, "Make Hollow", "selection_makehollow.png", "CSGHollow" );
 	toolbar_append_button( toolbar, "Make Room", "selection_makeroom.png", "CSGRoom" );
+	toolbar_append_button( toolbar, "CSG Tool", "ellipsis.png", "CSGTool" );
 }
 
 void ComponentModes_constructToolbar( ui::Toolbar toolbar ){
@@ -3498,8 +3506,8 @@ void MainFrame_Construct(){
 
 	GlobalCommands_insert( "CSGSubtract", makeCallbackF(CSG_Subtract), Accelerator( 'U', (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "CSGMerge", makeCallbackF(CSG_Merge), Accelerator( 'U', (GdkModifierType) GDK_CONTROL_MASK ) );
-	GlobalCommands_insert( "CSGHollow", makeCallbackF(CSG_MakeHollow) );
 	GlobalCommands_insert( "CSGRoom", makeCallbackF(CSG_MakeRoom) );
+	GlobalCommands_insert( "CSGTool", makeCallbackF(CSG_Tool) );
 
 	Grid_registerCommands();
 
