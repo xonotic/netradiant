@@ -3747,7 +3747,7 @@ void SelectionSystem_constructPage( PreferenceGroup& group ){
 	SelectionSystem_constructPreferences( page );
 }
 void SelectionSystem_registerPreferencesPage(){
-	PreferencesDialog_addSettingsPage( FreeCaller1<PreferenceGroup&, SelectionSystem_constructPage>() );
+	PreferencesDialog_addSettingsPage( FreeCaller<void(PreferenceGroup&), SelectionSystem_constructPage>() );
 }
 
 
@@ -3767,7 +3767,7 @@ void SelectionSystem_Construct(){
 
 	GlobalShaderCache().attachRenderable( getSelectionSystem() );
 
-	GlobalPreferenceSystem().registerPreference( "PreferPointEntsIn2D", BoolImportStringCaller( getSelectionSystem().m_bPreferPointEntsIn2D ), BoolExportStringCaller( getSelectionSystem().m_bPreferPointEntsIn2D ) );
+	GlobalPreferenceSystem().registerPreference( "PreferPointEntsIn2D", make_property_string( getSelectionSystem().m_bPreferPointEntsIn2D ) );
 	SelectionSystem_registerPreferencesPage();
 }
 

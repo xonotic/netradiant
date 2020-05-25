@@ -207,6 +207,13 @@ ui::Toolbar create_filter_toolbar(){
 //			gtk_toolbar_set_show_arrow( toolbar, TRUE );
 			toolbar.show();
 
+
+			auto space = [&]() {
+				auto btn = ui::ToolItem::from(gtk_separator_tool_item_new());
+				btn.show();
+				toolbar.add(btn);
+			};
+
 			g_signal_connect( G_OBJECT( toolbar ), "enter_notify_event", G_CALLBACK( ToggleActions0 ), 0 );
 
 			toolbar_append_toggle_button( toolbar, "World (ALT + 1)", "f-world.png", "FilterWorldBrushes" );
@@ -231,7 +238,7 @@ ui::Toolbar create_filter_toolbar(){
 			space();
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Areaportals (ALT + 3)\nRightClick: toggle tex\n\tnoDraw\n\tnoDrawNonSolid", "f-areaportal.png", "FilterAreaportals" );
+				auto button = toolbar_append_toggle_button( toolbar, "Areaportals (ALT + 3)\nRightClick: toggle tex\n\tnoDraw\n\tnoDrawNonSolid", "f-areaportal.png", "FilterAreaportals" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Areaportals_button_press ), 0 );
 			}
 
@@ -266,7 +273,7 @@ ui::Toolbar create_filter_toolbar(){
 			toolbar_append_toggle_button( toolbar, "Models (SHIFT + M)", "f-models.png", "FilterModels" );
 
 			{
-				auto button = toolbar_append_toggle_button( filter_toolbar, "Triggers (CTRL + SHIFT + T)\nRightClick: tex Trigger", "f-triggers.png", "FilterTriggers" );
+				auto button = toolbar_append_toggle_button( toolbar, "Triggers (CTRL + SHIFT + T)\nRightClick: tex Trigger", "f-triggers.png", "FilterTriggers" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Trigger_button_press ), 0 );
 			}
 

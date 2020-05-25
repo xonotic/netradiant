@@ -602,17 +602,20 @@ void Entity_registerPreferencesPage(){
 }
 */
 
-void ShowLightRadiiExport( const BoolImportCallback& importer ){
-	importer( GlobalEntityCreator().getLightRadii() );
-}
-typedef FreeCaller1<const BoolImportCallback&, ShowLightRadiiExport> ShowLightRadiiExportCaller;
-ShowLightRadiiExportCaller g_show_lightradii_caller;
-ToggleItem g_show_lightradii_item( g_show_lightradii_caller );
-void ToggleShowLightRadii(){
+void ShowLightRadiiToggle(){
 	GlobalEntityCreator().setLightRadii( !GlobalEntityCreator().getLightRadii() );
-	g_show_lightradii_item.update();
 	UpdateAllWindows();
 }
+typedef FreeCaller<void(), ShowLightRadiiToggle> ShowLightRadiiToggleCaller;
+void ShowLightRadiiExport( const Callback<void(bool)> & importer ){
+	GlobalEntityCreator().getLightRadii();
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowLightRadiiExport> ShowLightRadiiExportCaller;
+
+ShowLightRadiiExportCaller g_show_lightradii_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_lightradii_callback( g_show_lightradii_caller );
+ToggleItem g_show_lightradii( g_show_lightradii_callback );
+
 void Entity_constructMenu( ui::Menu menu ){
 	create_menu_item_with_mnemonic( menu, "_Regroup", "GroupSelection" );
 	create_menu_item_with_mnemonic( menu, "_Ungroup", "UngroupSelection" );
@@ -633,7 +636,7 @@ void Entity_Construct(){
 	GlobalCommands_insert( "GroupSelection", makeCallbackF(Entity_groupSelected) );
 	GlobalCommands_insert( "UngroupSelection", makeCallbackF(Entity_ungroupSelected) );
 
-	GlobalToggles_insert( "ShowLightRadiuses", FreeCaller<ToggleShowLightRadii>(), ToggleItem::AddCallbackCaller( g_show_lightradii_item ) );
+	GlobalToggles_insert( "ShowLightRadiuses", makeCallbackF( ShowLightRadiiToggle ), ToggleItem::AddCallbackCaller( g_show_lightradii ) );
 
 	GlobalPreferenceSystem().registerPreference( "SI_Colors5", make_property_string( g_entity_globals.color_entity ) );
 	GlobalPreferenceSystem().registerPreference( "LastLightIntensity", make_property_string( g_iLastLightIntensity ) );

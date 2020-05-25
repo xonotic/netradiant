@@ -2768,7 +2768,6 @@ EntityClassMenu g_EntityClassMenu;
 // Names
 void ShowNamesToggle(){
 	GlobalEntityCreator().setShowNames( !GlobalEntityCreator().getShowNames() );
-//	g_show_names.update();
 	XY_UpdateAllWindows();
 }
 
@@ -2783,7 +2782,6 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowNamesExport> ShowName
 // Angles
 void ShowAnglesToggle(){
 	GlobalEntityCreator().setShowAngles( !GlobalEntityCreator().getShowAngles() );
-//	g_show_angles.update();
 	XY_UpdateAllWindows();
 }
 
@@ -2797,7 +2795,6 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowAnglesExport> ShowAng
 // Blocks
 void ShowBlocksToggle(){
 	g_xywindow_globals_private.show_blocks ^= 1;
-//	g_show_blocks.update();
 	XY_UpdateAllWindows();
 }
 
@@ -2812,7 +2809,6 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowBlocksExport> ShowBlo
 // Coordinates
 void ShowCoordinatesToggle(){
 	g_xywindow_globals_private.show_coordinates ^= 1;
-//	g_show_coordinates.update();
 	XY_UpdateAllWindows();
 }
 
@@ -2827,7 +2823,6 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowCoordinatesExport> Sh
 // Outlines
 void ShowOutlineToggle(){
 	g_xywindow_globals_private.show_outline ^= 1;
-//	g_show_outline.update();
 	XY_UpdateAllWindows();
 }
 
@@ -2842,7 +2837,6 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowOutlineExport> ShowOu
 // Axes
 void ShowAxesToggle(){
 	g_xywindow_globals_private.show_axis ^= 1;
-//	g_show_axes.update();
 	XY_UpdateAllWindows();
 }
 typedef FreeCaller<void(), ShowAxesToggle> ShowAxesToggleCaller;
@@ -2856,7 +2850,6 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowAxesExport> ShowAxesE
 // Workzone
 void ShowWorkzoneToggle(){
 	g_xywindow_globals_private.d_show_work ^= 1;
-//	g_show_workzone.update();
 	XY_UpdateAllWindows();
 }
 typedef FreeCaller<void(), ShowWorkzoneToggle> ShowWorkzoneToggleCaller;
@@ -2880,7 +2873,6 @@ void Texdef_ToggleMoveLock(){
 // Size
 void ShowSizeToggle(){
 	g_xywindow_globals_private.m_bSizePaint = !g_xywindow_globals_private.m_bSizePaint;
-//	g_show_size_item.update();
 	XY_UpdateAllWindows();
 }
 typedef FreeCaller<void(), ShowSizeToggle> ShowSizeToggleCaller;
@@ -2891,27 +2883,25 @@ typedef FreeCaller<void(const Callback<void(bool)> &), ShowSizeExport> ShowSizeE
 
 // Crosshair
 void ShowCrosshairToggle(){
-	g_bCrossHairs ^= 1;
-//	g_show_crosshair_item.update();
+	g_xywindow_globals_private.g_bCrossHairs ^= 1;
 	XY_UpdateAllWindows();
 }
 typedef FreeCaller<void(), ShowCrosshairToggle> ShowCrosshairToggleCaller;
 void ShowCrosshairExport( const Callback<void(bool)> & importer ){
-	importer( g_bCrossHairs );
+	importer( g_xywindow_globals_private.g_bCrossHairs );
 }
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowCrosshairExport> ShowCrosshairExportCaller;
 
 // Grid
 void ShowGridToggle(){
 	g_xywindow_globals_private.d_showgrid = !g_xywindow_globals_private.d_showgrid;
-//	g_show_grid_item.update();
 	XY_UpdateAllWindows();
 }
-typedef FreeCaller<void(), ShowGridTToggle> ShowGridTToggleCaller;
+typedef FreeCaller<void(), ShowGridToggle> ShowGridToggleCaller;
 void ShowGridTExport( const Callback<void(bool)> & importer ){
 	importer( g_xywindow_globals_private.d_showgrid );
 }
-typedef FreeCaller<void(const Callback<void(bool)> &), ShowSizeExport> ShowSizeExportCaller;
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowSizeExport> ShowGridExportCaller;
 
 
 ShowNamesExportCaller g_show_names_caller;
@@ -2956,9 +2946,9 @@ ToggleItem g_show_grid( g_show_grid_callback );
 
 
 void XYShow_registerCommands(){
-	GlobalToggles_insert( "ToggleSizePaint", FreeCaller<ToggleShowSizeInfo>(), ToggleItem::AddCallbackCaller( g_show_size_item ), Accelerator( 'J' ) );
-	GlobalToggles_insert( "ToggleCrosshairs", FreeCaller<ToggleShowCrosshair>(), ToggleItem::AddCallbackCaller( g_show_crosshair_item ), Accelerator( 'X', (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalToggles_insert( "ToggleGrid", FreeCaller<ToggleShowGrid>(), ToggleItem::AddCallbackCaller( g_show_grid_item ), Accelerator( '0' ) );
+	GlobalToggles_insert( "ToggleSizePaint", ShowSizeToggleCaller(), ToggleItem::AddCallbackCaller( g_show_size ), Accelerator( 'J' ) );
+	GlobalToggles_insert( "ToggleCrosshairs", ShowCrosshairToggleCaller(), ToggleItem::AddCallbackCaller( g_show_crosshair ), Accelerator( 'X', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalToggles_insert( "ToggleGrid", ShowGridToggleCaller(), ToggleItem::AddCallbackCaller( g_show_grid ), Accelerator( '0' ) );
 
 	GlobalToggles_insert( "ShowAngles", ShowAnglesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_angles ) );
 	GlobalToggles_insert( "ShowNames", ShowNamesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_names ) );

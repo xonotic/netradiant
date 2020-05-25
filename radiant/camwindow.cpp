@@ -1432,13 +1432,21 @@ FreeCaller<void(const Callback<void(bool)>&), ShowStatsExport> g_show_stats_call
 Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
 ToggleItem g_show_stats( g_show_stats_callback );
 */
-BoolExportCaller g_show_stats_caller( g_camwindow_globals_private.m_showStats );
-ToggleItem g_show_stats( g_show_stats_caller );
+
 void ShowStatsToggle(){
 	g_camwindow_globals_private.m_showStats ^= 1;
-	g_show_stats.update();
+//	g_show_stats.update();
 	UpdateAllWindows();
 }
+typedef FreeCaller<void(), ShowStatsToggle> ShowStatsToggleCaller;
+void ShowStatsExport( const Callback<void(bool)> & importer ){
+	importer( g_camwindow_globals_private.m_showStats );
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowStatsExport> ShowStatsExportCaller;
+
+ShowStatsExportCaller g_show_stats_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
+ToggleItem g_show_stats( g_show_stats_callback );
 
 void CamWnd::Cam_Draw(){
 	glViewport( 0, 0, m_Camera.width, m_Camera.height );

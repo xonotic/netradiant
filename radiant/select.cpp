@@ -719,7 +719,8 @@ inline void hide_node( scene::Node& node, bool hide ){
 
 bool g_nodes_be_hidden = false;
 
-BoolExportCaller g_hidden_caller( g_nodes_be_hidden );
+ConstReferenceCaller<bool, void(const Callback<void(bool)> &), PropertyImpl<bool>::Export> g_hidden_caller( g_nodes_be_hidden );
+
 ToggleItem g_hidden_item( g_hidden_caller );
 
 class HideSelectedWalker : public scene::Graph::Walker
@@ -781,8 +782,8 @@ void Select_ShowAllHidden(){
 }
 
 void Hide_registerCommands(){
-	GlobalCommands_insert( "ShowHidden", FreeCaller<Select_ShowAllHidden>(), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalToggles_insert( "HideSelected", FreeCaller<HideSelected>(), ToggleItem::AddCallbackCaller( g_hidden_item ), Accelerator( 'H' ) );
+	GlobalCommands_insert( "ShowHidden", makeCallbackF( Select_ShowAllHidden ), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalToggles_insert( "HideSelected", makeCallbackF( HideSelected ), ToggleItem::AddCallbackCaller( g_hidden_item ), Accelerator( 'H' ) );
 }
 
 

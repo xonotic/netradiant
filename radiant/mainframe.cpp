@@ -2561,13 +2561,11 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 	space();
 
 	ComponentModes_constructToolbar( toolbar );
-	gtk_toolbar_append_space( toolbar );
 
 	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
 		space();
 
 		XYWnd_constructToolbar( toolbar );
-		gtk_toolbar_append_space( toolbar );
 	}
 
 	space();
@@ -2577,19 +2575,16 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 	space();
 
 	Manipulators_constructToolbar( toolbar );
-	gtk_toolbar_append_space( toolbar );
 
 	if ( g_Layout_enablePatchToolbar.m_value ) {
 		space();
 
 		Patch_constructToolbar( toolbar );
-		gtk_toolbar_append_space( toolbar );
 	}
 
 	space();
 
 	toolbar_append_toggle_button( toolbar, "Texture Lock (SHIFT + T)", "texture_lock.png", "TogTexLock" );
-	gtk_toolbar_append_space( toolbar );
 
 	space();
 
@@ -3417,8 +3412,7 @@ void Layout_constructPreferences( PreferencesPage& page ){
 		);
 	page.appendCheckBox(
 		"", "Main Toolbar",
-		LatchedBoolImportCaller( g_Layout_enableMainToolbar ),
-		BoolExportCaller( g_Layout_enableMainToolbar.m_latched )
+		make_property( g_Layout_enableMainToolbar )
 		);
 	if ( !string_empty( g_pGameDescription->getKeyValue( "no_patch" ) ) ) {
 		page.appendCheckBox(
