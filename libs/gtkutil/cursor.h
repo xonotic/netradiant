@@ -29,9 +29,11 @@
 typedef struct _GdkCursor GdkCursor;
 typedef struct _GdkEventMotion GdkEventMotion;
 
+#if 0
 GdkCursor* create_blank_cursor();
 void blank_cursor( ui::Widget widget );
 void default_cursor( ui::Widget widget );
+#endif
 void Sys_GetCursorPos( ui::Window window, int *x, int *y );
 void Sys_SetCursorPos( ui::Window window, int x, int y );
 
@@ -107,7 +109,8 @@ void motion_delta( int x, int y, unsigned int state ){
 class FreezePointer
 {
 unsigned int handle_motion;
-int recorded_x, recorded_y, last_x, last_y;
+int recorded_x, recorded_y, last_x, last_y, center_x, center_y;
+GtkWidget* weedjet;
 typedef void ( *MotionDeltaFunction )( int x, int y, unsigned int state, void* data );
 MotionDeltaFunction m_function;
 void* m_data;

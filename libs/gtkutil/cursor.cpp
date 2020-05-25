@@ -27,7 +27,7 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-
+#if 0
 GdkCursor* create_blank_cursor(){
 	return gdk_cursor_new(GDK_BLANK_CURSOR);
 }
@@ -41,6 +41,7 @@ void blank_cursor( ui::Widget widget ){
 void default_cursor( ui::Widget widget ){
 	gdk_window_set_cursor( gtk_widget_get_window(widget), 0 );
 }
+#endif
 
 
 void Sys_GetCursorPos( ui::Window window, int *x, int *y ){

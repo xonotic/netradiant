@@ -1041,7 +1041,7 @@ void DoTextEditor( const char* filename, int cursorpos, int length ){
 			ShellExecute( (HWND)GDK_WINDOW_HWND( gtk_widget_get_window( MainFrame_getWindow() ) ), "open", path.c_str(), 0, 0, SW_SHOW );
 		}
 		else{
-			globalOutputStream() << "Failed to open '" << filename << "\n";
+			globalOutputStream() << "Failed to open '" << filename << "'\nOne sits in .pk3 most likely!\n";
 		}
 		return;
 	}
@@ -1062,7 +1062,7 @@ void DoTextEditor( const char* filename, int cursorpos, int length ){
 			DoGtkTextEditor( path.c_str(), cursorpos, length );
 		}
 		else{
-			globalOutputStream() << "Failed to open '" << filename << "\n";
+			globalOutputStream() << "Failed to open '" << filename << "'\nOne sits in .pk3 most likely!\n";
 		}
 		return;
 	}

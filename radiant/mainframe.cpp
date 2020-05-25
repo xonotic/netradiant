@@ -3192,7 +3192,7 @@ void MainFrame::Create(){
 		vbox.pack_start( split, TRUE, TRUE, 0 );
 
 		{
-            auto frame = create_framed_widget( TextureBrowser_constructWindow( window ) );
+            auto frame = create_framed_widget( TextureBrowser_constructWindow( GroupDialog_getWindow() ) );
 			g_page_textures = GroupDialog_addPage( "Textures", frame, TextureBrowserExportTitleCaller() );
 #ifndef GARUX_GTK_WORKAROUND
 			/* workaround for gtk 2.24 issue: not displayed glwidget after toggle */
