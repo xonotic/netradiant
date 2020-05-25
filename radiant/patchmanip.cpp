@@ -378,6 +378,20 @@ void Scene_PatchGetShader_Selected( scene::Graph& graph, CopiedString& name ){
 	}
 }
 
+class PatchSelectByShader
+{
+const char* m_name;
+public:
+inline PatchSelectByShader( const char* name )
+	: m_name( name ){
+}
+void operator()( PatchInstance& patch ) const {
+	if ( shader_equal( patch.getPatch().GetShader(), m_name ) ) {
+		patch.setSelected( true );
+	}
+}
+};
+
 void Scene_PatchSelectByShader( scene::Graph& graph, const char* name ){
 	Scene_forEachVisiblePatchInstance([&](PatchInstance &patch) {
 		if (shader_equal(patch.getPatch().GetShader(), name)) {
@@ -387,20 +401,42 @@ void Scene_PatchSelectByShader( scene::Graph& graph, const char* name ){
 }
 
 
+class PatchFindReplaceShader
+{
+const char* m_find;
+const char* m_replace;
+public:
+PatchFindReplaceShader( const char* find, const char* replace ) : m_find( find ), m_replace( replace ){
+}
+void operator()( Patch& patch ) const {
+	if ( shader_equal( patch.GetShader(), m_find ) ) {
+		patch.SetShader( m_replace );
+	}
+}
+};
+
+namespace{
+bool DoingSearch( const char *repl ){
+	return ( repl == NULL || ( strcmp( "textures/", repl ) == 0 ) );
+}
+}
 void Scene_PatchFindReplaceShader( scene::Graph& graph, const char* find, const char* replace ){
-	Scene_forEachVisiblePatch([&](Patch &patch) {
-		if (shader_equal(patch.GetShader(), find)) {
-			patch.SetShader(replace);
-		}
-	});
+	if( DoingSearch( replace ) ){
+		Scene_forEachVisiblePatchInstance( PatchSelectByShader( find ) );
+	}
+	else{
+		Scene_forEachVisiblePatch( PatchFindReplaceShader( find, replace ) );
+	}
 }
 
 void Scene_PatchFindReplaceShader_Selected( scene::Graph& graph, const char* find, const char* replace ){
-	Scene_forEachVisibleSelectedPatch([&](Patch &patch) {
-		if (shader_equal(patch.GetShader(), find)) {
-			patch.SetShader(replace);
-		}
-	});
+	if( DoingSearch( replace ) ){
+		//do nothing, because alternative is replacing to notex
+		//perhaps deselect ones with not matching shaders here?
+	}
+	else{
+		Scene_forEachVisibleSelectedPatch( PatchFindReplaceShader( find, replace ) );
+	}
 }
 
 

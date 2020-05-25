@@ -13,7 +13,7 @@
 #include "gtkutil/accelerator.h"
 #include "generic/callback.h"
 
-
+#include "entity.h"
 int ToggleActions = 0;
 int ButtonNum = 0;
 
@@ -152,6 +152,16 @@ gboolean Trigger_button_press( ui::Widget widget, GdkEventButton *event, gpointe
 	return FALSE;
 }
 
+gboolean Func_Groups_button_press( GtkWidget *widget, GdkEventButton *event, gpointer data ){
+	if ( event->button == 3 && event->type == GDK_BUTTON_PRESS ) {
+		UndoableCommand undo( "create func_group" );
+		Entity_createFromSelection( "func_group", g_vector3_identity );
+		ToggleActions = 0;
+		return TRUE;
+	}
+	return FALSE;
+}
+
 
 gboolean Detail_button_press( ui::Widget widget, GdkEventButton *event, gpointer data ){
 	if ( event->button == 3 && event->type == GDK_BUTTON_PRESS ) {
@@ -200,14 +210,19 @@ ui::Toolbar create_filter_toolbar(){
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Detail_button_press ), 0 );
 			}
 
-			toolbar_append_toggle_button( filter_toolbar, "Patches (CTRL + P)", "patch_wireframe.png", "FilterPatches" );
+			{
+				auto button = toolbar_append_toggle_button( filter_toolbar, "Func_Groups\nRightClick: create func_group", "f-funcgroups.png", "FilterFuncGroups" );
+				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Func_Groups_button_press ), 0 );
+
+				toolbar_append_toggle_button( filter_toolbar, "Patches (CTRL + P)", "patch_wireframe.png", "FilterPatches" );
+			}
+
 			space();
 
 			{
 				auto button = toolbar_append_toggle_button( filter_toolbar, "Areaportals (ALT + 3)\nRightClick: toggle tex\n\tnoDraw\n\tnoDrawNonSolid", "f-areaportal.png", "FilterAreaportals" );
 				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Areaportals_button_press ), 0 );
 			}
-
 
 			toolbar_append_toggle_button( filter_toolbar, "Translucent (ALT + 4)", "f-translucent.png", "FilterTranslucent" );
 
@@ -232,7 +247,9 @@ ui::Toolbar create_filter_toolbar(){
 			}
 
 			//toolbar_append_toggle_button( filter_toolbar, "Paths (ALT + 8)", "texture_lock.png", "FilterPaths" );
+
 			space();
+
 			toolbar_append_toggle_button( filter_toolbar, "Entities (ALT + 2)", "f-entities.png", "FilterEntities" );
 			toolbar_append_toggle_button( filter_toolbar, "Lights (ALT + 0)", "f-lights.png", "FilterLights" );
 			toolbar_append_toggle_button( filter_toolbar, "Models (SHIFT + M)", "f-models.png", "FilterModels" );
@@ -245,6 +262,7 @@ ui::Toolbar create_filter_toolbar(){
 			//toolbar_append_toggle_button( filter_toolbar, "Decals (SHIFT + D)", "f-decals.png", "FilterDecals" );
 			space();
 			toolbar_append_button( filter_toolbar, "InvertFilters", "f-invert.png", "InvertFilters" );
+
 			toolbar_append_button( filter_toolbar, "ResetFilters", "f-reset.png", "ResetFilters" );
 			return filter_toolbar;
 }
