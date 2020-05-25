@@ -1681,6 +1681,7 @@ void TextureBrowser_constructTreeStore(){
 	TextureGroups groups = TextureGroups_constructTreeView();
 	auto store = ui::TreeStore::from(gtk_tree_store_new( 1, G_TYPE_STRING ));
 	TextureGroups_constructTreeModel( groups, store );
+	std::set<CopiedString>::iterator iter;
 
 	gtk_tree_view_set_model(g_TextureBrowser.m_treeViewTree, store);
 
@@ -1688,7 +1689,7 @@ void TextureBrowser_constructTreeStore(){
 }
 
 void TextureBrowser_constructTreeStoreTags(){
-	TextureGroups groups;
+	//TextureGroups groups;
 	auto store = ui::TreeStore::from(gtk_tree_store_new( 1, G_TYPE_STRING ));
     auto model = g_TextureBrowser.m_all_tags_list;
 

@@ -211,6 +211,7 @@ void BuildMonitor_Construct(){
 
 void BuildMonitor_Destroy(){
 	delete g_pWatchBSP;
+	g_pWatchBSP = NULL;
 }
 
 CWatchBSP *GetWatchBSP(){

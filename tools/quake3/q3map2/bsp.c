@@ -349,7 +349,7 @@ void ProcessWorldModel( const char *portalFilePath, const char *lineFilePath ){
 		Sys_FPrintf( SYS_NOXML, "**********************\n" );
 		polyline = LeakFile( tree, lineFilePath );
 		leaknode = xmlNewNode( NULL, (xmlChar*)"message" );
-		xmlNodeSetContent( leaknode, (xmlChar*)"MAP LEAKED\n" );
+		xmlNodeAddContent( leaknode, (xmlChar*)"MAP LEAKED\n" );
 		xmlAddChild( leaknode, polyline );
 		level[0] = (int) '0' + SYS_ERR;
 		level[1] = 0;
