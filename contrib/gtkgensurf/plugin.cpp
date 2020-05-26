@@ -17,6 +17,8 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <uilib/uilib.h>
+
 #include "gensurf.h"
 
 // Global plugin FuncTable
@@ -32,7 +34,7 @@ bool g_bInitDone;
 #include "iplugin.h"
 
 const char* QERPlug_Init( void* hApp, void* pMainWidget ){
-	g_pRadiantWnd = (GtkWidget*)pMainWidget;
+	g_pRadiantWnd = ui::Window::from(pMainWidget);
 
 	return "GenSurf for Q3Radiant";
 }

@@ -22,4 +22,8 @@
 #if !defined( INCLUDED_BRUSH_EXPORT_H )
 #define INCLUDED_BRUSH_EXPORT_H
 
+#include <uilib/uilib.h>
+
+extern ui::Widget g_pRadiantWnd;
+
 #endif

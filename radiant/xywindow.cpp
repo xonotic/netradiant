@@ -353,7 +353,7 @@ struct xywindow_globals_private_t
 	bool show_blocks;
 	int blockSize;
 
-	bool m_bCamXYUpdate;
+//	bool m_bCamXYUpdate;
 	bool m_bChaseMouse;
 	bool m_bSizePaint;
 
@@ -372,7 +372,7 @@ struct xywindow_globals_private_t
 
 		show_blocks( false ),
 
-		m_bCamXYUpdate( true ),
+//		m_bCamXYUpdate( true ),
 		m_bChaseMouse( true ),
 		m_bSizePaint( true ),
 
@@ -824,10 +824,10 @@ gboolean xywnd_expose( ui::Widget widget, GdkEventExpose* event, XYWnd* xywnd ){
 
 
 void XYWnd_CameraMoved( XYWnd& xywnd ){
-	if ( g_xywindow_globals_private.m_bCamXYUpdate ) {
+//	if ( g_xywindow_globals_private.m_bCamXYUpdate ) {
 		//XYWnd_Update( xywnd );
 		xywnd.UpdateCameraIcon();
-	}
+//	}
 }
 
 XYWnd::XYWnd() :
@@ -1015,7 +1015,8 @@ void XYWnd::SetCustomPivotOrigin( int pointx, int pointy ){
 }
 
 unsigned int MoveCamera_buttons(){
-	return RAD_CONTROL | ( g_glwindow_globals.m_nMouseType == ETwoButton ? RAD_RBUTTON : RAD_MBUTTON );
+//	return RAD_CONTROL | ( g_glwindow_globals.m_nMouseType == ETwoButton ? RAD_RBUTTON : RAD_MBUTTON );
+	return RAD_CONTROL | RAD_MBUTTON;
 }
 
 void XYWnd_PositionCamera( XYWnd* xywnd, int x, int y, CamWnd& camwnd ){
@@ -1026,16 +1027,17 @@ void XYWnd_PositionCamera( XYWnd* xywnd, int x, int y, CamWnd& camwnd ){
 }
 
 unsigned int OrientCamera_buttons(){
-	if ( g_glwindow_globals.m_nMouseType == ETwoButton ) {
-		return RAD_RBUTTON | RAD_SHIFT | RAD_CONTROL;
-	}
+//	if ( g_glwindow_globals.m_nMouseType == ETwoButton ) {
+//		return RAD_RBUTTON | RAD_SHIFT | RAD_CONTROL;
+//	}
 	return RAD_MBUTTON;
 }
 
 void XYWnd_OrientCamera( XYWnd* xywnd, int x, int y, CamWnd& camwnd ){
+	//globalOutputStream() << Camera_getAngles( camwnd ) << "  b4\n";
 	Vector3 point = g_vector3_identity;
 	xywnd->XY_ToPoint( x, y, point );
-	xywnd->XY_SnapToGrid( point );
+	//xywnd->XY_SnapToGrid( point );
 	vector3_subtract( point, Camera_getOrigin( camwnd ) );
 
 	int n1 = ( xywnd->GetViewType() == XY ) ? 1 : 2;
@@ -1044,8 +1046,34 @@ void XYWnd_OrientCamera( XYWnd* xywnd, int x, int y, CamWnd& camwnd ){
 	if ( point[n1] || point[n2] ) {
 		Vector3 angles( Camera_getAngles( camwnd ) );
 		angles[nAngle] = static_cast<float>( radians_to_degrees( atan2( point[n1], point[n2] ) ) );
+		if( angles[CAMERA_YAW] < 0 )
+			angles[CAMERA_YAW] = angles[CAMERA_YAW] + 360;
+		if ( nAngle == CAMERA_PITCH ){
+			if( fabs( angles[CAMERA_PITCH] ) > 90 ){
+				angles[CAMERA_PITCH] = ( angles[CAMERA_PITCH] > 0 ) ? ( -angles[CAMERA_PITCH] + 180 ) : ( -angles[CAMERA_PITCH] - 180 );
+				if( xywnd->GetViewType() == YZ ){
+					if( angles[CAMERA_YAW] < 180 ){
+						angles[CAMERA_YAW] = 360 - angles[CAMERA_YAW];
+					}
+				}
+				else if( angles[CAMERA_YAW] < 90 || angles[CAMERA_YAW] > 270 ){
+					angles[CAMERA_YAW] = 180 - angles[CAMERA_YAW];
+				}
+			}
+			else{
+				if( xywnd->GetViewType() == YZ ){
+					if( angles[CAMERA_YAW] > 180 ){
+						angles[CAMERA_YAW] = 360 - angles[CAMERA_YAW];
+					}
+				}
+				else if( angles[CAMERA_YAW] > 90 && angles[CAMERA_YAW] < 270 ){
+					angles[CAMERA_YAW] = 180 - angles[CAMERA_YAW];
+				}
+			}
+		}
 		Camera_setAngles( camwnd, angles );
 	}
+	//globalOutputStream() << Camera_getAngles( camwnd ) << "\n";
 }
 
 unsigned int SetCustomPivotOrigin_buttons(){
@@ -1212,9 +1240,9 @@ void addItem( const char* name, const char* next ){
 };
 
 void XYWnd::OnContextMenu(){
-	if ( g_xywindow_globals.m_bRightClick == false ) {
-		return;
-	}
+//	if ( g_xywindow_globals.m_bRightClick == false ) {
+//		return;
+//	}
 
 	if ( !m_mnuDrop ) { // first time, load it up
 		auto menu = m_mnuDrop = ui::Menu(ui::New);
@@ -1410,12 +1438,12 @@ void XYWnd::XY_MouseMoved( int x, int y, unsigned int buttons ){
 	}
 
 	// control mbutton = move camera
-	else if ( getButtonState() == MoveCamera_buttons() ) {
+	else if ( buttons == MoveCamera_buttons() ) {
 		XYWnd_PositionCamera( this, x, y, *g_pParentWnd->GetCamWnd() );
 	}
 
 	// mbutton = angle camera
-	else if ( getButtonState() == OrientCamera_buttons() ) {
+	else if ( buttons == OrientCamera_buttons() ) {
 		XYWnd_OrientCamera( this, x, y, *g_pParentWnd->GetCamWnd() );
 	}
 
@@ -2042,6 +2070,7 @@ void XYWnd::XY_DrawBlockGrid(){
 void XYWnd::DrawCameraIcon( const Vector3& origin, const Vector3& angles ){
 	Cam.fov = 48 / m_fScale;
 	Cam.box = 16 / m_fScale;
+//	globalOutputStream() << "pitch " << angles[CAMERA_PITCH] << "   yaw " << angles[CAMERA_YAW] << "\n";
 
 	if ( m_viewType == XY ) {
 		Cam.x = origin[0];
@@ -2051,13 +2080,13 @@ void XYWnd::DrawCameraIcon( const Vector3& origin, const Vector3& angles ){
 	else if ( m_viewType == YZ ) {
 		Cam.x = origin[1];
 		Cam.y = origin[2];
-		Cam.a = degrees_to_radians( angles[CAMERA_PITCH] );
+		Cam.a = degrees_to_radians( ( angles[CAMERA_YAW] > 180 ) ? ( 180.0f - angles[CAMERA_PITCH] ) : angles[CAMERA_PITCH] );
 	}
 	else
 	{
 		Cam.x = origin[0];
 		Cam.y = origin[2];
-		Cam.a = degrees_to_radians( angles[CAMERA_PITCH] );
+		Cam.a = degrees_to_radians( ( angles[CAMERA_YAW] < 270 && angles[CAMERA_YAW] > 90 ) ? ( 180.0f - angles[CAMERA_PITCH] ) : angles[CAMERA_PITCH] );
 	}
 
 	//glColor3f( 0.0, 0.0, 1.0 );
@@ -3021,7 +3050,7 @@ void Orthographic_constructPreferences( PreferencesPage& page ){
 	page.appendCheckBox( "", "Solid selection boxes ( no stipple )", g_xywindow_globals.m_bNoStipple );
 	//page.appendCheckBox( "", "Display size info", g_xywindow_globals_private.m_bSizePaint );
 	page.appendCheckBox( "", "Chase mouse during drags", g_xywindow_globals_private.m_bChaseMouse );
-	page.appendCheckBox( "", "Update views on camera move", g_xywindow_globals_private.m_bCamXYUpdate );
+//	page.appendCheckBox( "", "Update views on camera move", g_xywindow_globals_private.m_bCamXYUpdate );
 }
 void Orthographic_constructPage( PreferenceGroup& group ){
 	PreferencesPage page( group.createPage( "Orthographic", "Orthographic View Preferences" ) );
@@ -3077,7 +3106,7 @@ void XYWindow_Construct(){
 
 	GlobalPreferenceSystem().registerPreference( "ClipCaulk", make_property_string( g_clip_useCaulk ) );
 
-	GlobalPreferenceSystem().registerPreference( "NewRightClick", make_property_string( g_xywindow_globals.m_bRightClick ) );
+//	GlobalPreferenceSystem().registerPreference( "NewRightClick", make_property_string( g_xywindow_globals.m_bRightClick ) );
 	GlobalPreferenceSystem().registerPreference( "ImprovedWheelZoom", make_property_string( g_xywindow_globals.m_bImprovedWheelZoom ) );
 	GlobalPreferenceSystem().registerPreference( "ChaseMouse", make_property_string( g_xywindow_globals_private.m_bChaseMouse ) );
 	GlobalPreferenceSystem().registerPreference( "SizePainting", make_property_string( g_xywindow_globals_private.m_bSizePaint ) );
@@ -3086,7 +3115,7 @@ void XYWindow_Construct(){
 	GlobalPreferenceSystem().registerPreference( "SI_ShowCoords", make_property_string( g_xywindow_globals_private.show_coordinates ) );
 	GlobalPreferenceSystem().registerPreference( "SI_ShowOutlines", make_property_string( g_xywindow_globals_private.show_outline ) );
 	GlobalPreferenceSystem().registerPreference( "SI_ShowAxis", make_property_string( g_xywindow_globals_private.show_axis ) );
-	GlobalPreferenceSystem().registerPreference( "CamXYUpdate", make_property_string( g_xywindow_globals_private.m_bCamXYUpdate ) );
+//	GlobalPreferenceSystem().registerPreference( "CamXYUpdate", make_property_string( g_xywindow_globals_private.m_bCamXYUpdate ) );
 	GlobalPreferenceSystem().registerPreference( "ShowWorkzone", make_property_string( g_xywindow_globals_private.d_show_work ) );
 
 	GlobalPreferenceSystem().registerPreference( "SI_AxisColors0", make_property_string( g_xywindow_globals.AxisColorX ) );

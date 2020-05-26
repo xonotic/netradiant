@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <uilib/uilib.h>
+
 #include "profile/profile.h"
 
 #include "qerplugin.h"
@@ -201,8 +203,10 @@ static const char *PLUGIN_COMMANDS =
 	Q3R_CMD_LOAD;
 
 
+ui::Widget g_pRadiantWnd{ui::null};
 
 const char* QERPlug_Init( void *hApp, void* pMainWidget ){
+	g_pRadiantWnd = ui::Window::from(pMainWidget);
 	return "Portal Viewer for Q3Radiant";
 }
 

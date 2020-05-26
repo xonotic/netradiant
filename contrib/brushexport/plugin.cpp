@@ -47,12 +47,15 @@ void CreateWindow( void );
 void DestroyWindow( void );
 bool IsWindowOpen( void );
 
+ui::Widget g_pRadiantWnd{ui::null};
+
 namespace BrushExport
 {
 ui::Window g_mainwnd{ui::null};
 
 const char* init( void* hApp, void* pMainWidget ){
 	g_mainwnd = ui::Window::from(pMainWidget);
+	g_pRadiantWnd = ui::Window::from(pMainWidget);
 	ASSERT_TRUE( g_mainwnd );
 	return "";
 }

@@ -20,6 +20,8 @@
 #if !defined( INCLUDED_PRTVIEW_H )
 #define INCLUDED_PRTVIEW_H
 
+#include <uilib/uilib.h>
+
 #define MSG_PREFIX "Portal Viewer plugin: "
 
 void InitInstance();
@@ -28,8 +30,9 @@ void SaveConfig();
 int INIGetInt( const char *key, int def );
 void INISetInt( const char *key, int val, const char *comment = 0 );
 
+extern ui::Widget g_pRadiantWnd;
+
 const int IDOK                = 1;
 const int IDCANCEL            = 2;
-
 
 #endif

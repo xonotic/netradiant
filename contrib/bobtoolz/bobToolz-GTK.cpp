@@ -34,6 +34,8 @@
 #include "dialogs/dialogs-gtk.h"
 #include "../../libs/cmdlib.h"
 
+#include "bobToolz-GTK.h"
+
 void BobToolz_construct(){
 }
 
@@ -61,9 +63,6 @@ const char* PLUGIN_NAME = "bobToolz";
 
 // commands in the menu
 static const char* PLUGIN_COMMANDS = "About...,-,Reset Textures...,PitOMatic,-,Vis Viewer,Brush Cleanup,Polygon Builder,Caulk Selection,-,Tree Planter,Drop Entity,Plot Splines,-,Merge Patches,Split patches,Split patches cols,Split patches rows,Turn edge";
-
-// globals
-ui::Window g_pRadiantWnd{ui::null};
 
 static const char *PLUGIN_ABOUT =   "bobToolz for SDRadiant\n"
 									"by digibob (digibob@splashdamage.com)\n"

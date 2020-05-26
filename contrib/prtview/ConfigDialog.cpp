@@ -58,6 +58,10 @@ static int DoColor( PackedColour *c ){
 	clr.green = (guint16) (GetBValue(*c) * (65535 / 255));
 
 	auto dlg = ui::Widget::from(gtk_color_selection_dialog_new( "Choose Color" ));
+
+	gtk_window_set_transient_for( GTK_WINDOW( dlg ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_position( GTK_WINDOW( dlg ),GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_modal( GTK_WINDOW( dlg ), TRUE );
 	gtk_color_selection_set_current_color( GTK_COLOR_SELECTION( gtk_color_selection_dialog_get_color_selection(GTK_COLOR_SELECTION_DIALOG(dlg)) ), &clr );
 	dlg.connect( "delete_event", G_CALLBACK( dialog_delete_callback ), NULL );
 	dlg.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
@@ -237,6 +241,11 @@ void DoConfigDialog(){
 	int loop = 1, ret = IDCANCEL;
 
 	auto dlg = ui::Window( ui::window_type::TOP );
+
+	gtk_window_set_transient_for( GTK_WINDOW( dlg ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_position( GTK_WINDOW( dlg ),GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_modal( GTK_WINDOW( dlg ), TRUE );
+
 	gtk_window_set_title( dlg, "Portal Viewer Configuration" );
 	dlg.connect( "delete_event",
 						G_CALLBACK( dialog_delete_callback ), NULL );
