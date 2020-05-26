@@ -2084,6 +2084,9 @@ int main( int argc, char **argv ){
 	double start, end;
 	extern qboolean werror;
 
+#ifdef WIN32
+	_setmaxstdio(2048);
+#endif
 
 	/* we want consistent 'randomness' */
 	srand( 0 );
