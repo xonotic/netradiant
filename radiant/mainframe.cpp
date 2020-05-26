@@ -2891,6 +2891,13 @@ ui::Window create_splash(){
 	image.show();
 	window.add(image);
 
+	if( gtk_image_get_storage_type( image ) == GTK_IMAGE_PIXBUF ){
+		GdkBitmap* mask;
+		GdkPixbuf* pix = gtk_image_get_pixbuf( image );
+		gdk_pixbuf_render_pixmap_and_mask( pix, NULL, &mask, 255 );
+		gtk_widget_shape_combine_mask ( GTK_WIDGET( window ), mask, 0, 0 );
+	}
+
 	window.dimensions(-1, -1);
 	window.show();
 

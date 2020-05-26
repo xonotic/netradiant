@@ -476,12 +476,12 @@ void DoAbout(){
                 auto vbox2 = create_dialog_vbox( 4 );
 				hbox.pack_start( vbox2, TRUE, FALSE, 0 );
 				{
-					auto frame = create_dialog_frame( 0, ui::Shadow::IN );
-					vbox2.pack_start( frame, FALSE, FALSE, 0 );
+					//auto frame = create_dialog_frame( 0, ui::Shadow::IN );
+					//vbox2.pack_start( frame, FALSE, FALSE, 0 );
 					{
 						auto image = new_local_image( "logo.png" );
 						image.show();
-						frame.add(image);
+						//frame.add(image);
 					}
 				}
 			}
