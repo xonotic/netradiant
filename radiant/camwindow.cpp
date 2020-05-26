@@ -93,7 +93,7 @@ struct camwindow_globals_private_t
 		m_bCamDiscrete( true ),
 		m_bCubicClipping( false ),
 		m_showStats( true ),
-		m_nStrafeMode( 0 ){
+		m_nStrafeMode( 3 ){
 	}
 
 };
@@ -145,6 +145,7 @@ struct camera_t
 
 	bool m_strafe; // true when in strafemode toggled by the ctrl-key
 	bool m_strafe_forward; // true when in strafemode by ctrl-key and shift is pressed for forward strafing
+	bool m_strafe_forward_invert; //silly option to invert forward strafing to support old fegs
 
 	unsigned int movementflags; // movement flags
 	Timer m_keycontrol_timer;
@@ -283,7 +284,7 @@ void Camera_FreeMove( camera_t& camera, int dx, int dy ){
 
 		camera.origin -= camera.vright * strafespeed * dx;
 		if ( camera.m_strafe_forward ) {
-			camera.origin -= camera.vpn * strafespeed * dy;
+			camera.origin += camera.m_strafe_forward_invert ? ( camera.vpn * strafespeed * dy ) : ( -camera.vpn * strafespeed * dy );
 		}
 		else{
 			camera.origin += camera.vup * strafespeed * dy;
@@ -623,16 +624,12 @@ void Camera_motionDelta( int x, int y, unsigned int state, void* data ){
 
 	cam->m_mouseMove.motion_delta( x, y, state );
 
+	cam->m_strafe_forward_invert = false;
+
 	switch ( g_camwindow_globals_private.m_nStrafeMode )
 	{
 	case 0:
-		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0;
-		if ( cam->m_strafe ) {
-			cam->m_strafe_forward = ( state & GDK_SHIFT_MASK ) != 0;
-		}
-		else{
-			cam->m_strafe_forward = false;
-		}
+		cam->m_strafe = false;
 		break;
 	case 1:
 		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0 && ( state & GDK_SHIFT_MASK ) == 0;
@@ -642,8 +639,23 @@ void Camera_motionDelta( int x, int y, unsigned int state, void* data ){
 		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0 && ( state & GDK_SHIFT_MASK ) == 0;
 		cam->m_strafe_forward = cam->m_strafe;
 		break;
+	case 4:
+		cam->m_strafe_forward_invert = true;
+	default:
+		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0;
+		if ( cam->m_strafe ) {
+			cam->m_strafe_forward = ( state & GDK_SHIFT_MASK ) != 0;
+		}
+		else{
+			cam->m_strafe_forward = false;
+		}
+		break;
 	}
 }
+
+
+
+
 
 class CamWnd
 {
@@ -1916,7 +1928,7 @@ void Camera_constructPreferences( PreferencesPage& page ){
 			);
 	}
 
-	const char* strafe_mode[] = { "Both", "Forward", "Up" };
+	const char* strafe_mode[] = { "None", "Up", "Forward", "Both", "Both Inverted" };
 
 	page.appendCombo(
 		"Strafe Mode",

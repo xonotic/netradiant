@@ -381,9 +381,9 @@ void Transform( const Matrix4& manip2object, const Matrix4& device2manip, const 
 		float grid = GetSnapGridSize();
 		Vector3 maxs( m_bounds.origin + m_bounds.extents );
 		Vector3 mins( m_bounds.origin - m_bounds.extents );
-//		globalOutputStream() << "current: " << current << "\n";
+		//globalOutputStream() << "current: " << current << "\n";
 		for( std::size_t i = 0; i < 3; ++i ){
-			if( current[i] != 0.f ){
+			if( fabs( current[i] ) > 0.000001f ){
 				float snapto1 = float_snapped( maxs[i] + current[i] , grid );
 				float snapto2 = float_snapped( mins[i] + current[i] , grid );
 
@@ -2643,6 +2643,7 @@ std::list<Selectable*>& best(){
 };
 
 bool g_bAltDragManipulatorResize = false;
+bool g_bTmpComponentMode = false;
 
 class DragManipulator : public Manipulator
 {
@@ -2729,6 +2730,7 @@ void testSelect( const View& view, const Matrix4& pivot2world ){
 	{
 		( *i ).second->setSelected( true );
 	}
+	g_bTmpComponentMode = m_selected;
 }
 
 void setSelected( bool select ){
@@ -3681,6 +3683,7 @@ void RadiantSelectionSystem::endMove(){
 
 	if ( Mode() == ePrimitive ) {
 		if ( ManipulatorMode() == eDrag ) {
+			g_bTmpComponentMode = false;
 			if( g_bAltDragManipulatorResize ){
 				Scene_SelectAll_Component( false, SelectionSystem::eVertex );
 			}
@@ -3927,7 +3930,7 @@ void RadiantSelectionSystem::setCustomPivotOrigin( Vector3& point ) const {
 AABB RadiantSelectionSystem::getSelectionAABB() const {
 	AABB bounds;
 	if ( !nothingSelected() ) {
-		if ( Mode() == eComponent ) {
+		if ( Mode() == eComponent || g_bTmpComponentMode ) {
 			Scene_BoundsSelectedComponent( GlobalSceneGraph(), bounds );
 		}
 		else
