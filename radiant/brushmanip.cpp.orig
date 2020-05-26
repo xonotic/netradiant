@@ -429,6 +429,20 @@ void Scene_BrushSetTexdef_Component_Selected( scene::Graph& graph, const Texture
 }
 
 
+<<<<<<< HEAD
+=======
+class FaceSetFlags
+{
+const ContentsFlagsValue& m_flags;
+public:
+FaceSetFlags( const ContentsFlagsValue& flags ) : m_flags( flags ){
+}
+void operator()( Face& face ) const {
+	face.SetFlags( m_flags );
+}
+};
+
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 void Scene_BrushSetFlags_Selected( scene::Graph& graph, const ContentsFlagsValue& flags ){
 	Scene_ForEachSelectedBrush_ForEachFace(graph, [&](Face &face) {
 		face.SetFlags(flags);

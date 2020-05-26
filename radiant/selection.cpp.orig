@@ -4056,7 +4056,10 @@ void mouseUp( DeviceVector position ){
 	g_mouseMovedCallback.clear();
 	g_mouseUpCallback.clear();
 }
+<<<<<<< HEAD
 typedef MemberCaller<Manipulator_, void(DeviceVector), &Manipulator_::mouseUp> MouseUpCaller;
+=======
+typedef MemberCaller1<Manipulator_, DeviceVector, &Manipulator_::mouseUp> MouseUpCaller;
 
 void setState( ModifierFlags state ){
 	m_state = state;
@@ -4072,6 +4075,7 @@ void modifierEnable( ModifierFlags type ){
 void modifierDisable( ModifierFlags type ){
 	setState( bitfield_disable( getState(), type ) );
 }
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 };
 
 void Scene_copyClosestTexture( SelectionTest& test );

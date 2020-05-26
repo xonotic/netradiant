@@ -334,7 +334,10 @@ bool m_move_started;
 int m_uniformTextureSize;
 int m_uniformTextureMinSize;
 
+<<<<<<< HEAD
+=======
 bool m_hideNonShadersInCommon;
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 // Return the display width of a texture in the texture browser
 void getTextureWH( qtexture_t* tex, int &W, int &H ){
 		// Don't use uniform size
@@ -534,7 +537,8 @@ bool TextureSearch_IsShown( const char* name ){
 }
 
 // if texture_showinuse jump over non in-use textures
-bool Texture_IsShown( IShader* shader, bool show_shaders, bool show_textures, bool hideUnused, bool hideNonShadersInCommon ){
+<<<<<<< HEAD
+bool Texture_IsShown( IShader* shader, bool show_shaders, bool show_textures, bool hideUnused ){
 	// filter missing shaders
 	// ugly: filter on built-in fallback name after substitution
 	if ( g_TextureBrowser_filterMissing ) {
@@ -550,6 +554,12 @@ bool Texture_IsShown( IShader* shader, bool show_shaders, bool show_textures, bo
 		if ( isNotex( shader->getTexture()->name ) ) {
 			return false;
 		}
+=======
+bool Texture_IsShown( IShader* shader, bool show_shaders, bool show_textures, bool hideUnused, bool hideNonShadersInCommon ){
+	// filter notex / shadernotex images
+	if ( g_TextureBrowser_filterNotex && ( string_equal( g_notex.c_str(), shader->getTexture()->name ) || string_equal( g_shadernotex.c_str(), shader->getTexture()->name ) ) ) {
+		return false;
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 	}
 
 	if ( g_TextureBrowser_currentDirectory == "Untagged" ) {
@@ -2843,6 +2853,7 @@ void TextureBrowser_registerPreferencesPage(){
 void TextureClipboard_textureSelected( const char* shader );
 
 void TextureBrowser_Construct(){
+<<<<<<< HEAD
 	GlobalCommands_insert( "ShaderInfo", makeCallbackF(TextureBrowser_shaderInfo) );
 	GlobalCommands_insert( "ShowUntagged", makeCallbackF(TextureBrowser_showUntagged) );
 	GlobalCommands_insert( "AddTag", makeCallbackF(TextureBrowser_addTag) );
@@ -2876,7 +2887,50 @@ void TextureBrowser_Construct(){
 	GlobalPreferenceSystem().registerPreference( "LoadShaders", make_property_string( reinterpret_cast<int&>( GlobalTextureBrowser().m_startupShaders ) ) );
 	GlobalPreferenceSystem().registerPreference( "WheelMouseInc", make_property_string( GlobalTextureBrowser().m_mouseWheelScrollIncrement ) );
 	GlobalPreferenceSystem().registerPreference( "SI_Colors0", make_property_string( GlobalTextureBrowser().color_textureback ) );
-	GlobalPreferenceSystem().registerPreference( "HideNonShadersInCommon", make_property_string( GlobalTextureBrowser().m_hideNonShadersInCommon ) );
+=======
+	GlobalCommands_insert( "ShaderInfo", FreeCaller<TextureBrowser_shaderInfo>() );
+	GlobalCommands_insert( "ShowUntagged", FreeCaller<TextureBrowser_showUntagged>() );
+	GlobalCommands_insert( "AddTag", FreeCaller<TextureBrowser_addTag>() );
+	GlobalCommands_insert( "RenameTag", FreeCaller<TextureBrowser_renameTag>() );
+	GlobalCommands_insert( "DeleteTag", FreeCaller<TextureBrowser_deleteTag>() );
+	GlobalCommands_insert( "CopyTag", FreeCaller<TextureBrowser_copyTag>() );
+	GlobalCommands_insert( "PasteTag", FreeCaller<TextureBrowser_pasteTag>() );
+	GlobalCommands_insert( "RefreshShaders", FreeCaller<RefreshShaders>() );
+	GlobalToggles_insert( "ShowInUse", FreeCaller<TextureBrowser_ToggleHideUnused>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_hideunused_item ), Accelerator( 'U' ) );
+	GlobalCommands_insert( "ShowAllTextures", FreeCaller<TextureBrowser_showAll>(), Accelerator( 'A', (GdkModifierType)GDK_CONTROL_MASK ) );
+	GlobalCommands_insert( "ToggleTextures", FreeCaller<TextureBrowser_toggleShow>(), Accelerator( 'T' ) );
+	GlobalToggles_insert( "ToggleShowShaders", FreeCaller<TextureBrowser_ToggleShowShaders>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_showshaders_item ) );
+	GlobalToggles_insert( "ToggleShowTextures", FreeCaller<TextureBrowser_ToggleShowTextures>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_showtextures_item ) );
+	GlobalToggles_insert( "ToggleShowShaderlistOnly", FreeCaller<TextureBrowser_ToggleShowShaderListOnly>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_showshaderlistonly_item ) );
+	GlobalToggles_insert( "FixedSize", FreeCaller<TextureBrowser_FixedSize>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_fixedsize_item ) );
+	GlobalToggles_insert( "FilterNotex", FreeCaller<TextureBrowser_FilterNotex>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_filternotex_item ) );
+	GlobalToggles_insert( "EnableAlpha", FreeCaller<TextureBrowser_EnableAlpha>(), ToggleItem::AddCallbackCaller( g_TextureBrowser.m_enablealpha_item ) );
+
+	GlobalPreferenceSystem().registerPreference( "TextureScale",
+												 makeSizeStringImportCallback( TextureBrowserSetScaleCaller( g_TextureBrowser ) ),
+												 SizeExportStringCaller( g_TextureBrowser.m_textureScale )
+												 );
+	GlobalPreferenceSystem().registerPreference( "UniformTextureSize",
+												makeIntStringImportCallback(UniformTextureSizeImportCaller(g_TextureBrowser)),
+												IntExportStringCaller(g_TextureBrowser.m_uniformTextureSize) );
+	GlobalPreferenceSystem().registerPreference( "UniformTextureMinSize",
+												makeIntStringImportCallback(UniformTextureMinSizeImportCaller(g_TextureBrowser)),
+												IntExportStringCaller(g_TextureBrowser.m_uniformTextureMinSize) );
+	GlobalPreferenceSystem().registerPreference( "TextureScrollbar",
+												 makeBoolStringImportCallback( TextureBrowserImportShowScrollbarCaller( g_TextureBrowser ) ),
+												 BoolExportStringCaller( GlobalTextureBrowser().m_showTextureScrollbar )
+												 );
+	GlobalPreferenceSystem().registerPreference( "ShowShaders", BoolImportStringCaller( GlobalTextureBrowser().m_showShaders ), BoolExportStringCaller( GlobalTextureBrowser().m_showShaders ) );
+	GlobalPreferenceSystem().registerPreference( "ShowTextures", BoolImportStringCaller( GlobalTextureBrowser().m_showTextures ), BoolExportStringCaller( GlobalTextureBrowser().m_showTextures ) );
+	GlobalPreferenceSystem().registerPreference( "ShowShaderlistOnly", BoolImportStringCaller( g_TextureBrowser_shaderlistOnly ), BoolExportStringCaller( g_TextureBrowser_shaderlistOnly ) );
+	GlobalPreferenceSystem().registerPreference( "FixedSize", BoolImportStringCaller( g_TextureBrowser_fixedSize ), BoolExportStringCaller( g_TextureBrowser_fixedSize ) );
+	GlobalPreferenceSystem().registerPreference( "FilterNotex", BoolImportStringCaller( g_TextureBrowser_filterNotex ), BoolExportStringCaller( g_TextureBrowser_filterNotex ) );
+	GlobalPreferenceSystem().registerPreference( "EnableAlpha", BoolImportStringCaller( g_TextureBrowser_enableAlpha ), BoolExportStringCaller( g_TextureBrowser_enableAlpha ) );
+	GlobalPreferenceSystem().registerPreference( "LoadShaders", IntImportStringCaller( reinterpret_cast<int&>( GlobalTextureBrowser().m_startupShaders ) ), IntExportStringCaller( reinterpret_cast<int&>( GlobalTextureBrowser().m_startupShaders ) ) );
+	GlobalPreferenceSystem().registerPreference( "WheelMouseInc", SizeImportStringCaller( GlobalTextureBrowser().m_mouseWheelScrollIncrement ), SizeExportStringCaller( GlobalTextureBrowser().m_mouseWheelScrollIncrement ) );
+	GlobalPreferenceSystem().registerPreference( "SI_Colors0", Vector3ImportStringCaller( GlobalTextureBrowser().color_textureback ), Vector3ExportStringCaller( GlobalTextureBrowser().color_textureback ) );
+	GlobalPreferenceSystem().registerPreference( "HideNonShadersInCommon", BoolImportStringCaller( GlobalTextureBrowser().m_hideNonShadersInCommon ), BoolExportStringCaller( GlobalTextureBrowser().m_hideNonShadersInCommon ) );
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 
 	g_TextureBrowser.shader = texdef_name_default();
 

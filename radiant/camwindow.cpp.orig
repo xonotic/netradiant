@@ -322,8 +322,22 @@ void Camera_FreeMove( camera_t& camera, int dx, int dy ){
 }
 
 void Cam_MouseControl( camera_t& camera, int x, int y ){
+<<<<<<< HEAD
 	float xf = (float)( x - camera.width / 2 ) / ( camera.width / 2 );
 	float yf = (float)( y - camera.height / 2 ) / ( camera.height / 2 );
+=======
+//	int xl, xh;
+//	int yl, yh;
+	float xf, yf;
+
+	xf = (float)( x - camera.width / 2 ) / ( camera.width / 2 );
+	yf = (float)( y - camera.height / 2 ) / ( camera.height / 2 );
+
+//	xl = camera.width / 3;
+//	xh = xl * 2;
+//	yl = camera.height / 3;
+//	yh = yl * 2;
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 
 	xf *= 1.0f - fabsf( yf );
 	if ( xf < 0 ) {
@@ -908,48 +922,104 @@ void KeyEvent_disconnect( const char* name ){
 }
 
 void CamWnd_registerCommands( CamWnd& camwnd ){
-	GlobalKeyEvents_insert( "CameraForward", accelerator_null(),
+<<<<<<< HEAD
+	GlobalKeyEvents_insert( "CameraForward", Accelerator( GDK_KEY_Up ),
 							ReferenceCaller<camera_t, void(), Camera_MoveForward_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveForward_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraBack", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraBack", Accelerator( GDK_KEY_Down ),
 							ReferenceCaller<camera_t, void(), Camera_MoveBack_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveBack_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraLeft", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraLeft", Accelerator( GDK_KEY_Left ),
 							ReferenceCaller<camera_t, void(), Camera_RotateLeft_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_RotateLeft_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraRight", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraRight", Accelerator( GDK_KEY_Right ),
 							ReferenceCaller<camera_t, void(), Camera_RotateRight_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_RotateRight_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraStrafeRight", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraStrafeRight", Accelerator( GDK_KEY_period ),
 							ReferenceCaller<camera_t, void(), Camera_MoveRight_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveRight_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraStrafeLeft", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraStrafeLeft", Accelerator( GDK_KEY_comma ),
 							ReferenceCaller<camera_t, void(), Camera_MoveLeft_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveLeft_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraUp", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraUp", Accelerator( 'D' ),
 							ReferenceCaller<camera_t, void(), Camera_MoveUp_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveUp_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraDown", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraDown", Accelerator( 'C' ),
 							ReferenceCaller<camera_t, void(), Camera_MoveDown_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveDown_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraAngleUp", accelerator_null(),
-							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyDown>( camwnd.getCamera() ),
-							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyUp>( camwnd.getCamera() )
-							);
-	GlobalKeyEvents_insert( "CameraAngleDown", accelerator_null(),
+	GlobalKeyEvents_insert( "CameraAngleDown", Accelerator( 'A' ),
 							ReferenceCaller<camera_t, void(), Camera_PitchDown_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_PitchDown_KeyUp>( camwnd.getCamera() )
 							);
+	GlobalKeyEvents_insert( "CameraAngleUp", Accelerator( 'Z' ),
+							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyUp>( camwnd.getCamera() )
+=======
+	GlobalKeyEvents_insert( "CameraForward", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_MoveForward_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_MoveForward_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraBack", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_MoveBack_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_MoveBack_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraLeft", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_RotateLeft_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_RotateLeft_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraRight", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_RotateRight_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_RotateRight_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraStrafeRight", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_MoveRight_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_MoveRight_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraStrafeLeft", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_MoveLeft_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_MoveLeft_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraUp", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_MoveUp_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_MoveUp_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraDown", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_MoveDown_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_MoveDown_KeyUp>( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraAngleUp", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_PitchUp_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_PitchUp_KeyUp>( camwnd.getCamera() )
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
+							);
+	GlobalKeyEvents_insert( "CameraAngleDown", accelerator_null(),
+							ReferenceCaller<camera_t, Camera_PitchDown_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, Camera_PitchDown_KeyUp>( camwnd.getCamera() )
+							);
 
-
+<<<<<<< HEAD
+	GlobalKeyEvents_insert( "CameraFreeMoveForward", Accelerator( GDK_KEY_Up ),
+							FreeMoveCameraMoveForwardKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveForwardKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveBack", Accelerator( GDK_KEY_Down ),
+							FreeMoveCameraMoveBackKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveBackKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveLeft", Accelerator( GDK_KEY_Left ),
+							FreeMoveCameraMoveLeftKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveLeftKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveRight", Accelerator( GDK_KEY_Right ),
+=======
 	GlobalKeyEvents_insert( "CameraFreeMoveForward", accelerator_null(),
 							FreeMoveCameraMoveForwardKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveForwardKeyUpCaller( camwnd.getCamera() )
@@ -963,6 +1033,7 @@ void CamWnd_registerCommands( CamWnd& camwnd ){
 							FreeMoveCameraMoveLeftKeyUpCaller( camwnd.getCamera() )
 							);
 	GlobalKeyEvents_insert( "CameraFreeMoveRight", accelerator_null(),
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 							FreeMoveCameraMoveRightKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveRightKeyUpCaller( camwnd.getCamera() )
 							);
@@ -984,26 +1055,48 @@ void CamWnd_registerCommands( CamWnd& camwnd ){
 							FreeMoveCameraMoveRightKeyUpCaller( camwnd.getCamera() )
 							);
 
+<<<<<<< HEAD
+	GlobalKeyEvents_insert( "CameraFreeMoveUp", Accelerator( 'D' ),
+							FreeMoveCameraMoveUpKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveUpKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveDown", Accelerator( 'C' ),
+=======
 	GlobalKeyEvents_insert( "CameraFreeMoveUp", accelerator_null(),
 							FreeMoveCameraMoveUpKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveUpKeyUpCaller( camwnd.getCamera() )
 							);
 	GlobalKeyEvents_insert( "CameraFreeMoveDown", accelerator_null(),
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 							FreeMoveCameraMoveDownKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveDownKeyUpCaller( camwnd.getCamera() )
 							);
 
-	GlobalCommands_insert( "CameraForward", ReferenceCaller<camera_t, void(), Camera_MoveForward_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraBack", ReferenceCaller<camera_t, void(), Camera_MoveBack_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraLeft", ReferenceCaller<camera_t, void(), Camera_RotateLeft_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraRight", ReferenceCaller<camera_t, void(), Camera_RotateRight_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraStrafeRight", ReferenceCaller<camera_t, void(), Camera_MoveRight_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraStrafeLeft", ReferenceCaller<camera_t, void(), Camera_MoveLeft_Discrete>( camwnd.getCamera() ) );
+<<<<<<< HEAD
+	GlobalCommands_insert( "CameraForward", ReferenceCaller<camera_t, void(), Camera_MoveForward_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Up ) );
+	GlobalCommands_insert( "CameraBack", ReferenceCaller<camera_t, void(), Camera_MoveBack_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Down ) );
+	GlobalCommands_insert( "CameraLeft", ReferenceCaller<camera_t, void(), Camera_RotateLeft_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Left ) );
+	GlobalCommands_insert( "CameraRight", ReferenceCaller<camera_t, void(), Camera_RotateRight_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Right ) );
+	GlobalCommands_insert( "CameraStrafeRight", ReferenceCaller<camera_t, void(), Camera_MoveRight_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_period ) );
+	GlobalCommands_insert( "CameraStrafeLeft", ReferenceCaller<camera_t, void(), Camera_MoveLeft_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_comma ) );
 
-	GlobalCommands_insert( "CameraUp", ReferenceCaller<camera_t, void(), Camera_MoveUp_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraDown", ReferenceCaller<camera_t, void(), Camera_MoveDown_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraAngleUp", ReferenceCaller<camera_t, void(), Camera_PitchUp_Discrete>( camwnd.getCamera() ) );
-	GlobalCommands_insert( "CameraAngleDown", ReferenceCaller<camera_t, void(), Camera_PitchDown_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraUp", ReferenceCaller<camera_t, void(), Camera_MoveUp_Discrete>( camwnd.getCamera() ), Accelerator( 'D' ) );
+	GlobalCommands_insert( "CameraDown", ReferenceCaller<camera_t, void(), Camera_MoveDown_Discrete>( camwnd.getCamera() ), Accelerator( 'C' ) );
+	GlobalCommands_insert( "CameraAngleUp", ReferenceCaller<camera_t, void(), Camera_PitchUp_Discrete>( camwnd.getCamera() ), Accelerator( 'A' ) );
+	GlobalCommands_insert( "CameraAngleDown", ReferenceCaller<camera_t, void(), Camera_PitchDown_Discrete>( camwnd.getCamera() ), Accelerator( 'Z' ) );
+=======
+	GlobalCommands_insert( "CameraForward", ReferenceCaller<camera_t, Camera_MoveForward_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraBack", ReferenceCaller<camera_t, Camera_MoveBack_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraLeft", ReferenceCaller<camera_t, Camera_RotateLeft_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraRight", ReferenceCaller<camera_t, Camera_RotateRight_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraStrafeRight", ReferenceCaller<camera_t, Camera_MoveRight_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraStrafeLeft", ReferenceCaller<camera_t, Camera_MoveLeft_Discrete>( camwnd.getCamera() ) );
+
+	GlobalCommands_insert( "CameraUp", ReferenceCaller<camera_t, Camera_MoveUp_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraDown", ReferenceCaller<camera_t, Camera_MoveDown_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraAngleUp", ReferenceCaller<camera_t, Camera_PitchUp_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraAngleDown", ReferenceCaller<camera_t, Camera_PitchDown_Discrete>( camwnd.getCamera() ) );
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 }
 
 void CamWnd_Move_Enable( CamWnd& camwnd ){
@@ -1999,9 +2092,7 @@ void CamWnd_Construct(){
 	GlobalShortcuts_insert( "CameraFreeMoveLeft2", Accelerator( GDK_Left ) );
 	GlobalShortcuts_insert( "CameraFreeMoveRight2", Accelerator( GDK_Right ) );
 
-	GlobalShortcuts_insert( "CameraFreeMoveUp", accelerator_null() );
-	GlobalShortcuts_insert( "CameraFreeMoveDown", accelerator_null() );
-
+<<<<<<< HEAD
 	GlobalToggles_insert( "ShowStats", makeCallbackF(ShowStatsToggle), ToggleItem::AddCallbackCaller( g_show_stats ) );
 
 	GlobalPreferenceSystem().registerPreference( "ShowStats", make_property_string( g_camwindow_globals_private.m_showStats ) );
@@ -2016,6 +2107,25 @@ void CamWnd_Construct(){
 	GlobalPreferenceSystem().registerPreference( "SI_Colors12", make_property_string( g_camwindow_globals.color_selbrushes3d ) );
 	GlobalPreferenceSystem().registerPreference( "CameraRenderMode", make_property_string<RenderMode>() );
 	GlobalPreferenceSystem().registerPreference( "StrafeMode", make_property_string( g_camwindow_globals_private.m_nStrafeMode ) );
+=======
+	GlobalShortcuts_insert( "CameraFreeMoveUp", accelerator_null() );
+	GlobalShortcuts_insert( "CameraFreeMoveDown", accelerator_null() );
+
+	GlobalToggles_insert( "ShowStats", FreeCaller<ShowStatsToggle>(), ToggleItem::AddCallbackCaller( g_show_stats ) );
+
+	GlobalPreferenceSystem().registerPreference( "ShowStats", BoolImportStringCaller( g_camwindow_globals_private.m_showStats ), BoolExportStringCaller( g_camwindow_globals_private.m_showStats ) );
+	GlobalPreferenceSystem().registerPreference( "MoveSpeed", IntImportStringCaller( g_camwindow_globals_private.m_nMoveSpeed ), IntExportStringCaller( g_camwindow_globals_private.m_nMoveSpeed ) );
+	GlobalPreferenceSystem().registerPreference( "CamLinkSpeed", BoolImportStringCaller( g_camwindow_globals_private.m_bCamLinkSpeed ), BoolExportStringCaller( g_camwindow_globals_private.m_bCamLinkSpeed ) );
+	GlobalPreferenceSystem().registerPreference( "AngleSpeed", IntImportStringCaller( g_camwindow_globals_private.m_nAngleSpeed ), IntExportStringCaller( g_camwindow_globals_private.m_nAngleSpeed ) );
+	GlobalPreferenceSystem().registerPreference( "CamInverseMouse", BoolImportStringCaller( g_camwindow_globals_private.m_bCamInverseMouse ), BoolExportStringCaller( g_camwindow_globals_private.m_bCamInverseMouse ) );
+	GlobalPreferenceSystem().registerPreference( "CamDiscrete", makeBoolStringImportCallback( CamWndMoveDiscreteImportCaller() ), BoolExportStringCaller( g_camwindow_globals_private.m_bCamDiscrete ) );
+	GlobalPreferenceSystem().registerPreference( "CubicClipping", BoolImportStringCaller( g_camwindow_globals_private.m_bCubicClipping ), BoolExportStringCaller( g_camwindow_globals_private.m_bCubicClipping ) );
+	GlobalPreferenceSystem().registerPreference( "CubicScale", IntImportStringCaller( g_camwindow_globals.m_nCubicScale ), IntExportStringCaller( g_camwindow_globals.m_nCubicScale ) );
+	GlobalPreferenceSystem().registerPreference( "SI_Colors4", Vector3ImportStringCaller( g_camwindow_globals.color_cameraback ), Vector3ExportStringCaller( g_camwindow_globals.color_cameraback ) );
+	GlobalPreferenceSystem().registerPreference( "SI_Colors12", Vector3ImportStringCaller( g_camwindow_globals.color_selbrushes3d ), Vector3ExportStringCaller( g_camwindow_globals.color_selbrushes3d ) );
+	GlobalPreferenceSystem().registerPreference( "CameraRenderMode", makeIntStringImportCallback( RenderModeImportCaller() ), makeIntStringExportCallback( RenderModeExportCaller() ) );
+	GlobalPreferenceSystem().registerPreference( "StrafeMode", IntImportStringCaller( g_camwindow_globals_private.m_nStrafeMode ), IntExportStringCaller( g_camwindow_globals_private.m_nStrafeMode ) );
+>>>>>>> 3a78d902017a780e65f21f12c709aa746dfcab84
 
 	CamWnd_constructStatic();
 
