@@ -2205,7 +2205,7 @@ int main( int argc, char **argv ){
 
 	/* check if we have enough options left to attempt something */
 	if ( argc < 2 ) {
-		Error( "Usage: %s [general options] [options] mapfile", argv[ 0 ] );
+		Error( "Usage: %s [general options] [options] mapfile\n%s -help for help", argv[ 0 ] , argv[ 0 ] );
 	}
 
 	/* fixaas */

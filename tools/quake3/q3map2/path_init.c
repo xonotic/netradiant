@@ -176,6 +176,7 @@ void LokiInitPaths( char *argv0 ){
 				path++;
 			}
 
+
 			/* concatenate */
 			if ( last > ( path + 1 ) ) {
 				// +1 hack: Q_strncat calls Q_strncpyz that expects a len including '\0'
@@ -528,16 +529,6 @@ void InitPaths( int *argc, char **argv ){
 			argv[ i - 1 ] = NULL;
 			homePath = argv[i];
 			homeBasePath = ".";
-			argv[ i ] = NULL;
-		}
-
-		/* -fs_pakpath */
-		else if ( strcmp( argv[ i ], "-fs_pakpath" ) == 0 ) {
-			if ( ++i >= *argc ) {
-				Error( "Out of arguments: No path specified after %s.", argv[ i - 1 ] );
-			}
-			argv[ i - 1 ] = NULL;
-			AddPakPath( argv[ i ] );
 			argv[ i ] = NULL;
 		}
 	}
