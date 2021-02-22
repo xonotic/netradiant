@@ -220,6 +220,8 @@ int ShiftBSPMain( int argc, char **argv ){
 	{
 		//find point on plane
 		for ( j=0; j<3; j++ ){
+			// This line being commented out is an unexplained change by Garux
+			// see dd7f4f1689e8ede7580bdfa8e08d0b78d08f5253
 			//point[j] = bspPlanes[ i ].dist * bspPlanes[ i ].normal[j];
 			if ( fabs( bspPlanes[ i ].normal[j] ) > 0.5 ){
 				point[j] = bspPlanes[ i ].dist / bspPlanes[ i ].normal[j];
