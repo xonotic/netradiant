@@ -58,15 +58,7 @@ void Global_constructPreferences( PreferencesPage& page ){
 }
 
 void Interface_constructPreferences( PreferencesPage& page ){
-#if GDEF_OS_WINDOWS
-	page.appendCheckBox( "", "External Shader Editor", g_TextEditor_useWin32Editor );
-#else
-	{
-		ui::CheckButton use_custom = page.appendCheckBox( "Text Editor", "Custom", g_TextEditor_useCustomEditor );
-		ui::Widget custom_editor = page.appendPathEntry( "Text Editor Command", g_TextEditor_editorCommand, true );
-		Widget_connectToggleDependency( custom_editor, use_custom );
-	}
-#endif
+	page.appendPathEntry( "Shader Editor Command", g_TextEditor_editorCommand, false );
 }
 
 void Mouse_constructPreferences( PreferencesPage& page ){
@@ -75,7 +67,7 @@ void Mouse_constructPreferences( PreferencesPage& page ){
 //		page.appendRadio( "Mouse Type",  g_glwindow_globals.m_nMouseType, STRING_ARRAY_RANGE( buttons ) );
 //	}
 //	page.appendCheckBox( "Right Button", "Activates Context Menu", g_xywindow_globals.m_bRightClick );
-	page.appendCheckBox( "", "Improved mousewheel zoom", g_xywindow_globals.m_bImprovedWheelZoom );
+	page.appendCheckBox( "", "Zoom to mouse pointer", g_xywindow_globals.m_bZoomInToPointer );
 }
 void Mouse_constructPage( PreferenceGroup& group ){
 	PreferencesPage page( group.createPage( "Mouse", "Mouse Preferences" ) );
@@ -675,7 +667,7 @@ PreferencesPage createPage( const char* treeName, const char* frameName ){
 
 ui::Window PrefsDlg::BuildDialog(){
 	PreferencesDialog_addInterfacePreferences( makeCallbackF(Interface_constructPreferences) );
-	Mouse_registerPreferencesPage();
+	//Mouse_registerPreferencesPage();
 
 	ui::Window dialog = ui::Window(create_floating_window( "NetRadiant Preferences", m_parent ));
 
@@ -942,12 +934,7 @@ struct GameMode {
 };
 
 void RegisterPreferences( PreferenceSystem& preferences ){
-#if GDEF_OS_WINDOWS
-	preferences.registerPreference( "UseCustomShaderEditor", make_property_string( g_TextEditor_useWin32Editor ) );
-#else
-	preferences.registerPreference( "UseCustomShaderEditor", make_property_string( g_TextEditor_useCustomEditor ) );
 	preferences.registerPreference( "CustomShaderEditorCommand", make_property_string( g_TextEditor_editorCommand ) );
-#endif
 
 	preferences.registerPreference( "GameName", make_property<GameName>() );
 	preferences.registerPreference( "GameMode", make_property<GameMode>() );

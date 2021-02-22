@@ -138,7 +138,9 @@ void ClipPoint::Draw( const char *label, float scale ){
 
 	// draw label
 	glRasterPos3f( m_ptClip[0] + offset, m_ptClip[1] + offset, m_ptClip[2] + offset );
-	glCallLists( GLsizei( strlen( label ) ), GL_UNSIGNED_BYTE, label );
+	//glCallLists( GLsizei( strlen( label ) ), GL_UNSIGNED_BYTE, label );	//fails with GCC
+	//glCallLists( GLsizei( strlen( label ) ), GL_UNSIGNED_BYTE, reinterpret_cast<const GLubyte*>( label ) );	//worx
+	GlobalOpenGL().drawString( label );
 }
 
 float fDiff( float f1, float f2 ){
@@ -544,7 +546,7 @@ void XYWnd::ZoomOut(){
 void XYWnd::ZoomInWithMouse( int pointx, int pointy ){
 	float old_scale = Scale();
 	ZoomIn();
-	if ( g_xywindow_globals.m_bImprovedWheelZoom ) {
+	if ( g_xywindow_globals.m_bZoomInToPointer ) {
 		float scale_diff = 1.0 / old_scale - 1.0 / Scale();
 		int nDim1 = ( m_viewType == YZ ) ? 1 : 0;
 		int nDim2 = ( m_viewType == XY ) ? 1 : 2;
@@ -987,14 +989,30 @@ void XYWnd::Clipper_OnMouseMoved( int x, int y ){
 	}
 }
 
+//#include "gtkutil/image.h"
+
+/* is called on every mouse move fraction; ain't good! */
 void XYWnd::Clipper_Crosshair_OnMouseMoved( int x, int y ){
 	Vector3 mousePosition;
 	XY_ToPoint( x, y, mousePosition );
-	if ( ClipMode() && GlobalClipPoints_Find( mousePosition, (VIEWTYPE)m_viewType, m_fScale ) != 0 ) {
-		GdkCursor *cursor;
-		cursor = gdk_cursor_new( GDK_CROSSHAIR );
-		gdk_window_set_cursor( gtk_widget_get_window(m_gl_widget), cursor );
-		gdk_cursor_unref( cursor );
+	if ( ClipMode() ) {
+		if( GlobalClipPoints_Find( mousePosition, (VIEWTYPE)m_viewType, m_fScale ) != 0 ){
+			GdkCursor *cursor;
+			cursor = gdk_cursor_new( GDK_CROSSHAIR );
+			//cursor = gdk_cursor_new( GDK_FLEUR );
+			gdk_window_set_cursor( gtk_widget_get_window(m_gl_widget), cursor );
+			gdk_cursor_unref( cursor );
+		}
+		else{
+			GdkCursor *cursor;
+			cursor = gdk_cursor_new( GDK_HAND2 );
+//			GdkPixbuf* pixbuf = pixbuf_new_from_file_with_mask( "bitmaps/icon.png" );
+//			cursor = gdk_cursor_new_from_pixbuf( gdk_display_get_default(), pixbuf, 0, 0 );
+//			g_object_unref( pixbuf );
+			gdk_window_set_cursor( gtk_widget_get_window(m_gl_widget), cursor );
+			gdk_cursor_unref( cursor );
+
+		}
 	}
 	else
 	{
@@ -1290,6 +1308,8 @@ unsigned int Zoom_buttons(){
 }
 
 int g_dragZoom = 0;
+int g_zoom2x = 0;
+int g_zoom2y = 0;
 
 void XYWnd_zoomDelta( int x, int y, unsigned int state, void* data ){
 	if ( y != 0 ) {
@@ -1302,7 +1322,12 @@ void XYWnd_zoomDelta( int x, int y, unsigned int state, void* data ){
 			}
 			else
 			{
-				reinterpret_cast<XYWnd*>( data )->ZoomIn();
+				if ( g_xywindow_globals.m_bZoomInToPointer ) {
+					reinterpret_cast<XYWnd*>( data )->ZoomInWithMouse( g_zoom2x, g_zoom2y );
+				}
+				else{
+					reinterpret_cast<XYWnd*>( data )->ZoomIn();
+				}
 				g_dragZoom += 8;
 			}
 		}
@@ -1314,12 +1339,14 @@ gboolean XYWnd_Zoom_focusOut( ui::Widget widget, GdkEventFocus* event, XYWnd* xy
 	return FALSE;
 }
 
-void XYWnd::Zoom_Begin(){
+void XYWnd::Zoom_Begin( int x, int y ){
 	if ( m_zoom_started ) {
 		Zoom_End();
 	}
 	m_zoom_started = true;
 	g_dragZoom = 0;
+	g_zoom2x = x;
+	g_zoom2y = y;
 	g_xywnd_freezePointer.freeze_pointer( m_parent ? m_parent : MainFrame_getWindow(), m_gl_widget, XYWnd_zoomDelta, this );
 	m_zoom_focusOut = m_gl_widget.connect( "focus_out_event", G_CALLBACK( XYWnd_Zoom_focusOut ), this );
 }
@@ -1366,7 +1393,7 @@ void XYWnd::XY_MouseDown( int x, int y, unsigned int buttons ){
 		EntityCreate_MouseDown( x, y );
 	}
 	else if ( buttons == Zoom_buttons() ) {
-		Zoom_Begin();
+		Zoom_Begin( x, y );
 	}
 	else if ( ClipMode() && ( buttons == Clipper_buttons() || buttons == Clipper_quick_buttons() ) ) {
 		Clipper_OnLButtonDown( x, y );
@@ -3071,6 +3098,7 @@ void Orthographic_constructPreferences( PreferencesPage& page ){
 	//page.appendCheckBox( "", "Display size info", g_xywindow_globals_private.m_bSizePaint );
 	page.appendCheckBox( "", "Chase mouse during drags", g_xywindow_globals_private.m_bChaseMouse );
 //	page.appendCheckBox( "", "Update views on camera move", g_xywindow_globals_private.m_bCamXYUpdate );
+	page.appendCheckBox( "", "Zoom In to Mouse pointer", g_xywindow_globals.m_bZoomInToPointer );
 }
 void Orthographic_constructPage( PreferenceGroup& group ){
 	PreferencesPage page( group.createPage( "Orthographic", "Orthographic View Preferences" ) );
@@ -3127,7 +3155,7 @@ void XYWindow_Construct(){
 	GlobalPreferenceSystem().registerPreference( "ClipCaulk", make_property_string( g_clip_useCaulk ) );
 
 //	GlobalPreferenceSystem().registerPreference( "NewRightClick", make_property_string( g_xywindow_globals.m_bRightClick ) );
-	GlobalPreferenceSystem().registerPreference( "ImprovedWheelZoom", make_property_string( g_xywindow_globals.m_bImprovedWheelZoom ) );
+	GlobalPreferenceSystem().registerPreference( "2DZoomInToPointer", make_property_string( g_xywindow_globals.m_bZoomInToPointer ) );
 	GlobalPreferenceSystem().registerPreference( "ChaseMouse", make_property_string( g_xywindow_globals_private.m_bChaseMouse ) );
 	GlobalPreferenceSystem().registerPreference( "SizePainting", make_property_string( g_xywindow_globals_private.m_bSizePaint ) );
 	GlobalPreferenceSystem().registerPreference( "ShowCrosshair", make_property_string( g_xywindow_globals_private.g_bCrossHairs ) );
