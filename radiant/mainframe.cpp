@@ -1,4 +1,4 @@
-﻿/*
+/*
    Copyright (C) 1999-2006 Id Software, Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
@@ -600,12 +600,28 @@ ui::Window BuildDialog(){
 	auto vbox2 = create_dialog_vbox( 0, 4 );
 	frame.add(vbox2);
 
+	const char* engine;
+#if defined( WIN32 )
+	engine = g_pGameDescription->getRequiredKeyValue( "engine_win32" );
+#elif defined( __linux__ ) || defined ( __FreeBSD__ )
+	engine = g_pGameDescription->getRequiredKeyValue( "engine_linux" );
+#elif defined( __APPLE__ )
+	engine = g_pGameDescription->getRequiredKeyValue( "engine_macos" );
+#else
+#error "unsupported platform"
+#endif
+	StringOutputStream text( 256 );
+	text << "Select directory, where game executable sits (typically \"" << engine << "\")\n";
+	GtkLabel* label = GTK_LABEL( gtk_label_new( text.c_str() ) );
+	gtk_widget_show( GTK_WIDGET( label ) );
+	gtk_container_add( GTK_CONTAINER( vbox2 ), GTK_WIDGET( label ) );
+
 	{
 		PreferencesPage preferencesPage( *this, vbox2 );
 		Paths_constructPreferences( preferencesPage );
 	}
 
-	return ui::Window(create_simple_modal_dialog_window( "Engine Path Not Found", m_modal, frame ));
+	return ui::Window(create_simple_modal_dialog_window( "Engine Path Configuration", m_modal, frame ));
 }
 };
 

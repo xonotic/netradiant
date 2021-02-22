@@ -220,7 +220,7 @@ inline bool string_parse_size( const char* string, std::size_t& i ){
 }
 
 
-#define RETURN_FALSE_IF_FAIL(expression) do { if (!(expression)) return false; } while (0)
+#define RETURN_FALSE_IF_FAIL( expression ) do{ if ( !expression ) {return false; } }while( 0 )
 
 inline void Tokeniser_unexpectedError( Tokeniser& tokeniser, const char* token, const char* expected ){
 	globalErrorStream() << Unsigned( tokeniser.getLine() ) << ":" << Unsigned( tokeniser.getColumn() ) << ": parse error at '" << ( token != 0 ? token : "#EOF" ) << "': expected '" << expected << "'\n";

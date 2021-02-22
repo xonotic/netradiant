@@ -393,10 +393,10 @@ TextureBrowser() :
 	m_rmbSelected( false ),
 	m_searchedTags( false ),
 	m_tags( false ),
+	m_move_started( false ),
 	m_uniformTextureSize( 160 ),
 	m_uniformTextureMinSize( 48 ),
-	m_hideNonShadersInCommon( true ),
-	m_move_started( false ){
+	m_hideNonShadersInCommon( true ){
 }
 };
 
@@ -868,6 +868,7 @@ void visit( const char* minor, const _QERPlugImageTable& table ) const {
 };
 
 void TextureBrowser_ShowDirectory( TextureBrowser& textureBrowser, const char* directory ){
+	textureBrowser.m_searchedTags = false;
 	if ( TextureBrowser_showWads() ) {
 		Archive* archive = GlobalFileSystem().getArchive( directory );
 		ASSERT_NOTNULL( archive );
@@ -1477,6 +1478,7 @@ void BuildStoreAvailableTags(   ui::ListStore storeAvailable,
 
 gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, TextureBrowser* textureBrowser ){
 	if ( event->type == GDK_BUTTON_PRESS ) {
+		gtk_widget_grab_focus( widget );
 		if ( event->button == 3 ) {
 			if ( GlobalTextureBrowser().m_tags ) {
 				textureBrowser->m_rmbSelected = true;
@@ -1554,6 +1556,10 @@ gboolean TextureBrowser_motion( ui::Widget widget, GdkEventMotion *event, Textur
 }
 
 gboolean TextureBrowser_scroll( ui::Widget widget, GdkEventScroll* event, TextureBrowser* textureBrowser ){
+	gtk_widget_grab_focus( widget );
+	if( !gtk_window_is_active( textureBrowser->m_parent ) )
+		gtk_window_present( textureBrowser->m_parent );
+
 	if ( event->direction == GDK_SCROLL_UP ) {
 		TextureBrowser_MouseWheel( *textureBrowser, true );
 	}

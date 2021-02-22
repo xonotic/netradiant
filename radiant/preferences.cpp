@@ -426,7 +426,7 @@ void CGameDialog::Init(){
 			}
 		}
 	}
-	if ( m_bGamePrompt || !currentGameDescription ) {
+	if ( !currentGameDescription ) {
 		Create();
 		DoGameDialog();
 		// use m_nComboSelect to identify the game to run as and set the globals
