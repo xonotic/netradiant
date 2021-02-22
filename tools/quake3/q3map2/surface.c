@@ -2115,8 +2115,8 @@ int FilterPointConvexHullIntoTree_r( vec3_t **points, int npoints, mapDrawSurfac
 
 int FilterWindingIntoTree_r( winding_t *w, mapDrawSurface_t *ds, node_t *node ){
 	int i, refs = 0;
-	plane_t         *p1, *p2;
-	vec4_t plane1, plane2;
+	plane_t         *p1;
+	vec4_t plane1;
 	winding_t       *fat, *front, *back;
 	shaderInfo_t    *si;
 
@@ -2170,12 +2170,15 @@ int FilterWindingIntoTree_r( winding_t *w, mapDrawSurface_t *ds, node_t *node ){
 
 		/* check if surface is planar */
 		if ( ds->planeNum >= 0 ) {
+			#if 0
+			plane_t *p2;
+			vec4_t plane2;
+
 			/* get surface plane */
 			p2 = &mapplanes[ ds->planeNum ];
 			VectorCopy( p2->normal, plane2 );
 			plane2[ 3 ] = p2->dist;
 
-			#if 0
 			/* div0: this is the plague (inaccurate) */
 			vec4_t reverse;
 
@@ -2191,7 +2194,6 @@ int FilterWindingIntoTree_r( winding_t *w, mapDrawSurface_t *ds, node_t *node ){
 				return FilterWindingIntoTree_r( w, ds, node->children[ 1 ] );
 			}
 			#else
-			(void) plane2;
 			/* div0: this is the cholera (doesn't hit enough) */
 
 			/* the drawsurf might have an associated plane, if so, force a filter here */

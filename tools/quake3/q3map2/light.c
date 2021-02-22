@@ -2119,7 +2119,7 @@ int LightMain( int argc, char **argv ){
 	const char  *value;
 	int lightmapMergeSize = 0;
 	qboolean lightSamplesInsist = qfalse;
-	qboolean fastAllocate = qfalse;
+	qboolean fastAllocate = qtrue;
 
 	/* note it */
 	Sys_Printf( "--- Light ---\n" );
@@ -2692,6 +2692,11 @@ int LightMain( int argc, char **argv ){
 		else if ( !strcmp( argv[ i ], "-fastallocate" ) ) {
 			fastAllocate = qtrue;
 			Sys_Printf( "Fast allocation mode enabled\n" );
+		}
+
+		else if ( !strcmp( argv[ i ], "-slowallocate" ) ) {
+			fastAllocate = qfalse;
+			Sys_Printf( "Slow allocation mode enabled\n" );
 		}
 
 		else if ( !strcmp( argv[ i ], "-fastgrid" ) ) {
