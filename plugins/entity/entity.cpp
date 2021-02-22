@@ -111,6 +111,7 @@ EntityCreator::KeyValueChangedFunc KeyValue::m_entityKeyValueChanged = 0;
 Counter* EntityKeyValues::m_counter = 0;
 
 bool g_showNames = true;
+bool g_showTargetNames = false;
 bool g_showAngles = true;
 bool g_newLightDraw = true;
 bool g_lightRadii = true;
@@ -264,6 +265,12 @@ void setShowNames( bool showNames ){
 bool getShowNames(){
 	return g_showNames;
 }
+void setShowTargetNames( bool showNames ){
+	g_showTargetNames = showNames;
+}
+bool getShowTargetNames(){
+	return g_showTargetNames;
+}
 void setShowAngles( bool showAngles ){
 	g_showAngles = showAngles;
 }
@@ -368,6 +375,7 @@ void Entity_Construct( EGameType gameType ){
 	}
 
 	GlobalPreferenceSystem().registerPreference( "SI_ShowNames", make_property_string( g_showNames ) );
+	GlobalPreferenceSystem().registerPreference( "SI_ShowTargetNames", make_property_string( g_showTargetNames ) );
 	GlobalPreferenceSystem().registerPreference( "SI_ShowAngles", make_property_string( g_showAngles ) );
 	GlobalPreferenceSystem().registerPreference( "NewLightStyle", make_property_string( g_newLightDraw ) );
 	GlobalPreferenceSystem().registerPreference( "LightRadiuses", make_property_string( g_lightRadii ) );

@@ -2846,7 +2846,6 @@ void unrealise(){
 EntityClassMenu g_EntityClassMenu;
 
 
-
 // Names
 void ShowNamesToggle(){
 	GlobalEntityCreator().setShowNames( !GlobalEntityCreator().getShowNames() );
@@ -2860,6 +2859,20 @@ void ShowNamesExport( const Callback<void(bool)> & importer ){
 }
 
 typedef FreeCaller<void(const Callback<void(bool)> &), ShowNamesExport> ShowNamesExportCaller;
+
+// TargetNames
+void ShowTargetNamesToggle(){
+	GlobalEntityCreator().setShowTargetNames( !GlobalEntityCreator().getShowTargetNames() );
+	XY_UpdateAllWindows();
+}
+
+typedef FreeCaller<void(), ShowTargetNamesToggle> ShowTargetNamesToggleCaller;
+
+void ShowTargetNamesExport( const Callback<void(bool)> & importer ){
+	importer( GlobalEntityCreator().getShowTargetNames() );
+}
+
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowTargetNamesExport> ShowTargetNamesExportCaller;
 
 // Angles
 void ShowAnglesToggle(){
@@ -2990,6 +3003,10 @@ ShowNamesExportCaller g_show_names_caller;
 Callback<void(const Callback<void(bool)> &)> g_show_names_callback( g_show_names_caller );
 ToggleItem g_show_names( g_show_names_callback );
 
+ShowTargetNamesExportCaller g_show_targetnames_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_targetnames_callback( g_show_targetnames_caller );
+ToggleItem g_show_targetnames( g_show_targetnames_callback );
+
 ShowAnglesExportCaller g_show_angles_caller;
 Callback<void(const Callback<void(bool)> &)> g_show_angles_callback( g_show_angles_caller );
 ToggleItem g_show_angles( g_show_angles_callback );
@@ -3034,6 +3051,7 @@ void XYShow_registerCommands(){
 
 	GlobalToggles_insert( "ShowAngles", ShowAnglesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_angles ) );
 	GlobalToggles_insert( "ShowNames", ShowNamesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_names ) );
+	GlobalToggles_insert( "ShowTargetNames", ShowTargetNamesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_targetnames ) );
 	GlobalToggles_insert( "ShowBlocks", ShowBlocksToggleCaller(), ToggleItem::AddCallbackCaller( g_show_blocks ) );
 	GlobalToggles_insert( "ShowCoordinates", ShowCoordinatesToggleCaller(), ToggleItem::AddCallbackCaller( g_show_coordinates ) );
 	GlobalToggles_insert( "ShowWindowOutline", ShowOutlineToggleCaller(), ToggleItem::AddCallbackCaller( g_show_outline ) );
