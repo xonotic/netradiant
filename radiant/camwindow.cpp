@@ -2019,23 +2019,23 @@ void CamWnd_Construct(){
 	GlobalShortcuts_insert( "CameraBack", Accelerator( GDK_KEY_Down ) );
 	GlobalShortcuts_insert( "CameraLeft", Accelerator( GDK_KEY_Left ) );
 	GlobalShortcuts_insert( "CameraRight", Accelerator( GDK_KEY_Right ) );
-	GlobalShortcuts_insert( "CameraStrafeRight", Accelerator( GDK_KEY_period ) );
-	GlobalShortcuts_insert( "CameraStrafeLeft", Accelerator( GDK_KEY_comma ) );
+	GlobalShortcuts_insert( "CameraStrafeRight", Accelerator( 'D' ) );
+	GlobalShortcuts_insert( "CameraStrafeLeft", Accelerator( 'A' ) );
 
 	GlobalShortcuts_insert( "CameraUp", accelerator_null() );
 	GlobalShortcuts_insert( "CameraDown", accelerator_null() );
 	GlobalShortcuts_insert( "CameraAngleUp", accelerator_null() );
 	GlobalShortcuts_insert( "CameraAngleDown", accelerator_null() );
 
-	GlobalShortcuts_insert( "CameraFreeMoveForward", Accelerator( GDK_Up ) );
-	GlobalShortcuts_insert( "CameraFreeMoveBack", Accelerator( GDK_Down ) );
-	GlobalShortcuts_insert( "CameraFreeMoveLeft", Accelerator( GDK_Left ) );
-	GlobalShortcuts_insert( "CameraFreeMoveRight", Accelerator( GDK_Right ) );
+	GlobalShortcuts_insert( "CameraFreeMoveForward", Accelerator( 'W' ) );
+	GlobalShortcuts_insert( "CameraFreeMoveBack", Accelerator( 'S' ) );
+	GlobalShortcuts_insert( "CameraFreeMoveLeft", Accelerator( 'A' ) );
+	GlobalShortcuts_insert( "CameraFreeMoveRight", Accelerator( 'D' ) );
 
-	GlobalShortcuts_insert( "CameraFreeMoveForward2", Accelerator( GDK_Up ) );
-	GlobalShortcuts_insert( "CameraFreeMoveBack2", Accelerator( GDK_Down ) );
-	GlobalShortcuts_insert( "CameraFreeMoveLeft2", Accelerator( GDK_Left ) );
-	GlobalShortcuts_insert( "CameraFreeMoveRight2", Accelerator( GDK_Right ) );
+	GlobalShortcuts_insert( "CameraFreeMoveForward2", Accelerator( GDK_KEY_Up ) );
+	GlobalShortcuts_insert( "CameraFreeMoveBack2", Accelerator( GDK_KEY_Down ) );
+	GlobalShortcuts_insert( "CameraFreeMoveLeft2", Accelerator( GDK_KEY_Left ) );
+	GlobalShortcuts_insert( "CameraFreeMoveRight2", Accelerator( GDK_KEY_Right ) );
 
 	GlobalShortcuts_insert( "CameraFreeMoveUp", accelerator_null() );
 	GlobalShortcuts_insert( "CameraFreeMoveDown", accelerator_null() );
