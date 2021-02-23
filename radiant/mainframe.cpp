@@ -1310,6 +1310,12 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			 && selectable->isSelected() ) {
 			return false;
 		}
+		if( doMakeUnique && instance.childSelected() ){
+			NodeSmartReference clone( Node_Clone_Selected( path.top() ) );
+			Map_gatherNamespaced( clone );
+			Node_getTraversable( path.parent().get() )->insert( clone );
+			return false;
+		}
 	}
 
 	return true;
@@ -2065,6 +2071,7 @@ ui::MenuItem create_edit_menu(){
 //	}
 	create_menu_item_with_mnemonic( menu, "Select All Of Type", "SelectAllOfType" );
 	create_menu_item_with_mnemonic( menu, "_Expand Selection To Entities", "ExpandSelectionToEntities" );
+	create_menu_item_with_mnemonic( menu, "Select Connected Entities", "SelectConnectedEntities" );
 
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Pre_ferences...", "Preferences" );
@@ -2143,6 +2150,7 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 			create_menu_item_with_mnemonic( orthographic_menu, "Center on Selected", "NextView" );
 		}
 
+		create_menu_item_with_mnemonic( orthographic_menu, "Focus on Selected", "XYFocusOnSelected" );
 		create_menu_item_with_mnemonic( orthographic_menu, "Center on Selected", "CenterXYView" );
 		menu_separator( orthographic_menu );
 		create_menu_item_with_mnemonic( orthographic_menu, "_XY 100%", "Zoom100" );
@@ -3571,6 +3579,10 @@ void Maximize_View(){
 		g_maximizeview.toggle();
 }
 
+void FocusAllViews(){
+	XY_Centralize(); //using centralizing here, not focusing function
+	GlobalCamera_FocusOnSelected();
+}
 
 #include "preferencesystem.h"
 #include "stringio.h"
@@ -3608,6 +3620,7 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "SelectInside", makeCallbackF(Select_Inside) );
 	GlobalCommands_insert( "SelectTouching", makeCallbackF(Select_Touching) );
 	GlobalCommands_insert( "ExpandSelectionToEntities", makeCallbackF(Scene_ExpandSelectionToEntities), Accelerator( 'E', (GdkModifierType)( GDK_MOD1_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "SelectConnectedEntities", makeCallbackF(SelectConnectedEntities), Accelerator( 'E', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 	GlobalCommands_insert( "Preferences", makeCallbackF(PreferencesDialog_showDialog), Accelerator( 'P' ) );
 
 	GlobalCommands_insert( "ToggleConsole", makeCallbackF(Console_ToggleShow), Accelerator( 'O' ) );

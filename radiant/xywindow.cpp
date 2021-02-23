@@ -557,6 +557,20 @@ void XYWnd::ZoomInWithMouse( int pointx, int pointy ){
 	}
 }
 
+void XYWnd::FocusOnBounds( AABB& bounds ){
+	SetOrigin( bounds.origin );
+	int nDim1 = ( m_viewType == YZ ) ? 1 : 0;
+	int nDim2 = ( m_viewType == XY ) ? 1 : 2;
+	if( bounds.extents[ nDim1 ] < 128.f )
+		bounds.extents[ nDim1 ] = 128.f;
+	if( bounds.extents[ nDim2 ] < 128.f )
+		bounds.extents[ nDim2 ] = 128.f;
+	float scale1 = Width() / ( 3.f * bounds.extents[ nDim1 ] );
+	float scale2 = Height() / ( 3.f * bounds.extents[ nDim2 ] );
+	SetScale( MIN( scale1, scale2 ) );
+
+}
+
 VIEWTYPE GlobalXYWnd_getCurrentViewType(){
 	ASSERT_NOTNULL( g_pParentWnd );
 	ASSERT_NOTNULL( g_pParentWnd->ActiveXY() );
@@ -2708,7 +2722,7 @@ void XYWnd::OnEntityCreate( const char* item ){
 
 
 
-void GetFocusPosition( Vector3& position ){
+void GetCenterPosition( Vector3& position ){
 	if ( GlobalSelectionSystem().countSelected() != 0 ) {
 		Select_GetMid( position );
 	}
@@ -2718,15 +2732,15 @@ void GetFocusPosition( Vector3& position ){
 	}
 }
 
-void XYWnd_Focus( XYWnd* xywnd ){
+void XYWnd_Centralize( XYWnd* xywnd ){
 	Vector3 position;
-	GetFocusPosition( position );
+	GetCenterPosition( position );
 	xywnd->PositionView( position );
 }
 
-void XY_Split_Focus(){
+void XY_Split_Centralize(){
 	Vector3 position;
-	GetFocusPosition( position );
+	GetCenterPosition( position );
 	if ( g_pParentWnd->GetXYWnd() ) {
 		g_pParentWnd->GetXYWnd()->PositionView( position );
 	}
@@ -2738,10 +2752,52 @@ void XY_Split_Focus(){
 	}
 }
 
+void XY_Centralize(){
+	if ( g_pParentWnd->CurrentStyle() == MainFrame::eSplit || g_pParentWnd->CurrentStyle() == MainFrame::eFloating ) {
+		// centralize all
+		XY_Split_Centralize();
+		return;
+	}
+
+	XYWnd* xywnd = g_pParentWnd->GetXYWnd();
+	XYWnd_Centralize( xywnd );
+}
+
+
+
+void GetSelectionBbox( AABB& bounds ){
+	if ( GlobalSelectionSystem().countSelected() != 0 ) {
+		Scene_BoundsSelected( GlobalSceneGraph(), bounds );
+	}
+	else
+	{
+		bounds = AABB( Camera_getOrigin( *g_pParentWnd->GetCamWnd() ), Vector3( 128.f, 128.f, 128.f ) );
+	}
+}
+
+void XYWnd_Focus( XYWnd* xywnd ){
+	AABB bounds;
+	GetSelectionBbox( bounds );
+	xywnd->FocusOnBounds( bounds );
+}
+
+void XY_Split_Focus(){
+	AABB bounds;
+	GetSelectionBbox( bounds );
+	if ( g_pParentWnd->GetXYWnd() ) {
+		g_pParentWnd->GetXYWnd()->FocusOnBounds( bounds );
+	}
+	if ( g_pParentWnd->GetXZWnd() ) {
+		g_pParentWnd->GetXZWnd()->FocusOnBounds( bounds );
+	}
+	if ( g_pParentWnd->GetYZWnd() ) {
+		g_pParentWnd->GetYZWnd()->FocusOnBounds( bounds );
+	}
+}
+
 void XY_Focus(){
 	if ( g_pParentWnd->CurrentStyle() == MainFrame::eSplit || g_pParentWnd->CurrentStyle() == MainFrame::eFloating ) {
-		// cannot do this in a split window
-		// do something else that the user may want here
+		// focus all
 		XY_Split_Focus();
 		return;
 	}
@@ -2750,16 +2806,18 @@ void XY_Focus(){
 	XYWnd_Focus( xywnd );
 }
 
+
+
 void XY_TopFrontSide( VIEWTYPE viewtype ){
 	if ( g_pParentWnd->CurrentStyle() == MainFrame::eSplit ) {
 		// cannot do this in a split window
 		// do something else that the user may want here
-		XY_Split_Focus();
+		XY_Split_Centralize();
 		return;
 	}
 	XYWnd* xywnd = g_pParentWnd->CurrentStyle() == MainFrame::eFloating ? g_pParentWnd->ActiveXY() : g_pParentWnd->GetXYWnd();
 	xywnd->SetViewType( viewtype );
-	XYWnd_Focus( xywnd );
+	XYWnd_Centralize( xywnd );
 }
 
 void XY_Top(){
@@ -2784,14 +2842,14 @@ void XY_NextView( XYWnd* xywnd ){
 	else{
 		xywnd->SetViewType( XY );
 	}
-	XYWnd_Focus( xywnd );
+	XYWnd_Centralize( xywnd );
 }
 
 void XY_Next(){
 	if ( g_pParentWnd->CurrentStyle() == MainFrame::eSplit ) {
 		// cannot do this in a split window
 		// do something else that the user may want here
-		XY_Split_Focus();
+		XY_Split_Centralize();
 		return;
 	}
 	XYWnd* xywnd = g_pParentWnd->CurrentStyle() == MainFrame::eFloating ? g_pParentWnd->ActiveXY() : g_pParentWnd->GetXYWnd();
@@ -3157,7 +3215,8 @@ void XYWindow_Construct(){
 	GlobalCommands_insert( "ViewSide", makeCallbackF(XY_Side), Accelerator( GDK_KEY_KP_Page_Down ) );
 	GlobalCommands_insert( "ViewFront", makeCallbackF(XY_Front), Accelerator( GDK_KEY_KP_End ) );
 	GlobalCommands_insert( "Zoom100", makeCallbackF(XY_Zoom100) );
-	GlobalCommands_insert( "CenterXYView", makeCallbackF(XY_Focus), Accelerator( GDK_KEY_Tab, (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "CenterXYView", makeCallbackF(XY_Centralize), Accelerator( GDK_Tab, (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "XYFocusOnSelected", makeCallbackF(XY_Focus), Accelerator( GDK_grave ) );
 
 	GlobalPreferenceSystem().registerPreference( "ClipCaulk", make_property_string( g_clip_useCaulk ) );
 
@@ -3185,8 +3244,6 @@ void XYWindow_Construct(){
 	GlobalPreferenceSystem().registerPreference( "SI_Colors9", make_property_string( g_xywindow_globals.color_viewname ) );
 	GlobalPreferenceSystem().registerPreference( "SI_Colors10", make_property_string( g_xywindow_globals.color_clipper ) );
 	GlobalPreferenceSystem().registerPreference( "SI_Colors11", make_property_string( g_xywindow_globals.color_selbrushes ) );
-
-
 
 
 	GlobalPreferenceSystem().registerPreference( "XZVIS", make_property_string<ToggleShown_Bool>( g_xz_front_shown ) );

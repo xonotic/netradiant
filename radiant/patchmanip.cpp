@@ -804,8 +804,10 @@ void Patch_registerCommands(){
 	GlobalCommands_insert( "PatchDeleteFirstRow", makeCallbackF(Patch_DeleteFirstRow), Accelerator( GDK_KEY_KP_Subtract, (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "PatchDeleteLastRow", makeCallbackF(Patch_DeleteLastRow) );
 	GlobalCommands_insert( "InvertCurve", makeCallbackF(Patch_Invert), Accelerator( 'I', (GdkModifierType)GDK_CONTROL_MASK ) );
-	GlobalCommands_insert( "RedisperseRows", makeCallbackF(Patch_RedisperseRows), Accelerator( 'E', (GdkModifierType)GDK_CONTROL_MASK ) );
-	GlobalCommands_insert( "RedisperseCols", makeCallbackF(Patch_RedisperseCols), Accelerator( 'E', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	// GlobalCommands_insert( "RedisperseRows", makeCallbackF(Patch_RedisperseRows), Accelerator( 'E', (GdkModifierType)GDK_CONTROL_MASK ) );
+	GlobalCommands_insert( "RedisperseRows", makeCallbackF(Patch_RedisperseRows) );
+	// GlobalCommands_insert( "RedisperseCols", makeCallbackF(Patch_RedisperseCols), Accelerator( 'E', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "RedisperseCols", makeCallbackF(Patch_RedisperseCols) );
 	GlobalCommands_insert( "SmoothRows", makeCallbackF(Patch_SmoothRows), Accelerator( 'W', (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "SmoothCols", makeCallbackF(Patch_SmoothCols), Accelerator( 'W', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 	GlobalCommands_insert( "MatrixTranspose", makeCallbackF(Patch_Transpose), Accelerator( 'M', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );

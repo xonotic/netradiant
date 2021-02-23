@@ -219,6 +219,11 @@ void accelerator_edit_button_clicked( ui::Button btn, gpointer dialogptr ){
 	if ( !gtk_tree_selection_get_selected( sel, &model, &iter ) ) {
 		return;
 	}
+	if ( dialog.m_waiting_for_key ) {
+		// unhighlight highlit
+		dialog.m_waiting_for_key = false;
+		gtk_list_store_set( GTK_LIST_STORE( dialog.m_model ), &dialog.m_command_iter, 2, false, -1 );
+	}
 	dialog.m_command_iter = iter;
 	dialog.m_model = ui::TreeModel::from(model);
 
@@ -230,6 +235,14 @@ void accelerator_edit_button_clicked( ui::Button btn, gpointer dialogptr ){
 
 	// 4. grab keyboard focus
 	dialog.m_waiting_for_key = true;
+}
+
+gboolean accelerator_tree_butt_press( GtkWidget* widget, GdkEventButton* event, gpointer dialogptr ){
+	if ( event->type == GDK_2BUTTON_PRESS && event->button == 1 ) {
+		accelerator_edit_button_clicked( ui::Button( ui::null ), dialogptr );
+		return TRUE;
+	}
+	return FALSE;
 }
 
 bool accelerator_window_key_press( ui::Window widget, GdkEventKey *event, gpointer dialogptr ){
@@ -408,7 +421,9 @@ void DoCommandListDlg(){
 			auto view = ui::TreeView(ui::TreeModel::from(store._handle));
 			dialog.m_list = view;
 
-			gtk_tree_view_set_enable_search(view, false ); // annoying
+			//gtk_tree_view_set_enable_search( GTK_TREE_VIEW( view ), false ); // annoying
+
+			g_signal_connect( G_OBJECT( view ), "button_press_event", G_CALLBACK( accelerator_tree_butt_press ), &dialog );
 
 			{
 				auto renderer = ui::CellRendererText(ui::New);

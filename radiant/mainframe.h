@@ -282,4 +282,6 @@ void XYWindowMouseDown_disconnect( MouseEventHandlerId id );
 
 extern ui::Widget g_page_entity;
 
+void FocusAllViews();
+
 #endif
