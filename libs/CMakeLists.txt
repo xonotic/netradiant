@@ -14,6 +14,7 @@ add_subdirectory(generic)
 if (BUILD_RADIANT)
     add_subdirectory(gtkutil)
     add_subdirectory(uilib)
+    add_subdirectory(viewport)
 endif ()
 
 add_subdirectory(l_net)

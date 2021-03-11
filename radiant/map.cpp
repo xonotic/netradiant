@@ -88,6 +88,7 @@ MapModules& ReferenceAPI_getMapModules();
 #include "brush.h"
 
 bool g_writeMapComments = true;
+bool g_deferredStartupShaders = false;
 
 class NameObserver
 {
@@ -1016,6 +1017,9 @@ void Map_LoadFile( const char *filename ){
 
 	g_currentMap = &g_map;
 
+	// Load up shaders now that we have the map loaded.
+	g_deferredStartupShaders = true;
+
 	Brush_switchFormat( switch_format );
 }
 
@@ -1285,6 +1289,9 @@ void Map_New(){
 	// restart VFS to apply new pak filtering based on mapname
 	// needed for daemon DPK VFS
 	VFS_Restart();
+
+	// Load up shaders now that we have the map loaded.
+	g_deferredStartupShaders = true;
 }
 
 extern void ConstructRegionBrushes( scene::Node * brushes[6], const Vector3 &region_mins, const Vector3 &region_maxs );

@@ -231,7 +231,7 @@ if (BUILD_BINARIES)
 
     if (APPLE)
         add_definitions(-DGL_SILENCE_DEPRECATION=1)
-    endif()
+    endif ()
 
     set(CMAKE_POSITION_INDEPENDENT_CODE 1)
 endif ()
@@ -249,11 +249,25 @@ if (BUILD_RADIANT)
     endif ()
 
     if (APPLE)
+        set(UNSUPPORTED_GL_SHARED_CONTEXT ON CACHE INTERNAL "...")
+
         if (GTK_TARGET EQUAL 2)
             add_definitions(-DWORKAROUND_MACOS_GTK2_DESTROY=1)
             add_definitions(-DWORKAROUND_MACOS_GTK2_GLWIDGET=1)
             add_definitions(-DWORKAROUND_MACOS_GTK2_LAGGYPOINTER=1)
         endif ()
+    endif ()
+
+	if (UNSUPPORTED_GL_SHARED_CONTEXT)
+		set(DEFAULT_GL_SHARED_CONTEXT ON)
+	else ()
+		set(DEFAULT_GL_SHARED_CONTEXT OFF)
+	endif ()
+
+    option(USE_GL_UNSHARED_CONTEXT "Do not share GL Contexts" ${DEFAULT_GL_SHARED_CONTEXT})
+
+    if (USE_GL_UNSHARED_CONTEXT)
+        add_definitions(-DGL_UNSHARED_CONTEXT=1)
     endif ()
 endif ()
 

@@ -1496,7 +1496,8 @@ void CopyPointsFromSelectedFace( void ){
 	}
 
 	Face & face = g_SelectedFaceInstances.last().getFace();
-	textureNum = face.getShader().m_state->getTexture().texture_number;
+	// FIXME: is it called by CamWindow thread?
+	textureNum = RequestBindTextureNumber( face.getShader().m_state->getTexture(), VP_CAMWINDOW );
 	textureSize.x() = face.getShader().m_state->getTexture().width;
 	textureSize.y() = face.getShader().m_state->getTexture().height;
 //globalOutputStream() << "--> Texture #" << textureNum << ": " << textureSize.x() << " x " << textureSize.y() << "...\n";

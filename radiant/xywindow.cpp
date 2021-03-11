@@ -36,6 +36,8 @@
 #include "ibrush.h"
 #include "iundo.h"
 #include "iimage.h"
+#include "ishaders.h"
+#include "itextures.h"
 #include "ifilesystem.h"
 #include "os/path.h"
 #include "image.h"
@@ -65,6 +67,7 @@
 #include "brushmanip.h"
 #include "selection.h"
 #include "entity.h"
+#include "textures.h"
 #include "camwindow.h"
 #include "texwindow.h"
 #include "mainframe.h"
@@ -74,10 +77,10 @@
 #include "grid.h"
 #include "windowobservers.h"
 
-void LoadTextureRGBA( qtexture_t* q, unsigned char* pPixels, int nWidth, int nHeight );
-
 // d1223m
 extern bool g_brush_always_caulk;
+
+const char *g_xywindow_background_filename = nullptr;
 
 //!\todo Rewrite.
 class ClipPoint
@@ -530,6 +533,22 @@ void XYWnd_ZoomOut( XYWnd* xy ){
 }
 
 void XYWnd::Redraw() {
+	if ( Textures_TriggeredRealise() || GlobalShaderSystem().triggeredRefresh() ) {
+		if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
+			// Draw something to not display garbage while camwindow
+			// is iterating textures.
+			if ( ScreenUpdates_Enabled() ) {
+				GlobalOpenGL_debugAssertNoErrors();
+				glViewport( 0, 0, m_nWidth, m_nHeight );
+				XY_Clear();
+				GlobalOpenGL_debugAssertNoErrors();
+			}
+		}
+
+		glwidget_swap_buffers( m_gl_widget );
+		return;
+	}
+
 	if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
 		if ( Map_Valid( g_map ) && ScreenUpdates_Enabled() ) {
 			GlobalOpenGL_debugAssertNoErrors();
@@ -538,6 +557,7 @@ void XYWnd::Redraw() {
 
 			m_XORRectangle.set( rectangle_t() );
 		}
+
 		glwidget_swap_buffers( m_gl_widget );
 	}
 }
@@ -1436,7 +1456,18 @@ void XYWnd::XY_SnapToGrid( Vector3& point ){
 	}
 }
 
-void XYWnd::XY_LoadBackgroundImage( const char *name ){
+void XYWnd::XY_LoadBackgroundImage(){
+	if (g_pParentWnd->ActiveXY()->m_backgroundActivated ){
+		return;
+	}
+
+	const char* name = g_xywindow_background_filename;
+
+	if ( name == nullptr )
+	{
+		return;
+	}
+
 	const char* relative = path_make_relative( name, GlobalFileSystem().findRoot( name ) );
 	if ( relative == name ) {
 		globalOutputStream() << "WARNING: could not extract the relative path, using full path instead\n";
@@ -1447,13 +1478,20 @@ void XYWnd::XY_LoadBackgroundImage( const char *name ){
 	fileNameWithoutExt[512 - 1] = '\0';
 	fileNameWithoutExt[strlen( fileNameWithoutExt ) - 4] = '\0';
 
-	Image *image = QERApp_LoadImage( 0, fileNameWithoutExt );
+	Image* image = QERApp_LoadImage( 0, fileNameWithoutExt );
+
 	if ( !image ) {
 		globalOutputStream() << "Could not load texture " << fileNameWithoutExt << "\n";
+		g_xywindow_background_filename = nullptr;
 		return;
 	}
+
 	g_pParentWnd->ActiveXY()->m_tex = (qtexture_t*)malloc( sizeof( qtexture_t ) );
-	LoadTextureRGBA( g_pParentWnd->ActiveXY()->XYWnd::m_tex, image->getRGBAPixels(), image->getWidth(), image->getHeight() );
+	g_pParentWnd->ActiveXY()->XYWnd::m_tex->name = fileNameWithoutExt;
+
+	// It can be loaded from outside the VFS, don't use RequestBindTextureNumber
+	LoadTextureRGBA( VP_XYWINDOW, g_pParentWnd->ActiveXY()->XYWnd::m_tex, image );
+
 	globalOutputStream() << "Loaded background texture " << relative << "\n";
 	g_pParentWnd->ActiveXY()->m_backgroundActivated = true;
 
@@ -1484,6 +1522,7 @@ void XYWnd::XY_LoadBackgroundImage( const char *name ){
 
 void XYWnd::XY_DisableBackground( void ){
 	g_pParentWnd->ActiveXY()->m_backgroundActivated = false;
+	g_xywindow_background_filename = nullptr;
 	if ( g_pParentWnd->ActiveXY()->m_tex ) {
 		free( g_pParentWnd->ActiveXY()->m_tex );
 	}
@@ -1501,13 +1540,18 @@ void WXY_BackgroundSelect( void ){
 		return;
 	}
 
-	const char *filename = main_window.file_dialog( TRUE, "Background Image", NULL, NULL );
-
 	g_pParentWnd->ActiveXY()->XY_DisableBackground();
 
-	if ( filename ) {
-		g_pParentWnd->ActiveXY()->XY_LoadBackgroundImage( filename );
+	g_xywindow_background_filename = main_window.file_dialog( TRUE, "Background Image", NULL, NULL );
+
+	if ( g_xywindow_background_filename != nullptr )
+	{
+		globalOutputStream() << "Selected background texture path: " << g_xywindow_background_filename << "\n";
 	}
+
+	// Request draw immediately, that will also request image loading.
+	// If something bad happens at image loading time, it will be known
+	// immediately.
 
 	// Draw the background image immediately (do not wait for user input).
 	g_pParentWnd->ActiveXY()->Redraw();
@@ -1573,6 +1617,22 @@ void XYWnd::XY_DrawAxis( void ){
 }
 
 void XYWnd::XY_DrawBackground( void ){
+	if ( g_xywindow_background_filename == nullptr )
+	{
+		return;
+	}
+
+	if ( m_tex == nullptr )
+	{
+		XY_LoadBackgroundImage();
+	}
+
+	// TODO: activated?
+	if ( m_tex == nullptr )
+	{
+		return;
+	}
+
 	glPushAttrib( GL_ALL_ATTRIB_BITS );
 
 	glEnable( GL_TEXTURE_2D );
@@ -1584,7 +1644,8 @@ void XYWnd::XY_DrawBackground( void ){
 
 	glPolygonMode( GL_FRONT, GL_FILL );
 
-	glBindTexture( GL_TEXTURE_2D, m_tex->texture_number );
+	// It can be loaded from outside the VFS, don't use RequestBindTextureNumber
+	glBindTexture( GL_TEXTURE_2D, GetBindTextureNumber( VP_XYWINDOW, m_tex ) );
 	glBegin( GL_QUADS );
 
 	glColor4f( 1.0, 1.0, 1.0, m_alpha );
@@ -2106,7 +2167,11 @@ void addRenderable( const OpenGLRenderable& renderable, const Matrix4& localToWo
 }
 
 void render( const Matrix4& modelview, const Matrix4& projection ){
-	GlobalShaderCache().render( m_globalstate, modelview, projection );
+	// GlobalShaderSystem is refreshed by camwindow
+	if ( GlobalShaderSystem().refreshed() )
+	{
+		GlobalShaderCache().render( VP_XYWINDOW, m_globalstate, modelview, projection );
+	}
 }
 private:
 std::vector<state_type> m_state_stack;
@@ -2212,17 +2277,20 @@ void XYWnd::updateModelview( bool reconstruct ){
 
 //#define DBG_SCENEDUMP
 
-void XYWnd::XY_Draw(){
-	//
-	// clear
-	//
-	glViewport( 0, 0, m_nWidth, m_nHeight );
+void XYWnd::XY_Clear(){
 	glClearColor( g_xywindow_globals.color_gridback[0],
 				  g_xywindow_globals.color_gridback[1],
 				  g_xywindow_globals.color_gridback[2],0 );
 
 	glClear( GL_COLOR_BUFFER_BIT );
+}
 
+void XYWnd::XY_Draw(){
+	//
+	// clear
+	//
+	glViewport( 0, 0, m_nWidth, m_nHeight );
+	XY_Clear();
 	//
 	// set up viewpoint
 	//
@@ -2247,9 +2315,7 @@ void XYWnd::XY_Draw(){
 	glDisable( GL_COLOR_MATERIAL );
 	glDisable( GL_DEPTH_TEST );
 
-	if ( m_backgroundActivated ) {
-		XY_DrawBackground();
-	}
+	XY_DrawBackground();
 	XY_DrawGrid();
 
 	if ( g_xywindow_globals_private.show_blocks ) {

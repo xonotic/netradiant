@@ -502,6 +502,8 @@ void user_shortcuts_save(){
 	SaveCommandMap( path.c_str() );
 }
 
+const char *g_deferredStartupMap = nullptr;
+
 /* HACK: If ui::main is not called yet,
 gtk_main_quit will not quit, so tell main
 to not call ui::main. This happens when a
@@ -617,7 +619,6 @@ int main( int argc, char* argv[] ){
 		g_GamesDialog.m_bForceLogConsole = false;
 	}
 
-
 	Radiant_Initialise();
 
 	user_shortcuts_init();
@@ -627,21 +628,20 @@ int main( int argc, char* argv[] ){
 
 	hide_splash();
 
+	// Always load an empty map at startup.
+	Map_New();
+	
+	// Defer the map loading to the time GL viewports are cleared,
+	// prevent garbage to be rendered while loading map and related assets.
+	// The deferred map is now loaded by the camwindow istelf and map related
+	// textures and GL states are now loaded and set by camwindow, so the
+	// camwindow must always be visible at map loading time.
 	if ( mapname != NULL ) {
-		Map_LoadFile( mapname );
+		g_deferredStartupMap = mapname;
 	}
 	else if ( g_bLoadLastMap && !g_strLastMap.empty() ) {
-		Map_LoadFile( g_strLastMap.c_str() );
+		g_deferredStartupMap = g_strLastMap.c_str();
 	}
-	else
-	{
-		Map_New();
-	}
-
-	// load up shaders now that we have the map loaded
-	// eviltypeguy
-	TextureBrowser_ShowStartupShaders( GlobalTextureBrowser() );
-
 
 	remove_local_pid();
 

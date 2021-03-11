@@ -25,6 +25,8 @@
 #include "generic/callback.h"
 
 void Textures_Realise();
+void Textures_TriggerRealise();
+bool Textures_TriggeredRealise();
 void Textures_Unrealise();
 void Textures_sharedContextDestroyed();
 

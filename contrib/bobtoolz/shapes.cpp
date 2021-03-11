@@ -101,7 +101,8 @@ void AddFaceWithTextureScaled( scene::Node& brush, vec3_t va, vec3_t vb, vec3_t 
 	//   If a texture doesn't have a shader script, a default shader object is used.
 	// The IShader object was leaking also
 	// collect texture info: sizes, etc
-	IShader* i = GlobalShaderSystem().getShaderForName( texture );
+	IShader* i = QERApp_Shader_ForName( texture );
+
 	pqtTexInfo = i->getTexture(); // shader width/height doesn't come out properly
 
 	if ( pqtTexInfo ) {

@@ -124,6 +124,7 @@ target_link_libraries(${RADIANT_BASENAME}
     stream
     string
     uilib
+    viewport
     xmllib
 )
 

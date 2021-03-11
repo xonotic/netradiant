@@ -26,6 +26,7 @@
 
 #include "itextures.h"
 #include "igl.h"
+
 #include "preferencesystem.h"
 #include "qgl.h"
 
@@ -38,8 +39,6 @@
 #include "image.h"
 #include "texmanip.h"
 #include "preferences.h"
-
-
 
 enum ETexturesMode
 {
@@ -170,10 +169,14 @@ LatchedValue<int> g_Textures_textureQuality( 3, "Texture Quality" );
 
 /// \brief This function does the actual processing of raw RGBA data into a GL texture.
 /// It will also resample to power-of-two dimensions, generate the mipmaps and adjust gamma.
-void LoadTextureRGBA( qtexture_t* q, unsigned char* pPixels, int nWidth, int nHeight ){
+void LoadTextureRGBA( const enum ViewportId v, qtexture_t* q, Image* image ){
 	static float fGamma = -1;
 	float total[3];
 	byte  *outpixels = 0;
+
+	unsigned char* pPixels = image->getRGBAPixels();
+	int nWidth = image->getWidth();
+	int nHeight = image->getHeight();
 	int nCount = nWidth * nHeight;
 
 	if ( fGamma != g_texture_globals.fGamma ) {
@@ -201,9 +204,17 @@ void LoadTextureRGBA( qtexture_t* q, unsigned char* pPixels, int nWidth, int nHe
 	q->color[1] = total[1] / ( nCount * 255 );
 	q->color[2] = total[2] / ( nCount * 255 );
 
-	glGenTextures( 1, &q->texture_number );
+	glGenTextures( 1, &q->texture_number[ v ] );
 
-	glBindTexture( GL_TEXTURE_2D, q->texture_number );
+	ASSERT_MESSAGE( q->name != nullptr, "Undefined texture name" );
+
+#ifdef DEBUG_TEXTURES
+	// It may produce an infinite loop (never reproduced though):
+	// Log → Redraw → Log → Redraw…
+	globalOutputStream() << "LoadTextureRGBA: " << v << ", " << q->name << ", " << q->texture_number[ v ] << "\n";
+#endif
+
+	glBindTexture( GL_TEXTURE_2D, q->texture_number[ v ] );
 
 	SetTexParameters( g_texture_mode );
 
@@ -262,6 +273,50 @@ void LoadTextureRGBA( qtexture_t* q, unsigned char* pPixels, int nWidth, int nHe
 	if ( resampled ) {
 		free( outpixels );
 	}
+}
+
+GLuint GetBindTextureNumber( const enum ViewportId v, const qtexture_t* q ){
+	ASSERT_MESSAGE( v >= VP_NONE && v < VP_MAX, "Unknown GL Viewport" );
+	ASSERT_MESSAGE( v != VP_NONE, "Unset GL Viewport" );
+
+	return q->texture_number[ v ];
+}
+
+GLuint RequestBindTextureNumber( const enum ViewportId v, qtexture_t* q ){
+	if ( GetBindTextureNumber( v, q ) == 0 )
+	{
+		ASSERT_MESSAGE( q->name != nullptr, "Undefined texture name" );
+
+		// It is common to set "" as unknown texture,
+		// expecting NetRadiant to display the notex fallback.
+		if ( q->name[0] == '\0' )
+		{
+			q->loaded = false;
+			return 0;
+		}
+
+		Image* image = GlobalTexturesCache().loadImage( q->name );
+
+		if ( image != nullptr )
+		{
+			LoadTextureRGBA( v, q, image );
+			q->surfaceFlags = image->getSurfaceFlags();
+			q->contentFlags = image->getContentFlags();
+			q->value = image->getValue();
+			GlobalOpenGL_debugAssertNoErrors();
+			globalOutputStream() << "Loaded Texture: \"" << q->name << "\"\n";
+			q->loaded = true;
+			image->release();
+		}
+		else
+		{
+			globalErrorStream() << "Texture load failed: \"" << q->name << "\"\n";
+			q->texture_number[ v ] = 0;
+			q->loaded = false;
+		}
+	}
+
+	return q->texture_number[ v ];
 }
 
 #if 0
@@ -334,29 +389,50 @@ const TestHashtable g_testhashtable;
 typedef std::pair<LoadImageCallback, CopiedString> TextureKey;
 
 void qtexture_realise( qtexture_t& texture, const TextureKey& key ){
-	texture.texture_number = 0;
 	if ( !string_empty( key.second.c_str() ) ) {
-		Image* image = key.first.loadImage( key.second.c_str() );
-		if ( image != 0 ) {
-			LoadTextureRGBA( &texture, image->getRGBAPixels(), image->getWidth(), image->getHeight() );
-			texture.surfaceFlags = image->getSurfaceFlags();
-			texture.contentFlags = image->getContentFlags();
-			texture.value = image->getValue();
+		for ( int v = VP_NONE; v < VP_MAX; v++ )
+		{
+			texture.texture_number[ v ] = 0;
+		}
+
+		texture.name = key.second.c_str();
+
+		ASSERT_MESSAGE( texture.name != nullptr, "Undefined texture name" );
+
+		// It is common to set "" as unknown texture,
+		// expecting NetRadiant to display the notex fallback.
+		if ( texture.name[0] == '\0' )
+		{
+			texture.loaded = false;
+			return;
+		}
+
+#if defined(GL_UNSHARED_CONTEXT)
+		Image* image = GlobalTexturesCache().loadImage( texture.name );
+		if ( image != nullptr )
+		{
+			texture.loaded = true;
 			image->release();
-			globalOutputStream() << "Loaded Texture: \"" << key.second.c_str() << "\"\n";
-			GlobalOpenGL_debugAssertNoErrors();
 		}
 		else
 		{
-			globalErrorStream() << "Texture load failed: \"" << key.second.c_str() << "\"\n";
+			globalErrorStream() << "Texture load failed: \"" << texture.name << "\"\n";
+			// Can't reuse texture_number because shader plugin has no knowledge about viewport.
+			texture.loaded = false;
 		}
+#else // !GL_UNSHARED_CONTEXT
+		RequestBindTextureNumber( VP_SHARED, &texture );
+#endif // !GL_UNSHARED_CONTEXT
 	}
 }
 
 void qtexture_unrealise( qtexture_t& texture ){
-	if ( GlobalOpenGL().contextValid && texture.texture_number != 0 ) {
-		glDeleteTextures( 1, &texture.texture_number );
-		GlobalOpenGL_debugAssertNoErrors();
+	for ( int v = VP_NONE; v < VP_MAX; v++ )
+	{
+		if ( GlobalOpenGL().contextValid && texture.texture_number[ v ] != 0 ) {
+			glDeleteTextures( 1, &texture.texture_number[ v ] );
+			GlobalOpenGL_debugAssertNoErrors();
+		}
 	}
 }
 
@@ -498,7 +574,6 @@ void realise(){
 			break;
 		}
 
-
 		glGetIntegerv( GL_MAX_TEXTURE_SIZE, &max_tex_size );
 		if ( max_tex_size == 0 ) {
 			max_tex_size = 1024;
@@ -539,9 +614,19 @@ TexturesCache& GetTexturesCache(){
 	return *g_texturesmap;
 }
 
+bool texturesToBeRealised = false;
 
 void Textures_Realise(){
 	g_texturesmap->realise();
+	texturesToBeRealised = false;
+}
+
+void Textures_TriggerRealise(){
+	texturesToBeRealised = true;
+}
+
+bool Textures_TriggeredRealise(){
+	return texturesToBeRealised;
 }
 
 void Textures_Unrealise(){
@@ -556,12 +641,13 @@ void Textures_setModeChangedNotify( const Callback<void()>& notify ){
 }
 
 void Textures_ModeChanged(){
+	// FIXME: not called by CamWindow thread
 	if ( g_texturesmap->realised() ) {
 		SetTexParameters( g_texture_mode );
 
 		for ( TexturesMap::iterator i = g_texturesmap->begin(); i != g_texturesmap->end(); ++i )
 		{
-			glBindTexture( GL_TEXTURE_2D, ( *i ).value->texture_number );
+			glBindTexture( GL_TEXTURE_2D, ( *i ).value->texture_number[ VP_CAMWINDOW ] );
 			SetTexParameters( g_texture_mode );
 		}
 
@@ -582,7 +668,7 @@ void Textures_setTextureComponents( GLint texture_components ){
 	if ( g_texture_globals.texture_components != texture_components ) {
 		Textures_Unrealise();
 		g_texture_globals.texture_components = texture_components;
-		Textures_Realise();
+		Textures_TriggerRealise();
 	}
 }
 
@@ -662,7 +748,7 @@ struct TextureGamma {
 		if (value != self) {
 			Textures_Unrealise();
 			self = value;
-			Textures_Realise();
+			Textures_TriggerRealise();
 		}
 	}
 };

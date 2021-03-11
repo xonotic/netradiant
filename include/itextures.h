@@ -23,9 +23,16 @@
 #define INCLUDED_ITEXTURES_H
 
 #include "iimage.h"
+#include "igl.h"
 #include "generic/constant.h"
 
+#include "viewport/viewport.h"
+
 struct qtexture_t;
+
+void LoadTextureRGBA( const enum ViewportId v, qtexture_t* q, Image* image );
+GLuint GetBindTextureNumber( const enum ViewportId v, const qtexture_t* q );
+GLuint RequestBindTextureNumber( const enum ViewportId v, qtexture_t* q );
 
 class LoadImageCallback
 {

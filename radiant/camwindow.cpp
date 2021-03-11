@@ -26,6 +26,7 @@
 //
 
 #include "camwindow.h"
+#include "texwindow.h" // TextureBrowser_ShowStartupShaders
 
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
@@ -33,9 +34,11 @@
 #include "debugging/debugging.h"
 
 #include "iscenegraph.h"
+#include "ishaders.h"
 #include "irender.h"
 #include "igl.h"
 #include "icamera.h"
+#include "textures.h"
 #include "cullable.h"
 #include "renderable.h"
 #include "preferencesystem.h"
@@ -725,6 +728,8 @@ CameraView& getCameraView(){
 }
 
 private:
+void Cam_Clear();
+void Cam_Init_World();
 void Cam_Draw();
 };
 
@@ -773,8 +778,6 @@ void CamWnd_setParent( CamWnd& camwnd, ui::Window parent ){
 void CamWnd_Update( CamWnd& camwnd ){
 	camwnd.queue_draw();
 }
-
-
 
 camwindow_globals_t g_camwindow_globals;
 
@@ -1384,7 +1387,10 @@ void addRenderable( const OpenGLRenderable& renderable, const Matrix4& world ){
 }
 
 void render( const Matrix4& modelview, const Matrix4& projection ){
-	GlobalShaderCache().render( m_globalstate, modelview, projection, m_viewer );
+	if( GlobalShaderSystem().refreshed() )
+	{
+		GlobalShaderCache().render( VP_CAMWINDOW, m_globalstate, modelview, projection, m_viewer );
+	}
 }
 };
 
@@ -1406,6 +1412,52 @@ FreeCaller<void(const Callback<void(bool)>&), ShowStatsExport> g_show_stats_call
 Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
 ToggleItem g_show_stats( g_show_stats_callback );
 
+void CamWnd::Cam_Clear(){
+	Vector3 clearColour( 0, 0, 0 );
+	if ( m_Camera.draw_mode != cd_lighting ) {
+		clearColour = g_camwindow_globals.color_cameraback;
+	}
+
+	glClearColor( clearColour[0], clearColour[1], clearColour[2], 0 );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+}
+
+// g_deferredStartupMap is set in main.cpp
+extern const char* g_deferredStartupMap;
+
+// g_loadedMap and g_deferredStartupShaders are set in map.cpp
+extern bool g_deferredStartupShaders;
+
+void CamWnd::Cam_Init_World(){
+	// Only run and run once when Textures_TriggerRealise() is called before.
+	if ( Textures_TriggeredRealise() )
+	{
+		Textures_Realise();
+	}
+
+	// Only run and run once when GlobalShaderSystem().TriggerRefresh() is called before.
+
+	if ( GlobalShaderSystem().triggeredRefresh() )
+	{
+		GlobalShaderSystem().refresh();
+	}
+
+	if ( g_deferredStartupShaders )
+	{
+		TextureBrowser_ShowStartupShaders( GlobalTextureBrowser() );
+		g_deferredStartupShaders = false;
+	}
+
+	// Load the “to be loaded at startup” map when GL viewport
+	// is cleared and builtin shaders are realised.
+	if ( g_deferredStartupMap != nullptr )
+	{
+		Map_Free();
+		Map_LoadFile( g_deferredStartupMap );
+		g_deferredStartupMap = nullptr;
+	}
+}
+
 void CamWnd::Cam_Draw(){
 	glViewport( 0, 0, m_Camera.width, m_Camera.height );
 #if 0
@@ -1417,13 +1469,7 @@ void CamWnd::Cam_Draw(){
 	glDepthMask( GL_TRUE );
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 
-	Vector3 clearColour( 0, 0, 0 );
-	if ( m_Camera.draw_mode != cd_lighting ) {
-		clearColour = g_camwindow_globals.color_cameraback;
-	}
-
-	glClearColor( clearColour[0], clearColour[1], clearColour[2], 0 );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	Cam_Clear();
 
 	extern void Renderer_ResetStats();
 	Renderer_ResetStats();
@@ -1566,6 +1612,23 @@ void CamWnd::Cam_Draw(){
 void CamWnd::draw(){
 	m_drawing = true;
 
+	if ( Textures_TriggeredRealise() || GlobalShaderSystem().triggeredRefresh() || g_deferredStartupShaders )
+	{
+		// Draw something to not display garbage while iterating textures.
+		if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
+			if ( ScreenUpdates_Enabled() ) {
+				GlobalOpenGL_debugAssertNoErrors();
+				glViewport( 0, 0, m_Camera.width, m_Camera.height );
+				Cam_Clear();
+				GlobalOpenGL_debugAssertNoErrors();
+			}
+
+			Cam_Init_World();
+
+			glwidget_swap_buffers( m_gl_widget );
+		}
+	}
+
 	//globalOutputStream() << "draw...\n";
 	if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
 		if ( Map_Valid( g_map ) && ScreenUpdates_Enabled() ) {
@@ -1698,6 +1761,10 @@ void GlobalCamera_Benchmark(){
 void GlobalCamera_Update(){
 	CamWnd& camwnd = *g_camwnd;
 	CamWnd_Update( camwnd );
+}
+
+void GlobalCamera_SetVisible(){
+	g_camera_shown.set( true );
 }
 
 camera_draw_mode CamWnd_GetMode(){

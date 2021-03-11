@@ -968,7 +968,7 @@ const char* getShaderFileName() const {
 void realise(){
 	m_pTexture = evaluateTexture( m_template.m_textureName, m_template.m_params, m_args );
 
-	if ( m_pTexture->texture_number == 0 ) {
+	if ( !m_pTexture->loaded ) {
 		m_notfound = m_pTexture;
 
 		{
@@ -1740,6 +1740,9 @@ void Shaders_Refresh(){
 
 class Quake3ShaderSystem : public ShaderSystem, public ModuleObserver
 {
+bool m_toBeRefreshed = false;
+bool m_refreshed = false;
+
 public:
 void realise(){
 	Shaders_Realise();
@@ -1750,7 +1753,25 @@ void unrealise(){
 }
 
 void refresh(){
-	Shaders_Refresh();
+	if ( m_toBeRefreshed )
+	{
+		Shaders_Refresh();
+		m_toBeRefreshed = false;
+		m_refreshed = true;
+	}
+}
+
+bool refreshed(){
+	return m_refreshed;
+}
+
+void triggerRefresh(){
+	m_toBeRefreshed = true;
+	m_refreshed = false;
+}
+
+bool triggeredRefresh(){
+	return m_toBeRefreshed;
 }
 
 IShader* getShaderForName( const char* name ){

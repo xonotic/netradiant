@@ -261,7 +261,12 @@ static bool glwidget_enable_gl(ui::GLArea self, ui::Widget root, gpointer data)
         GdkGLConfig *glconfig = zbuffer ? glconfig_new_with_depth() : glconfig_new();
         ASSERT_MESSAGE(glconfig, "failed to create OpenGL config");
 
+#if defined(GL_UNSHARED_CONTEXT)
+        const auto share_list = nullptr;
+#else // !GL_UNSHARED_CONTEXT
         const auto share_list = g_shared ? gtk_widget_get_gl_context(g_shared) : nullptr;
+#endif // !GL_UNSHARED_CONTEXT
+
         gtk_widget_set_gl_capability(self, glconfig, share_list, true, GDK_GL_RGBA_TYPE);
 
         gtk_widget_realize(self);

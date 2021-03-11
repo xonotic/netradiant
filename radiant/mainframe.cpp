@@ -159,6 +159,13 @@ void VFS_Shutdown(){
 
 void VFS_Refresh(){
 	if ( !g_vfsInitialized ) return;
+	// Always set camwindow visible when reloading VFS
+	// especially when loading maps, because GL states loaded
+	// by the camwindow are also used by the xywindow.
+	// Loading map at startup (not deferred) may also requires this
+	// to make sure GL states are ready at map loading time
+	// since camwindow is now the place to initialize GL stuff.
+	GlobalCamera_SetVisible();
 	GlobalFileSystem().clear();
 	QE_InitVFS();
 	GlobalFileSystem().refresh();
@@ -1994,8 +2001,8 @@ void XY_UpdateAllWindows(){
 }
 
 void UpdateAllWindows(){
-	GlobalCamera_UpdateWindow();
 	XY_UpdateAllWindows();
+	GlobalCamera_UpdateWindow();
 }
 
 
@@ -2004,8 +2011,8 @@ void ModeChangeNotify(){
 }
 
 void ClipperChangeNotify(){
-	GlobalCamera_UpdateWindow();
 	XY_UpdateAllWindows();
+	GlobalCamera_UpdateWindow();
 }
 
 
@@ -3359,7 +3366,7 @@ void GlobalGL_sharedContextCreated(){
 	ShaderCache_extensionsInitialised();
 
 	GlobalShaderCache().realise();
-	Textures_Realise();
+	Textures_TriggerRealise();
 
 #if GDEF_OS_WINDOWS
 	/* win32 is dodgy here, just use courier new then */

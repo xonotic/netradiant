@@ -147,6 +147,9 @@ STRING_CONSTANT( Name, "shaders" );
 virtual void realise() = 0;
 virtual void unrealise() = 0;
 virtual void refresh() = 0;
+virtual bool refreshed() = 0;
+virtual void triggerRefresh() = 0;
+virtual bool triggeredRefresh() = 0;
 // activate the shader for a given name and return it
 // will return the default shader if name is not found
 virtual IShader* getShaderForName( const char* name ) = 0;

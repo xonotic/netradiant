@@ -53,7 +53,6 @@
 
 #include "xywindow.h"
 
-
 #define DEBUG_RENDER 0
 
 inline void debug_string( const char* string ){
@@ -585,7 +584,7 @@ qtexture_t* g_specular_lookup = 0;
 qtexture_t* g_attenuation_xy = 0;
 qtexture_t* g_attenuation_z = 0;
 
-void createVertexProgram(){
+void createVertexProgram( const enum ViewportId v ){
 	{
 		glGenProgramsNV( 1, &m_vertex_program );
 		glBindProgramNV( GL_VERTEX_PROGRAM_NV, m_vertex_program );
@@ -605,13 +604,13 @@ void createVertexProgram(){
 
 	g_attenuation_xy = GlobalTexturesCache().capture( "lights/squarelight1" );
 	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, g_attenuation_xy->texture_number );
+	glBindTexture( GL_TEXTURE_2D, requestTextureBind( v, g_attenuation_xy ) );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 
 	g_attenuation_z = GlobalTexturesCache().capture( "lights/squarelight1a" );
 	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, g_attenuation_z->texture_number );
+	glBindTexture( GL_TEXTURE_2D, requestTextureBind( v, g_attenuation_z ) );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
@@ -772,12 +771,24 @@ bool g_normalArray_enabled = false;
 bool g_texcoordArray_enabled = false;
 bool g_colorArray_enabled = false;
 
+GLuint requestTextureBind( const enum ViewportId v, qtexture_t *q ){
+	if ( q != nullptr )
+	{
+		return RequestBindTextureNumber( v, q );
+	}
+
+	return 0;
+}
+
 inline bool OpenGLState_less( const OpenGLState& self, const OpenGLState& other ){
 	//! Sort by sort-order override.
 	if ( self.m_sort != other.m_sort ) {
 		return self.m_sort < other.m_sort;
 	}
+
 	//! Sort by texture handle.
+	// HACK: The same data it reused whatever the viewport,
+	// but it is expected to produce the same result anyway.
 	if ( self.m_texture != other.m_texture ) {
 		return self.m_texture < other.m_texture;
 	}
@@ -802,16 +813,27 @@ inline bool OpenGLState_less( const OpenGLState& self, const OpenGLState& other 
 	if ( self.m_texture7 != other.m_texture7 ) {
 		return self.m_texture7 < other.m_texture7;
 	}
+
 	//! Sort by state bit-vector.
 	if ( self.m_state != other.m_state ) {
 		return self.m_state < other.m_state;
 	}
+
 	//! Comparing address makes sure states are never equal.
 	return &self < &other;
 }
 
 void OpenGLState_constructDefault( OpenGLState& state ){
 	state.m_state = RENDER_DEFAULT;
+
+	state.m_qtexture = nullptr;
+	state.m_qtexture1 = nullptr;
+	state.m_qtexture2 = nullptr;
+	state.m_qtexture3 = nullptr;
+	state.m_qtexture4 = nullptr;
+	state.m_qtexture5 = nullptr;
+	state.m_qtexture6 = nullptr;
+	state.m_qtexture7 = nullptr;
 
 	state.m_texture = 0;
 	state.m_texture1 = 0;
@@ -880,7 +902,7 @@ OpenGLState& state(){
 	return m_state;
 }
 
-void render( OpenGLState& current, unsigned int globalstate, const Vector3& viewer );
+void render( const enum ViewportId, OpenGLState& current, unsigned int globalstate, const Vector3& viewer );
 };
 
 #define LIGHT_SHADER_DEBUG 0
@@ -1217,9 +1239,11 @@ Shader* capture( const char* name ){
 					|| *name == '<'
 					|| *name == '('
 					|| strchr( name, '\\' ) == 0, "shader name contains invalid characters: \"" << name << "\"" );
+
 #if DEBUG_SHADERS
 	globalOutputStream() << "shaders capture: " << makeQuoted( name ) << '\n';
 #endif
+	
 	return m_shaders.capture( name ).get();
 }
 
@@ -1229,7 +1253,7 @@ void release( const char *name ){
 #endif
 	m_shaders.release( name );
 }
-void render( RenderStateFlags globalstate, const Matrix4& modelview, const Matrix4& projection, const Vector3& viewer ){
+void render( const enum ViewportId v, RenderStateFlags globalstate, const Matrix4& modelview, const Matrix4& projection, const Vector3& viewer ){
 	glMatrixMode( GL_PROJECTION );
 	glLoadMatrixf( reinterpret_cast<const float*>( &projection ) );
   #if 0
@@ -1333,7 +1357,7 @@ void render( RenderStateFlags globalstate, const Matrix4& modelview, const Matri
 	debug_string( "begin rendering" );
 	for ( OpenGLStates::iterator i = g_state_sorted.begin(); i != g_state_sorted.end(); ++i )
 	{
-		( *i ).second->render( current, globalstate, viewer );
+		( *i ).second->render( v, current, globalstate, viewer );
 	}
 	debug_string( "end rendering" );
 }
@@ -1615,7 +1639,7 @@ ShaderCache* GetShaderCache(){
 	return g_ShaderCache;
 }
 
-inline void setTextureState( GLint& current, const GLint& texture, GLenum textureUnit ){
+inline void setTextureState( GLuint& current, const GLuint& texture, GLenum textureUnit ){
 	if ( texture != current ) {
 		glActiveTexture( textureUnit );
 		glClientActiveTexture( textureUnit );
@@ -1625,7 +1649,7 @@ inline void setTextureState( GLint& current, const GLint& texture, GLenum textur
 	}
 }
 
-inline void setTextureState( GLint& current, const GLint& texture ){
+inline void setTextureState( GLuint& current, const GLuint& texture ){
 	if ( texture != current ) {
 		glBindTexture( GL_TEXTURE_2D, texture );
 		GlobalOpenGL_debugAssertNoErrors();
@@ -1644,9 +1668,10 @@ inline void setState( unsigned int state, unsigned int delta, unsigned int flag,
 	}
 }
 
-void OpenGLState_apply( const OpenGLState& self, OpenGLState& current, unsigned int globalstate ){
-	debug_int( "sort", int(self.m_sort) );
+void OpenGLState_apply( const enum ViewportId v, OpenGLState& self, OpenGLState& current, unsigned int globalstate ){
+	self.m_texture = requestTextureBind( v, self.m_qtexture );
 	debug_int( "texture", self.m_texture );
+	debug_int( "sort", int(self.m_sort) );
 	debug_int( "state", self.m_state );
 	debug_int( "address", int(std::size_t( &self ) ) );
 
@@ -1870,26 +1895,35 @@ void OpenGLState_apply( const OpenGLState& self, OpenGLState& current, unsigned 
 		current.m_alpharef = self.m_alpharef;
 	}
 
+	// Request texture binds.
+	current.m_texture = requestTextureBind( v, current.m_qtexture );
+	current.m_texture1 = requestTextureBind( v, current.m_qtexture1 );
+	current.m_texture2 = requestTextureBind( v, current.m_qtexture2 );
+	current.m_texture3 = requestTextureBind( v, current.m_qtexture3 );
+	current.m_texture4 = requestTextureBind( v, current.m_qtexture4 );
+	current.m_texture5 = requestTextureBind( v, current.m_qtexture5 );
+	current.m_texture6 = requestTextureBind( v, current.m_qtexture6 );
+	current.m_texture7 = requestTextureBind( v, current.m_qtexture7 );
+
+	// Request texture binds.
+	self.m_texture = requestTextureBind( v, self.m_qtexture );
+	self.m_texture1 = requestTextureBind( v, self.m_qtexture1 );
+	self.m_texture2 = requestTextureBind( v, self.m_qtexture2 );
+	self.m_texture3 = requestTextureBind( v, self.m_qtexture3 );
+	self.m_texture4 = requestTextureBind( v, self.m_qtexture4 );
+	self.m_texture5 = requestTextureBind( v, self.m_qtexture5 );
+	self.m_texture6 = requestTextureBind( v, self.m_qtexture6 );
+	self.m_texture7 = requestTextureBind( v, self.m_qtexture7 );
+
 	{
-		GLint texture0 = 0;
-		GLint texture1 = 0;
-		GLint texture2 = 0;
-		GLint texture3 = 0;
-		GLint texture4 = 0;
-		GLint texture5 = 0;
-		GLint texture6 = 0;
-		GLint texture7 = 0;
-		//if(state & RENDER_TEXTURE) != 0)
-		{
-			texture0 = self.m_texture;
-			texture1 = self.m_texture1;
-			texture2 = self.m_texture2;
-			texture3 = self.m_texture3;
-			texture4 = self.m_texture4;
-			texture5 = self.m_texture5;
-			texture6 = self.m_texture6;
-			texture7 = self.m_texture7;
-		}
+		GLuint texture0 = self.m_texture;
+		GLuint texture1 = self.m_texture1;
+		GLuint texture2 = self.m_texture2;
+		GLuint texture3 = self.m_texture3;
+		GLuint texture4 = self.m_texture4;
+		GLuint texture5 = self.m_texture5;
+		GLuint texture6 = self.m_texture6;
+		GLuint texture7 = self.m_texture7;
 
 		if ( GlobalOpenGL().GL_1_3() ) {
 			setTextureState( current.m_texture, texture0, GL_TEXTURE0 );
@@ -1906,7 +1940,6 @@ void OpenGLState_apply( const OpenGLState& self, OpenGLState& current, unsigned 
 			setTextureState( current.m_texture, texture0 );
 		}
 	}
-
 
 	if ( state & RENDER_TEXTURE && self.m_colour[3] != current.m_colour[3] ) {
 		debug_colour( "setting alpha" );
@@ -1952,8 +1985,9 @@ void OpenGLState_apply( const OpenGLState& self, OpenGLState& current, unsigned 
 	GlobalOpenGL_debugAssertNoErrors();
 }
 
-void Renderables_flush( OpenGLStateBucket::Renderables& renderables, OpenGLState& current, unsigned int globalstate, const Vector3& viewer ){
+void Renderables_flush( const enum ViewportId v, OpenGLStateBucket::Renderables& renderables, OpenGLState& current, unsigned int globalstate, const Vector3& viewer ){
 	const Matrix4* transform = 0;
+
 	glPushMatrix();
 	for ( OpenGLStateBucket::Renderables::const_iterator i = renderables.begin(); i != renderables.end(); ++i )
 	{
@@ -1972,10 +2006,12 @@ void Renderables_flush( OpenGLStateBucket::Renderables& renderables, OpenGLState
 		if ( current.m_program != 0 && ( *i ).m_light != 0 ) {
 			const IShader& lightShader = static_cast<OpenGLShader*>( ( *i ).m_light->getShader() )->getShader();
 			if ( lightShader.firstLayer() != 0 ) {
-				GLuint attenuation_xy = lightShader.firstLayer()->texture()->texture_number;
+				GLuint attenuation_xy = requestTextureBind( v, lightShader.firstLayer()->texture() );
 				GLuint attenuation_z = lightShader.lightFalloffImage() != 0
-									   ? lightShader.lightFalloffImage()->texture_number
-									   : static_cast<OpenGLShader*>( g_defaultPointLight )->getShader().lightFalloffImage()->texture_number;
+									   ? requestTextureBind( v, lightShader.lightFalloffImage() )
+									   : requestTextureBind( v, static_cast<OpenGLShader*>( g_defaultPointLight )->getShader().lightFalloffImage() );
+
+				current.m_texture3 = requestTextureBind( v, current.m_qtexture3 );
 
 				setTextureState( current.m_texture3, attenuation_xy, GL_TEXTURE3 );
 				glActiveTexture( GL_TEXTURE3 );
@@ -1983,12 +2019,13 @@ void Renderables_flush( OpenGLStateBucket::Renderables& renderables, OpenGLState
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
 
+				current.m_texture4 = requestTextureBind( v, current.m_qtexture4 );
+
 				setTextureState( current.m_texture4, attenuation_z, GL_TEXTURE4 );
 				glActiveTexture( GL_TEXTURE4 );
 				glBindTexture( GL_TEXTURE_2D, attenuation_z );
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
 				glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
 
 				AABB lightBounds( ( *i ).m_light->aabb() );
 
@@ -2018,9 +2055,9 @@ void Renderables_flush( OpenGLStateBucket::Renderables& renderables, OpenGLState
 	renderables.clear();
 }
 
-void OpenGLStateBucket::render( OpenGLState& current, unsigned int globalstate, const Vector3& viewer ){
+void OpenGLStateBucket::render( const enum ViewportId v, OpenGLState& current, unsigned int globalstate, const Vector3& viewer ){
 	if ( ( globalstate & m_state.m_state & RENDER_SCREEN ) != 0 ) {
-		OpenGLState_apply( m_state, current, globalstate );
+		OpenGLState_apply( v, m_state, current, globalstate );
 		debug_colour( "screen fill" );
 
 		glMatrixMode( GL_PROJECTION );
@@ -2045,8 +2082,8 @@ void OpenGLStateBucket::render( OpenGLState& current, unsigned int globalstate, 
 		glPopMatrix();
 	}
 	else if ( !m_renderables.empty() ) {
-		OpenGLState_apply( m_state, current, globalstate );
-		Renderables_flush( m_renderables, current, globalstate, viewer );
+		OpenGLState_apply( v, m_state, current, globalstate );
+		Renderables_flush( v, m_renderables, current, globalstate, viewer );
 	}
 }
 
@@ -2123,6 +2160,11 @@ inline GLenum convertBlendFactor( BlendFactor factor ){
 /// \todo Define special-case shaders in a data file.
 void OpenGLShader::construct( const char* name ){
 	OpenGLState& state = appendDefaultPass();
+
+	// HACK: It is currently assumed this is only called by camwindow
+	// and that there is only one camwindow.
+	ViewportId v = VP_CAMWINDOW;
+
 	switch ( name[0] )
 	{
 	case '(':
@@ -2328,7 +2370,8 @@ void OpenGLShader::construct( const char* name ){
 		// construction from IShader
 		m_shader = QERApp_Shader_ForName( name );
 
-		if ( g_ShaderCache->lightingSupported() && g_ShaderCache->lightingEnabled() && m_shader->getBump() != 0 && m_shader->getBump()->texture_number != 0 ) { // is a bump shader
+		// FIXME: what if the image loading or upload fail?
+		if ( g_ShaderCache->lightingSupported() && g_ShaderCache->lightingEnabled() && m_shader->getBump() != 0 && requestTextureBind( v, m_shader->getBump() ) != 0 ) { // is a bump shader
 			state.m_state = RENDER_FILL | RENDER_CULLFACE | RENDER_TEXTURE | RENDER_DEPTHTEST | RENDER_DEPTHWRITE | RENDER_COLOURWRITE | RENDER_PROGRAM;
 			state.m_colour[0] = 0;
 			state.m_colour[1] = 0;
@@ -2345,9 +2388,12 @@ void OpenGLShader::construct( const char* name ){
 			}
 
 			OpenGLState& bumpPass = appendDefaultPass();
-			bumpPass.m_texture = m_shader->getDiffuse()->texture_number;
-			bumpPass.m_texture1 = m_shader->getBump()->texture_number;
-			bumpPass.m_texture2 = m_shader->getSpecular()->texture_number;
+			bumpPass.m_qtexture = m_shader->getDiffuse();
+			bumpPass.m_texture = requestTextureBind( v, bumpPass.m_qtexture );
+			bumpPass.m_qtexture1 = m_shader->getBump();
+			bumpPass.m_texture1 = requestTextureBind( v, bumpPass.m_qtexture1 );
+			bumpPass.m_qtexture2 = m_shader->getSpecular();
+			bumpPass.m_texture2 = requestTextureBind( v, bumpPass.m_qtexture2 );
 
 			bumpPass.m_state = RENDER_BLEND | RENDER_FILL | RENDER_CULLFACE | RENDER_DEPTHTEST | RENDER_COLOURWRITE | RENDER_SMOOTH | RENDER_BUMP | RENDER_PROGRAM;
 
@@ -2367,7 +2413,8 @@ void OpenGLShader::construct( const char* name ){
 		}
 		else
 		{
-			state.m_texture = m_shader->getTexture()->texture_number;
+			state.m_qtexture = m_shader->getTexture();
+			state.m_texture = requestTextureBind( v, state.m_qtexture );
 
 			state.m_state = RENDER_FILL | RENDER_TEXTURE | RENDER_DEPTHTEST | RENDER_COLOURWRITE | RENDER_LIGHTING | RENDER_SMOOTH;
 			if ( ( m_shader->getFlags() & QER_CULL ) != 0 ) {

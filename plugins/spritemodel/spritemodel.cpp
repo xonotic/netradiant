@@ -26,6 +26,9 @@
 // Based on MD3Model source code by SPoG
 //
 
+// This code looks to be dead and unused.
+// It is not ported to RequestBindTextureNumber().
+
 #include "spritemodel.h"
 
 void LoadSpriteModel( entity_interfaces_t *interfaces, const char *name ){

@@ -44,6 +44,7 @@ void CamWnd_constructToolbar( ui::Toolbar toolbar );
 void CamWnd_registerShortcuts();
 
 void GlobalCamera_Benchmark();
+void GlobalCamera_SetVisible();
 
 const Vector3& Camera_getOrigin( CamWnd& camwnd );
 void Camera_setOrigin( CamWnd& camwnd, const Vector3& origin );

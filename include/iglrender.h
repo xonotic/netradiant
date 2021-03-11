@@ -23,6 +23,7 @@
 #define INCLUDED_IGLRENDER_H
 
 #include "igl.h"
+#include "itextures.h"
 #include "generic/vector.h"
 class AABB;
 class Matrix4;
@@ -74,23 +75,38 @@ enum ESort
 
 unsigned int m_state;
 std::size_t m_sort;
-GLint m_texture;
-GLint m_texture1;
-GLint m_texture2;
-GLint m_texture3;
-GLint m_texture4;
-GLint m_texture5;
-GLint m_texture6;
-GLint m_texture7;
+
+qtexture_t *m_qtexture;
+qtexture_t *m_qtexture1;
+qtexture_t *m_qtexture2;
+qtexture_t *m_qtexture3;
+qtexture_t *m_qtexture4;
+qtexture_t *m_qtexture5;
+qtexture_t *m_qtexture6;
+qtexture_t *m_qtexture7;
+
+GLuint m_texture;
+GLuint m_texture1;
+GLuint m_texture2;
+GLuint m_texture3;
+GLuint m_texture4;
+GLuint m_texture5;
+GLuint m_texture6;
+GLuint m_texture7;
+
 Vector4 m_colour;
+
 GLenum m_blend_src, m_blend_dst;
 GLenum m_depthfunc;
 GLenum m_alphafunc;
+
 GLfloat m_alpharef;
 GLfloat m_linewidth;
 GLfloat m_pointsize;
+
 GLint m_linestipple_factor;
 GLushort m_linestipple_pattern;
+
 OpenGLFogState m_fog;
 GLProgram* m_program;
 

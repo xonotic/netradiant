@@ -22,7 +22,12 @@
 #if !defined ( INCLUDED_TEXTURELIB_H )
 #define INCLUDED_TEXTURELIB_H
 
+#include "iimage.h"
+
 #include "generic/vector.h"
+
+#include "viewport/viewport.h"
+
 typedef Vector3 Colour3;
 typedef unsigned int GLuint;
 class LoadImageCallback;
@@ -35,9 +40,10 @@ struct qtexture_t
 	const LoadImageCallback& load;
 	const char* name;
 	std::size_t width, height;
-	GLuint texture_number; // gl bind number
+	GLuint texture_number[ VP_MAX ]; // GL texture bind number
 	Colour3 color; // for flat shade mode
 	int surfaceFlags, contentFlags, value;
+	bool loaded; // shader plugin has no knowledge about viewport and can't rely on texture_number
 };
 
 #endif

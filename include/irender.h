@@ -25,6 +25,7 @@
 #include "generic/constant.h"
 #include "generic/callback.h"
 
+#include "viewport/viewport.h"
 
 // Rendering states to sort by.
 // Higher bits have the most effect - slowest state changes should be highest.
@@ -139,7 +140,7 @@ STRING_CONSTANT( Name, "renderstate" );
 virtual Shader* capture( const char* name ) = 0;
 virtual void release( const char* name ) = 0;
 /*! Render all Shader objects. */
-virtual void render( RenderStateFlags globalstate, const Matrix4& modelview, const Matrix4& projection, const Vector3& viewer = Vector3( 0, 0, 0 ) ) = 0;
+virtual void render( const enum ViewportId, RenderStateFlags globalstate, const Matrix4& modelview, const Matrix4& projection, const Vector3& viewer = Vector3( 0, 0, 0 ) ) = 0;
 
 virtual void realise() = 0;
 virtual void unrealise() = 0;

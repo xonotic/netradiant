@@ -69,6 +69,8 @@ guint m_exposeHandler;
 
 DeferredDraw m_deferredDraw;
 DeferredMotion m_deferred_motion;
+
+void XY_Clear();
 public:
 ui::Window m_parent;
 XYWnd();
@@ -100,7 +102,7 @@ void XY_DrawBlockGrid();
 void XY_DrawAxis();
 void XY_DrawGrid();
 void XY_DrawBackground();
-void XY_LoadBackgroundImage( const char *name );
+void XY_LoadBackgroundImage();
 void XY_DisableBackground();
 
 void XY_MouseUp( int x, int y, unsigned int buttons );

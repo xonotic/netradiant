@@ -26,6 +26,10 @@
 // texturing tools for Radiant
 //
 
+// This code looks to be dead and unused.
+// It calls unknown symbols like m_pfnGetTextureNumber().
+// It is not ported to RequestBindTextureNumber().
+
 #include "StdAfx.h"
 
 static void dialog_button_callback( GtkWidget *widget, gpointer data ){
