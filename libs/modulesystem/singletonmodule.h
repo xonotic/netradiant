@@ -111,7 +111,14 @@ void capture(){
 		else
 		{
 			globalOutputStream() << "Module Dependencies Failed: '" << typename Type::Name() << "' '" << APIConstructor::getName() << "'\n";
+#if defined ( IGNORE_DEPENDENCIES_FAIL )
+			if ( !m_dependencyCheck )
+			{
+				globalOutputStream() << "Continuing anyway, FIXME!!!";
+			}
+#else // !IGNORE_DEPENDENCIES_FAIL
 			ASSERT_MESSAGE( m_dependencyCheck, "module dependencies failed" );
+#endif // !IGNORE_DEPENDENCIES_FAIL
 		}
 		m_cycleCheck = true;
 	}
