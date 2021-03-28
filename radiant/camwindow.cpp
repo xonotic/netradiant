@@ -1742,9 +1742,11 @@ void CamWnd_constructToolbar( ui::Toolbar toolbar ){
 void CamWnd_registerShortcuts(){
 	toggle_add_accelerator( "ToggleCubicClip" );
 
+#if !defined( DISABLE_DOOM3_LIGHTING )
 	if ( g_pGameDescription->mGameType == "doom3" ) {
 		command_connect_accelerator( "TogglePreview" );
 	}
+#endif // !DISABLE_DOOM3_LIGHTING
 
 	command_connect_accelerator( "FOVInc" );
 	command_connect_accelerator( "FOVDec" );
@@ -1778,6 +1780,7 @@ void CamWnd_SetMode( camera_draw_mode mode ){
 	}
 }
 
+#if !defined( DISABLE_DOOM3_LIGHTING )
 void CamWnd_TogglePreview( void ){
 	// gametype must be doom3 for this function to work
 	// if the gametype is not doom3 something is wrong with the
@@ -1787,6 +1790,7 @@ void CamWnd_TogglePreview( void ){
 	// switch between textured and lighting mode
 	CamWnd_SetMode( ( CamWnd_GetMode() == cd_lighting ) ? cd_texture : cd_lighting );
 }
+#endif // !DISABLE_DOOM3_LIGHTING
 
 
 CameraModel* g_camera_model = 0;
@@ -1883,6 +1887,7 @@ void Camera_constructPreferences( PreferencesPage& page ){
 		make_property<Camera_FarClip>()
 		);
 
+#if !defined( DISABLE_DOOM3_LIGHTING )
 	if ( g_pGameDescription->mGameType == "doom3" ) {
 		const char* render_mode[] = { "Wireframe", "Flatshade", "Textured", "Lighting" };
 
@@ -1893,6 +1898,7 @@ void Camera_constructPreferences( PreferencesPage& page ){
 			);
 	}
 	else
+#endif // !DISABLE_DOOM3_LIGHTING
 	{
 		const char* render_mode[] = { "Wireframe", "Flatshade", "Textured" };
 
@@ -1981,9 +1987,11 @@ void CamWnd_Construct(){
 	GlobalCommands_insert( "LookThroughSelected", makeCallbackF(GlobalCamera_LookThroughSelected) );
 	GlobalCommands_insert( "LookThroughCamera", makeCallbackF(GlobalCamera_LookThroughCamera) );
 
+#if !defined( DISABLE_DOOM3_LIGHTING )
 	if ( g_pGameDescription->mGameType == "doom3" ) {
 		GlobalCommands_insert( "TogglePreview", makeCallbackF(CamWnd_TogglePreview), Accelerator( GDK_KEY_F3 ) );
 	}
+#endif // !DISABLE_DOOM3_LIGHTING
 
 	GlobalCommands_insert( "FOVInc", makeCallbackF(FOV_increase), Accelerator( GDK_KEY_KP_Multiply, (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "FOVDec", makeCallbackF(FOV_decrease), Accelerator( GDK_KEY_KP_Divide, (GdkModifierType)GDK_SHIFT_MASK ) );

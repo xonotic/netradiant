@@ -1698,6 +1698,7 @@ scene::Instance* erase( scene::Instantiable::Observer* observer, const scene::Pa
 };
 
 void Light_Construct( LightType lightType ){
+#if !defined( DISABLE_DOOM3_LIGHTING )
 	g_lightType = lightType;
 	if ( g_lightType == LIGHTTYPE_DOOM3 ) {
 		LightShader::m_defaultShader = "lights/defaultPointLight";
@@ -1707,10 +1708,13 @@ void Light_Construct( LightType lightType ){
 	}
 	RenderLightRadiiFill::m_state = GlobalShaderCache().capture( "$Q3MAP2_LIGHT_SPHERE" );
 	RenderLightCenter::m_state = GlobalShaderCache().capture( "$BIGPOINT" );
+#endif // !DISABLE_DOOM3_LIGHTING
 }
 void Light_Destroy(){
+#if !defined( DISABLE_DOOM3_LIGHTING )
 	GlobalShaderCache().release( "$Q3MAP2_LIGHT_SPHERE" );
 	GlobalShaderCache().release( "$BIGPOINT" );
+#endif // !DISABLE_DOOM3_LIGHTING
 }
 
 scene::Node& New_Light( EntityClass* eclass ){
