@@ -16,6 +16,7 @@ add_library(picomodel STATIC
         pm_3ds.c
         pm_ase.c
         pm_fm.c pm_fm.h
+        pm_iqm.c
         pm_lwo.c
         pm_md2.c
         pm_md3.c

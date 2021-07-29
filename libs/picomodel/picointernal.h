@@ -80,6 +80,10 @@ extern "C"
 extern const picoColor_t picoColor_white;
 
 /* types */
+#ifndef byte
+	typedef unsigned char byte;
+#endif
+
 typedef struct picoParser_s
 {
 	const char *buffer;
