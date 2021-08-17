@@ -40,14 +40,22 @@ cat <<\EOF
 # Obsolete packs                                      #
 #######################################################
 
-# Quake2World was renamed as Quetoo
-# Other gamepacks have better version available
+# Quake2World was renamed as Quetoo.
+# JediAcademy and JediOutcast gamepacks are unusable.
+# Other gamepacks have better version available.
 
+# JediAcademy   no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JAPack/branches/1.5/
+# JediOutcast   no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JK2Pack/branches/1.5/
+# Kingpin       no   unknown      zip     http://download.kingpin.info/kingpin/editing/maps/map_editors/NetRadiant/addon/Kingpinpack.zip
+# Neverball     no   proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/NeverballPack.zip
 # OpenArena     no   unknown      zip     http://ingar.intranifty.net/files/netradiant/gamepacks/OpenArenaPack.zip
-# Quake         no   proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/QuakePack.zip
 # Quake2World   no   GPL          svn     svn://jdolan.dyndns.org/quake2world/trunk/gtkradiant
+# Quake3        no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Q3Pack/trunk/ 29
+# Quake         no   proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/QuakePack.zip
 # Tremulous     no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/TremulousPack/branches/1.5/
+# Tremulous     no   proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/TremulousPack.zip
 # Unvanquished  no   unknown      zip     http://ingar.intranifty.net/gtkradiant/files/gamepacks/UnvanquishedPack.zip
+# Warfork       no   GPL          zip     https://cdn.discordapp.com/attachments/611741789237411850/659512520553267201/netradiant_warfork_gamepack.zip
 # Warsow        no   GPL          svn     https://svn.bountysource.com/wswpack/trunk/netradiant/games/WarsowPack/
 # Warsow        no   GPL          zip     http://ingar.intranifty.net/files/netradiant/gamepacks/WarsowPack.zip
 
@@ -60,28 +68,33 @@ DarkPlaces      yes  GPL          svn     svn://svn.icculus.org/gtkradiant-gamep
 Doom3           yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Doom3Pack/branches/1.5/
 ET              yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/ETPack/branches/1.5/
 Heretic2        yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Her2Pack/branches/1.5/
-JediAcademy     no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JAPack/branches/1.5/
-Kingpin         yes  unknown      zip     https://www.kingpin.info/download/kingpin/editing/maps/map_editors/NetRadiant/addon/Kingpinpack.zip
-Neverball       yes  proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/NeverballPack.zip
+Kingpin         yes  unknown      git     https://gitlab.com/netradiant/gamepacks/kingpin-mapeditor-support.git
+Neverball       yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/neverball-mapeditor-support.git
 Nexuiz          yes  GPL          gitdir  git://git.icculus.org/divverent/nexuiz.git misc/netradiant-NexuizPack master
 OpenArena       yes  GPL          git     https://github.com/NeonKnightOA/oagamepack.git
 Osirion         yes  GPL          zip     http://ingar.intranifty.net/files/netradiant/gamepacks/OsirionPack.zip
 Prey            yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/PreyPack/trunk/
-Q3              yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Q3Pack/trunk/ 29
 Q3Rally         yes  proprietary  svn     https://svn.code.sf.net/p/q3rallysa/code/tools/radiant-config/radiant15-netradiant/
 Quake2          yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Q2Pack/branches/1.5/
+Quake3          yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/quake3-mapeditor-support.git
 Quake4          yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Q4Pack/branches/1.5/
+QuakeLive       yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/quakelive-mapeditor-support.git
 Quake           yes  GPL          zip     http://ingar.intranifty.net/files/netradiant/gamepacks/Quake1Pack.zip
 Quetoo          yes  GPL          svn     svn://svn.icculus.org/gtkradiant-gamepacks/QuetooPack/branches/1.5/
 SmokinGuns      yes  unknown      git     https://github.com/smokin-guns/smokinguns-mapeditor-support.git
-Tremulous       yes  proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/TremulousPack.zip
+SoF2            yes  unknown      git     https://gitlab.com/netradiant/gamepacks/sof2-mapeditor-support.git
+STVEF           yes  unknown      git     https://gitlab.com/netradiant/gamepacks/stvef-mapeditor-support.git
+Tremulous       yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/tremulous-mapeditor-support.git
 TurtleArena     yes  proprietary  git     https://github.com/Turtle-Arena/turtle-arena-radiant-pack.git
 UFOAI           yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/UFOAIPack/branches/1.5/
 Unvanquished    yes  BSD          git     https://github.com/Unvanquished/unvanquished-mapeditor-support.git
+UrbanTerror     yes  unknown      git     https://gitlab.com/netradiant/gamepacks/urbanterror-mapeditor-support.git
+Warfork         yes  GPL          git     https://gitlab.com/netradiant/gamepacks/warfork-mapeditor-support.git
 Warsow          yes  GPL          git     https://github.com/Warsow/NetRadiantPack.git
 Wolf            yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/WolfPack/branches/1.5/
 WoP             yes  proprietary  git     https://github.com/PadWorld-Entertainment/wop-mapeditor-support.git
 Xonotic         yes  GPL          git     https://gitlab.com/xonotic/netradiant-xonoticpack.git
+ZEQ2Lite        yes  unknown      git     https://gitlab.com/netradiant/gamepacks/zeq2lite-mapeditor-support.git
 EOF
 }
 
