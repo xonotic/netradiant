@@ -100,6 +100,16 @@ int Brush_toggleFormatCount(){
 	return 1;
 }
 
+void Brush_switchFormat( bool switch_format ){
+	if ( switch_format )
+	{
+		g_useAlternativeTextureProjection.m_latched = g_useAlternativeTextureProjection.m_value;
+		g_useAlternativeTextureProjection.m_value = !g_useAlternativeTextureProjection.m_value;
+		PreferencesDialog_restartRequired( g_useAlternativeTextureProjection.m_description );
+		PreferencesDialog_restartIfRequired();
+	}
+}
+
 void Brush_Construct( EBrushType type ){
 	if ( type == eBrushTypeQuake3 ) {
 		g_showAlternativeTextureProjectionOption = true;
@@ -113,6 +123,7 @@ void Brush_Construct( EBrushType type ){
 			"AlternativeTextureProjection",
 			make_property_string( g_useAlternativeTextureProjection.m_latched )
 			);
+
 		g_useAlternativeTextureProjection.useLatched();
 
 		if ( g_useAlternativeTextureProjection.m_value ) {

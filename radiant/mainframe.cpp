@@ -3623,6 +3623,15 @@ void GLWindow_Construct(){
 void GLWindow_Destroy(){
 }
 
+/* HACK: If ui::main is not called yet,
+gtk_main_quit will not quit, so tell main
+to not call ui::main. This happens when a
+map is loaded from command line and require
+a restart because of wrong format.
+Delete this when the code to not have to
+restart to load another format is merged. */
+extern bool g_dontStart;
+
 void Radiant_Restart(){
 	// preferences are expected to be already saved in any way
 	// this is just to be sure and be future proof
@@ -3661,5 +3670,13 @@ void Radiant_Restart(){
 	// quit if radiant successfully started
 	if ( status == 0 ) {
 		gtk_main_quit();
+		/* HACK: If ui::main is not called yet,
+		gtk_main_quit will not quit, so tell main
+		to not call ui::main. This happens when a
+		map is loaded from command line and require
+		a restart because of wrong format.
+		Delete this when the code to not have to
+		restart to load another format is merged. */
+		g_dontStart = true;
 	}
 }

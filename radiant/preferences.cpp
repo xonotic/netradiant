@@ -934,28 +934,36 @@ void PreferencesDialog_restartRequired( const char* staticName ){
 	g_restart_required.push_back( staticName );
 }
 
+bool PreferencesDialog_isRestartRequired(){
+	return !g_restart_required.empty();
+}
+
+void PreferencesDialog_restartIfRequired(){
+	if ( !g_restart_required.empty() ) {
+		StringOutputStream message( 256 );
+		message << "Preference changes require a restart:\n\n";
+
+		for ( std::vector<const char*>::iterator i = g_restart_required.begin(); i != g_restart_required.end(); ++i )
+		{
+			message << ( *i ) << '\n';
+		}
+
+		message << "\nRestart now?";
+
+		auto ret = ui::alert( MainFrame_getWindow(), message.c_str(), "Restart " RADIANT_NAME "?", ui::alert_type::YESNO, ui::alert_icon::Question );
+
+		g_restart_required.clear();
+
+		if ( ret == ui::alert_response::YES ) {
+			g_GamesDialog.m_bSkipGamePromptOnce = true;
+			Radiant_Restart();
+		}
+	}
+}
+
 void PreferencesDialog_showDialog(){
 	if ( ConfirmModified( "Edit Preferences" ) && g_Preferences.DoModal() == eIDOK ) {
-		if ( !g_restart_required.empty() ) {
-			StringOutputStream message( 256 );
-			message << "Preference changes require a restart:\n\n";
-
-			for ( std::vector<const char*>::iterator i = g_restart_required.begin(); i != g_restart_required.end(); ++i )
-			{
-				message << ( *i ) << '\n';
-			}
-
-			message << "\nRestart now?";
-
-			auto ret = ui::alert( MainFrame_getWindow(), message.c_str(), "Restart " RADIANT_NAME "?", ui::alert_type::YESNO, ui::alert_icon::Question );
-
-			g_restart_required.clear();
-
-			if ( ret == ui::alert_response::YES ) {
-				g_GamesDialog.m_bSkipGamePromptOnce = true;
-				Radiant_Restart();
-			}
-		}
+		PreferencesDialog_restartIfRequired();
 	}
 }
 

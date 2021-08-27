@@ -966,6 +966,8 @@ void Map_LoadFile( const char *filename ){
 	MRU_AddFile( filename );
 	g_strLastMapFolder = g_path_get_dirname( filename );
 
+	bool switch_format = false;
+
 	{
 		ScopeTimer timer( "map load" );
 
@@ -992,6 +994,7 @@ void Map_LoadFile( const char *filename ){
 				if ( !format->wrongFormat ) {
 					break;
 				}
+				switch_format = !switch_format;
 			}
 		}
 
@@ -1012,6 +1015,8 @@ void Map_LoadFile( const char *filename ){
 	Map_StartPosition();
 
 	g_currentMap = &g_map;
+
+	Brush_switchFormat( switch_format );
 }
 
 class Excluder

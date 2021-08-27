@@ -502,6 +502,15 @@ void user_shortcuts_save(){
 	SaveCommandMap( path.c_str() );
 }
 
+/* HACK: If ui::main is not called yet,
+gtk_main_quit will not quit, so tell main
+to not call ui::main. This happens when a
+map is loaded from command line and require
+a restart because of wrong format.
+Delete this when the code to not have to
+restart to load another format is merged. */
+bool g_dontStart = false;
+
 int main( int argc, char* argv[] ){
 #if GTK_TARGET == 3
 	// HACK: force legacy GL backend as we don't support GL3 yet
@@ -636,7 +645,17 @@ int main( int argc, char* argv[] ){
 
 	remove_local_pid();
 
-	ui::main();
+	/* HACK: If ui::main is not called yet,
+	gtk_main_quit will not quit, so tell main
+	to not call ui::main. This happens when a
+	map is loaded from command line and require
+	a restart because of wrong format.
+	Delete this when the code to not have to
+	restart to load another format is merged. */
+	if ( !g_dontStart )
+	{
+		ui::main();
+	}
 
 	// avoid saving prefs when the app is minimized
 	if ( g_pParentWnd->IsSleeping() ) {

@@ -129,6 +129,7 @@ void PreferencesDialog_addDisplayPage( const PreferenceGroupCallback& callback )
 void PreferencesDialog_addSettingsPreferences( const PreferencesPageCallback& callback );
 void PreferencesDialog_addSettingsPage( const PreferenceGroupCallback& callback );
 
+bool PreferencesDialog_isRestartRequired();
 void PreferencesDialog_restartRequired( const char* staticName );
 
 template<typename Value>
@@ -410,6 +411,8 @@ extern preferences_globals_t g_preferences_globals;
 void PreferencesDialog_constructWindow( ui::Window main_window );
 void PreferencesDialog_destroyWindow();
 
+
+void PreferencesDialog_restartIfRequired();
 void PreferencesDialog_showDialog();
 
 void GlobalPreferences_Init();
