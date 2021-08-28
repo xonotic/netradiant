@@ -1435,7 +1435,7 @@ void CamWnd::Cam_Init_World(){
 		Textures_Realise();
 	}
 
-	// Only run and run once when GlobalShaderSystem().TriggerRefresh() is called before.
+	// Only run and run once when GlobalShaderSystem().triggerRefresh() is called before.
 
 	if ( GlobalShaderSystem().triggeredRefresh() )
 	{
