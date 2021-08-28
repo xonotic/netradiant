@@ -823,6 +823,14 @@ void operator()( const char* name ) const {
 };
 
 void TextureDirectory_loadTexture( const char* directory, const char* texture ){
+	// Doom3-like dds/ prefix (used by DarkPlaces).
+	// When we list dds/textures/ folder,
+	// store the texture names without dds/ prefix.
+	if ( !strncmp( "dds/", directory, 4 ) )
+	{
+		directory = &directory[ 4 ];
+	}
+
 	StringOutputStream name( 256 );
 	name << directory << StringRange( texture, path_get_filename_base_end( texture ) );
 
@@ -865,6 +873,9 @@ void TextureBrowser_ShowDirectory( TextureBrowser& textureBrowser, const char* d
 		{
 			LoadShaderVisitor visitor;
 			archive->forEachFile( Archive::VisitorFunc( visitor, Archive::eFiles, 0 ), "textures/" );
+
+			// Doom3-like dds/ prefix (used by DarkPlaces).
+			archive->forEachFile( Archive::VisitorFunc( visitor, Archive::eFiles, 0 ), "dds/textures/" );
 		}
 		else if ( extension_equal_i( path_get_extension( directory ), "wad" ) )
 		{
@@ -886,7 +897,19 @@ void TextureBrowser_ShowDirectory( TextureBrowser& textureBrowser, const char* d
 			StringOutputStream dirstring( 64 );
 			dirstring << "textures/" << directory;
 
-			Radiant_getImageModules().foreachModule( LoadTexturesByTypeVisitor( dirstring.c_str() ) );
+			{
+				LoadTexturesByTypeVisitor visitor( dirstring.c_str() );
+				Radiant_getImageModules().foreachModule( visitor );
+			}
+
+			// Doom3-like dds/ prefix (used by DarkPlaces).
+			dirstring.clear();
+			dirstring << "dds/textures/" << directory;
+
+			{
+				LoadTexturesByTypeVisitor visitor( dirstring.c_str() );
+				Radiant_getImageModules().foreachModule( visitor );
+			}
 		}
 	}
 
@@ -908,6 +931,15 @@ void TextureBrowser_ShowTagSearchResult( TextureBrowser& textureBrowser, const c
 		// load remaining texture files
 		StringOutputStream dirstring( 64 );
 		dirstring << "textures/" << directory;
+
+		{
+			LoadTexturesByTypeVisitor visitor( dirstring.c_str() );
+			Radiant_getImageModules().foreachModule( visitor );
+		}
+
+		// Doom3-like dds/ prefix (used by DarkPlaces).
+		dirstring.clear();
+		dirstring << "dds/textures/" << directory;
 
 		{
 			LoadTexturesByTypeVisitor visitor( dirstring.c_str() );
