@@ -1017,6 +1017,8 @@ void Map_LoadFile( const char *filename ){
 
 	g_currentMap = &g_map;
 
+	VFS_Refresh();
+
 	// Load up shaders now that we have the map loaded.
 	g_deferredStartupShaders = true;
 

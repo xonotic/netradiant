@@ -179,6 +179,7 @@ void VFS_Refresh(){
 void VFS_Restart(){
 	VFS_Shutdown();
 	VFS_Init();
+	VFS_Refresh();
 }
 
 class VFSModuleObserver : public ModuleObserver
