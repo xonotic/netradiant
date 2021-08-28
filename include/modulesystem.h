@@ -174,10 +174,6 @@ void initialise( const char* name ){
 		globalModuleServer().setError( true );
 		globalErrorStream() << "SingletonModuleRef::initialise: type=" << makeQuoted( typename Type::Name() ) << " version=" << makeQuoted( typename Type::Version() ) << " name=" << makeQuoted( name ) << " - not found\n";
 	}
-	else
-	{
-		globalOutputStream() << "SingletonModuleRef::initialise: type=" << makeQuoted( typename Type::Name() ) << " version=" << makeQuoted( typename Type::Version() ) << " name=" << makeQuoted( name ) << " - found\n";
-	}
 }
 
 Type* getTable(){
