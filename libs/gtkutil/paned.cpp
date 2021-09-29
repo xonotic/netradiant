@@ -20,19 +20,7 @@
  */
 
 #include "paned.h"
-
-#include <gtk/gtk.h>
-#include <uilib/uilib.h>
-
 #include "frame.h"
-
-
-class PanedState
-{
-public:
-float position;
-int size;
-};
 
 gboolean hpaned_allocate(ui::Widget widget, GtkAllocation* allocation, PanedState* paned ){
 	if ( paned->size != allocation->width ) {

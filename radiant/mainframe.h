@@ -54,6 +54,7 @@ enum EViewStyle
 	eFloating = 1,
 	eSplit = 2,
 	eRegularLeft = 3,
+	eSingle = 4,
 };
 
 MainFrame();

@@ -2943,6 +2943,9 @@ static gint mainframe_delete( ui::Widget widget, GdkEvent *event, gpointer data 
 	return TRUE;
 }
 
+PanedState g_single_hpaned = { 0.75f, -1, };
+PanedState g_single_vpaned = { 0.75f, -1, };
+
 void MainFrame::Create(){
 	ui::Window window = ui::Window( ui::window_type::TOP );
 
@@ -3027,7 +3030,8 @@ void MainFrame::Create(){
 
 	window.show();
 
-	if ( CurrentStyle() == eRegular || CurrentStyle() == eRegularLeft ) {
+	if ( CurrentStyle() == eRegular || CurrentStyle() == eRegularLeft )
+	{
 		{
 			ui::Widget vsplit = ui::VPaned(ui::New);
 			m_vSplit = vsplit;
@@ -3064,7 +3068,6 @@ void MainFrame::Create(){
 						gtk_paned_add2( GTK_PANED( hsplit ), xy_window );
 					}
 
-
 					// camera
 					m_pCamWnd = NewCamWnd();
 					GlobalCamera_setCamWnd( *m_pCamWnd );
@@ -3093,7 +3096,8 @@ void MainFrame::Create(){
 
 		gtk_paned_set_position( GTK_PANED( m_vSplit2 ), g_layout_globals.nCamHeight );
 	}
-	else if ( CurrentStyle() == eFloating ) {
+	else if ( CurrentStyle() == eFloating )
+	{
 		{
 			ui::Window window = ui::Window(create_persistent_floating_window( "Camera", m_window ));
 			global_accel_connect_window( window );
@@ -3187,7 +3191,7 @@ void MainFrame::Create(){
 
 		GroupDialog_show();
 	}
-	else // 4 way
+	else if ( CurrentStyle() == eSplit )
 	{
 		m_pCamWnd = NewCamWnd();
 		GlobalCamera_setCamWnd( *m_pCamWnd );
@@ -3210,15 +3214,65 @@ void MainFrame::Create(){
 
 		ui::Widget xz = m_pXZWnd->GetWidget();
 
-        auto split = create_split_views( camera, yz, xy, xz );
+		auto split = create_split_views( camera, yz, xy, xz );
 		vbox.pack_start( split, TRUE, TRUE, 0 );
 
 		{
-            auto frame = create_framed_widget( TextureBrowser_constructWindow( window ) );
+		auto frame = create_framed_widget( TextureBrowser_constructWindow( window ) );
 			g_page_textures = GroupDialog_addPage( "Textures", frame, TextureBrowserExportTitleCaller() );
 
 			WORKAROUND_GOBJECT_SET_GLWIDGET( window, TextureBrowser_getGLWidget() );
 		}
+	}
+	else // single window
+	{
+		m_pCamWnd = NewCamWnd();
+		GlobalCamera_setCamWnd( *m_pCamWnd );
+		CamWnd_setParent( *m_pCamWnd, window );
+
+		ui::Widget camera = CamWnd_getWidget( *m_pCamWnd );
+
+		m_pYZWnd = new XYWnd();
+		m_pYZWnd->SetViewType( YZ );
+
+		ui::Widget yz = m_pYZWnd->GetWidget();
+
+		m_pXYWnd = new XYWnd();
+		m_pXYWnd->SetViewType( XY );
+
+		ui::Widget xy = m_pXYWnd->GetWidget();
+
+		m_pXZWnd = new XYWnd();
+		m_pXZWnd->SetViewType( XZ );
+
+		ui::Widget xz = m_pXZWnd->GetWidget();
+
+		ui::Widget hsplit = ui::HPaned(ui::New);
+		vbox.pack_start( hsplit, TRUE, TRUE, 0 );
+		hsplit.show();
+
+		ui::Widget split = create_split_views( camera, yz, xy, xz );
+
+		ui::Widget vsplit = ui::VPaned(ui::New);
+		vsplit.show();
+
+		// textures
+		ui::Widget texture_window = create_framed_widget( TextureBrowser_constructWindow( window ) );
+
+		// console
+		ui::Widget console_window = create_framed_widget( Console_constructWindow( window ) );
+
+		gtk_paned_add1( GTK_PANED( hsplit ), split );
+		gtk_paned_add2( GTK_PANED( hsplit ), vsplit );
+
+		gtk_paned_add1( GTK_PANED( vsplit ), texture_window  );
+		gtk_paned_add2( GTK_PANED( vsplit ), console_window  );
+
+		hsplit.connect( "size_allocate", G_CALLBACK( hpaned_allocate ), &g_single_hpaned );
+		hsplit.connect( "notify::position", G_CALLBACK( paned_position ), &g_single_hpaned );
+
+		vsplit.connect( "size_allocate", G_CALLBACK( vpaned_allocate ), &g_single_vpaned );
+		vsplit.connect( "notify::position", G_CALLBACK( paned_position ), &g_single_vpaned );
 	}
 
 	EntityList_constructWindow( window );
@@ -3384,7 +3438,7 @@ void GlobalGL_sharedContextDestroyed(){
 
 void Layout_constructPreferences( PreferencesPage& page ){
 	{
-		const char* layouts[] = { "window1.png", "window2.png", "window3.png", "window4.png" };
+		const char* layouts[] = { "window1.png", "window2.png", "window3.png", "window4.png", "window5.png" };
 		page.appendRadioIcons(
 			"Window Layout",
 			STRING_ARRAY_RANGE( layouts ),
