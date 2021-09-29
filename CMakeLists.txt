@@ -20,7 +20,7 @@ if (APPLE)
 endif ()
 
 set(BUILTIN_GTKGLEXT_BUILT OFF CACHE INTERNAL "...")
-if (EXISTS "${BUILTINS_PKGCONFIG_DIR}gtkglext-1.0.pc")
+if (EXISTS "${BUILTINS_PKGCONFIG_DIR}/gtkglext-1.0.pc")
     set(BUILTIN_GTKGLEXT_BUILT ON)
 endif ()
 
@@ -373,11 +373,13 @@ if (BUILTIN_GTKGLEXT)
 
     set(GTKGLEXT_CFLAGS "$ENV{CFLAGS} ${GTKGLEXT_CFLAGS}")
 
-    if (NOT CMAKE_BUILD_TYPE MATCHES Release)
-        set(GTKGLEXT_CFLAGS "${GTKGLEXT_CFLAGS} -g")
-    endif ()
 
-    set(CONFIGURE_OPTIONS --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf)
+    set(CONFIGURE_OPTIONS --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf
+        --disable-dependency-tracking --without-x)
+
+    if (NOT CMAKE_BUILD_TYPE MATCHES Release)
+        set(CONFIGURE_OPTIONS "${CONFIGURE_OPTIONS} --disable-debug")
+    endif ()
 
     if (APPLE)
         set(GTKGLEXT_GIT_TAG macos)
@@ -395,8 +397,8 @@ if (BUILTIN_GTKGLEXT)
         GIT_REPOSITORY https://gitlab.gnome.org/illwieckz/gtkglext.git
         GIT_TAG ${GTKGLEXT_GIT_TAG}
         BUILD_IN_SOURCE ON
-        CONFIGURE_COMMAND export CFLAGS=${GTKGLEXT_LDFLAGS}
-        CONFIGURE_COMMAND && export LDFLAGS=${GTKGLEXT_CFLAGS}
+        CONFIGURE_COMMAND export CFLAGS=${GTKGLEXT_CFLAGS}
+        CONFIGURE_COMMAND && export LDFLAGS=${GTKGLEXT_LDFLAGS}
         CONFIGURE_COMMAND && export NOCONFIGURE=1
         CONFIGURE_COMMAND && ./autogen.sh
         CONFIGURE_COMMAND && ./configure --prefix "${BUILTINS_INSTALL_DIR}" ${CONFIGURE_OPTIONS}
