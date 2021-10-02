@@ -167,6 +167,8 @@ void VFS_Refresh(){
 	RefreshReferences();
 	// also refresh texture browser
 	TextureBrowser_RefreshShaders();
+	// also show textures (all or common)
+	TextureBrowser_ShowStartupShaders( GlobalTextureBrowser() );
 }
 
 void VFS_Restart(){
