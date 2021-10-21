@@ -374,11 +374,10 @@ if (BUILTIN_GTKGLEXT)
     set(GTKGLEXT_CFLAGS "$ENV{CFLAGS} ${GTKGLEXT_CFLAGS}")
 
 
-    set(CONFIGURE_OPTIONS --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf
-        --disable-dependency-tracking --without-x)
+    set(CONFIGURE_OPTIONS --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf --disable-dependency-tracking --without-x)
 
-    if (NOT CMAKE_BUILD_TYPE MATCHES Release)
-        set(CONFIGURE_OPTIONS "${CONFIGURE_OPTIONS} --disable-debug")
+    if (CMAKE_BUILD_TYPE MATCHES Release)
+        set(CONFIGURE_OPTIONS ${CONFIGURE_OPTIONS} --disable-debug)
     endif ()
 
     if (APPLE)
@@ -388,16 +387,14 @@ if (BUILTIN_GTKGLEXT)
     endif ()
 
     if (APPLE)
-        set(GTKGLEXT_CFLAGS "${GTKGLEXT_CFLAGS} -DGL_SILENCE_DEPRECATION=1")
-        # FIXME: OpenGL deprecation warnings are not silenced
-        # in Objective C code.
+        set(GTKGLEXT_CFLAGS "${GTKGLEXT_CFLAGS} -DGL_SILENCE_DEPRECATION=1 -Wno-deprecated-declarations")
     endif ()
 
     ExternalProject_Add(gtkglext
         GIT_REPOSITORY https://gitlab.gnome.org/illwieckz/gtkglext.git
         GIT_TAG ${GTKGLEXT_GIT_TAG}
         BUILD_IN_SOURCE ON
-        CONFIGURE_COMMAND export CFLAGS=${GTKGLEXT_CFLAGS}
+        CONFIGURE_COMMAND export CCFLAGS=${GTKGLEXT_CFLAGS}
         CONFIGURE_COMMAND && export LDFLAGS=${GTKGLEXT_LDFLAGS}
         CONFIGURE_COMMAND && export NOCONFIGURE=1
         CONFIGURE_COMMAND && ./autogen.sh
