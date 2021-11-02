@@ -61,7 +61,7 @@ Doom3           yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamep
 ET              yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/ETPack/branches/1.5/
 Heretic2        yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Her2Pack/branches/1.5/
 JediAcademy     no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JAPack/branches/1.5/
-Kingpin         yes  unknown      zip     http://download.kingpin.info/kingpin/editing/maps/map_editors/NetRadiant/addon/Kingpinpack.zip
+Kingpin         yes  unknown      zip     https://www.kingpin.info/download/kingpin/editing/maps/map_editors/NetRadiant/addon/Kingpinpack.zip
 Neverball       yes  proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/NeverballPack.zip
 Nexuiz          yes  GPL          gitdir  git://git.icculus.org/divverent/nexuiz.git misc/netradiant-NexuizPack master
 OpenArena       yes  GPL          git     https://github.com/NeonKnightOA/oagamepack.git
