@@ -172,6 +172,7 @@ ui::Window create_simple_modal_dialog_window( const char* title, ModalDialog& di
 
 	auto button = create_dialog_button( "OK", G_CALLBACK( dialog_button_ok ), &dialog );
 	alignment.add(button);
+	gtk_widget_grab_focus (button);
 
 	return window;
 }
