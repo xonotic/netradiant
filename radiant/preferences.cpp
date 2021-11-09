@@ -348,6 +348,30 @@ ui::Window CGameDialog::BuildDialog(){
 	return create_simple_modal_dialog_window( "Global Preferences", m_modal, frame );
 }
 
+static void StringReplace( std::string& input, const std::string& first, const std::string& second )
+{
+	size_t found = 0;
+	while ( ( found = input.find(first, found) ) != std::string::npos )
+	{
+		input.replace( found, first.length(), second );
+	}
+}
+
+// FIXME, for some unknown reason it sorts “Quake 3” after “Quake 4”.
+static bool CompareGameName( CGameDescription *first, CGameDescription *second )
+{
+	std::string string1( first->getRequiredKeyValue( "name" ) );
+	std::string string2( second->getRequiredKeyValue( "name" ) );
+
+	// HACK: Replace some roman numerals.
+	StringReplace( string1, " III", " 3" );
+	StringReplace( string2, " III", " 3" );
+	StringReplace( string1, " II", " 2" );
+	StringReplace( string2, " II", " 2" );
+
+	return string1 < string2;
+}
+
 void CGameDialog::ScanForGames(){
 	StringOutputStream strGamesPath( 256 );
 	strGamesPath << DataPath_get() << "gamepacks/games/";
@@ -379,6 +403,8 @@ void CGameDialog::ScanForGames(){
 		} else {
 			globalErrorStream() << "XML parser failed on '" << strPath.c_str() << "'\n";
 		}
+
+		mGames.sort(CompareGameName);
 	});
 }
 
