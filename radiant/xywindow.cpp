@@ -1074,11 +1074,11 @@ void entitycreate_activated( ui::Widget item ){
 		g_pParentWnd->ActiveXY()->OnEntityCreate( entity_name );
 	}
 	else {
-		GlobalRadiant().m_pfnMessageBox( MainFrame_getWindow(), "There's already a worldspawn in your map!"
-																			  "",
-										 "Info",
-										 eMB_OK,
-										 eMB_ICONDEFAULT );
+		GlobalRadiant().m_pfnMessageBox( MainFrame_getWindow(),
+			"There's already a worldspawn in your map!",
+			"Info",
+			eMB_OK,
+			eMB_ICONDEFAULT );
 	}
 }
 
