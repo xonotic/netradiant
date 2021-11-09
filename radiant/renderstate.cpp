@@ -2150,13 +2150,15 @@ void OpenGLShader::construct( const char* name ){
 		break;
 
 	case '$':
-	{
-		OpenGLStateMap::iterator i = g_openglStates->find( name );
-		if ( i != g_openglStates->end() ) {
-			state = ( *i ).second;
-			break;
+		{
+			OpenGLStateMap::iterator i = g_openglStates->find( name );
+			if ( i != g_openglStates->end() )
+			{
+				state = ( *i ).second;
+				break;
+			}
 		}
-	}
+
 		if ( string_equal( name + 1, "POINT" ) ) {
 			state.m_state = RENDER_COLOURARRAY | RENDER_COLOURWRITE | RENDER_DEPTHWRITE;
 			state.m_sort = OpenGLState::eSortControlFirst;
