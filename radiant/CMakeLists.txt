@@ -123,6 +123,7 @@ target_link_libraries(${RADIANT_BASENAME}
     splines
     stream
     string
+    transformpath
     uilib
     xmllib
 )

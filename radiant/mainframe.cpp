@@ -3472,9 +3472,9 @@ void Layout_registerPreferencesPage(){
 	PreferencesDialog_addInterfacePage( makeCallbackF(Layout_constructPage) );
 }
 
-
 #include "preferencesystem.h"
 #include "stringio.h"
+#include "transformpath/transformpath.h"
 
 void MainFrame_Construct(){
 	GlobalCommands_insert( "OpenManual", makeCallbackF(OpenHelpURL), Accelerator( GDK_KEY_F1 ) );
@@ -3631,9 +3631,11 @@ void MainFrame_Construct(){
 #error "unknown platform"
 #endif
 		;
+
 		StringOutputStream path( 256 );
 		path << DirectoryCleaned( g_pGameDescription->getRequiredKeyValue( ENGINEPATH_ATTRIBUTE ) );
-		g_strEnginePath = path.c_str();
+
+		g_strEnginePath = transformPath( path.c_str() ).c_str();
 	}
 
 	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
