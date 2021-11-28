@@ -50,6 +50,8 @@ cd netradiant
 
 To fetch default game packages you'll need Git, Subversion, Wget and `unzip`.
 
+It's possible to build against GTK3 using the `-DGTK_TARGET=3` cmake option, but some problems may be encountered, see [GUI/GTK](https://gitlab.com/xonotic/netradiant/-/issues?label_name[]=GUI%2FGTK3) issues. GTK2 remains recommended for now.
+
 
 ### Ubuntu:
 
@@ -77,8 +79,8 @@ export PATH="/mingw64/bin:${PATH}"
 Install the dependencies this way:
 
 ```sh
-pacman -S --needed base-devel git \
-    mingw-w64-$(uname -m)-{ntldd-git,subversion,unzip,toolchain,cmake,make,gtk2,gtkglext,libwebp,minizip-git}
+pacman -S --needed base-devel git subversion unzip \
+    mingw-w64-$(uname -m)-{ntldd-git,toolchain,cmake,make,gtk2,gtkglext,libwebp,minizip-git}
 ```
 
 Explicitely use `mingw-w64-x86_64-` or `mingw-w64-i686-` prefix instead of `mingw-w64-$(uname -m)` if you need to target a non-default architecture.
