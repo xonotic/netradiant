@@ -39,7 +39,7 @@ Common::getPath () {
 		if [ "${file_path}" = '-' ]
 		then
 			tr '\n' '\0' \
-			| xargs -0 -n1 -P1 -I{} \
+			| xargs -0 -P1 -I{} \
 				cygpath --unix '{}'
 		else
 			cygpath --unix "${file_path}"
@@ -448,7 +448,7 @@ Windows::listLibForManifest () {
 		-name '*.dll' \
 		-exec basename {} \; \
 	| tr '\n' '\0' \
-	| xargs -0 -n1 -P1 -I{} \
+	| xargs -0 -P1 -I{} \
 		printf '  <file name="{}"/>\n'
 }
 
