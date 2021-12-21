@@ -2795,7 +2795,7 @@ void IlluminateVertexes( int num ){
 			else if ( debugOrigin ) {
 				VectorSubtract( info->maxs, info->mins, temp );
 				VectorScale( temp, ( 1.0f / 255.0f ), temp );
-				VectorSubtract( origin, lm->mins, temp2 );
+				VectorSubtract( verts[ i ].xyz, info->mins, temp2 );
 				radVertLuxel[ 0 ] = info->mins[ 0 ] + ( temp[ 0 ] * temp2[ 0 ] );
 				radVertLuxel[ 1 ] = info->mins[ 1 ] + ( temp[ 1 ] * temp2[ 1 ] );
 				radVertLuxel[ 2 ] = info->mins[ 2 ] + ( temp[ 2 ] * temp2[ 2 ] );
