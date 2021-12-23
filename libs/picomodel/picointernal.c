@@ -741,7 +741,28 @@ void _pico_deduce_shadernames( picoModel_t *model ){
 
 		const char* mapname = model->shader[i]->mapName;
 		const char* shadername = model->shader[i]->name;
-		if( mapname && *mapname )
+
+		/* Detect intentional material name to not replace it with texture name.
+
+		Reimplement commits by Garux:
+		https://github.com/Garux/netradiant-custom/commit/1bd3e7ae186b55fb61e3738d2493432c0b1f5a7b
+		https://github.com/Garux/netradiant-custom/commit/ea21eee2254fb2e667732d8f1b0f83c439a89bfa
+
+		This attempts to restore proper material behaviour when the mapper knows what he is doing,
+		also called Julius' case or correct case because Julius is always correct™
+		while keeping the fallback for other situations, also called newbie's case
+		which may be compatible with third-party tools not following Quake 3 conventions.
+
+		See: https://gitlab.com/xonotic/netradiant/-/merge_requests/179#note_777324051 */
+		if ( shadername && *shadername &&
+			( _pico_strnicmp( shadername, "models/", 7 ) == 0
+			|| _pico_strnicmp( shadername, "models\\", 7 ) == 0
+			|| _pico_strnicmp( shadername, "textures/", 9 ) == 0
+			|| _pico_strnicmp( shadername, "textures\\", 9 ) == 0 ) )
+		{
+			_pico_deduce_shadername( model->fileName, shadername, model->shader[i] );
+		}
+		else if( mapname && *mapname )
 			_pico_deduce_shadername( model->fileName, mapname, model->shader[i] );
 		else if( shadername && *shadername )
 			_pico_deduce_shadername( model->fileName, shadername, model->shader[i] );
