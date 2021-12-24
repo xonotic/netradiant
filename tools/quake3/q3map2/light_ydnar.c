@@ -2740,7 +2740,7 @@ void IlluminateVertexes( int num ){
 	int i, x, y, z, x1, y1, z1, sx, sy, radius, maxRadius, *cluster;
 	int lightmapNum, numAvg;
 	float samples, *vertLuxel, *radVertLuxel, *luxel, dirt;
-	vec3_t origin, temp, temp2, colors[ MAX_LIGHTMAPS ], avgColors[ MAX_LIGHTMAPS ];
+	vec3_t temp, temp2, colors[ MAX_LIGHTMAPS ], avgColors[ MAX_LIGHTMAPS ];
 	bspDrawSurface_t    *ds;
 	surfaceInfo_t       *info;
 	rawLightmap_t       *lm;
@@ -2795,7 +2795,7 @@ void IlluminateVertexes( int num ){
 			else if ( debugOrigin ) {
 				VectorSubtract( info->maxs, info->mins, temp );
 				VectorScale( temp, ( 1.0f / 255.0f ), temp );
-				VectorSubtract( origin, lm->mins, temp2 );
+				VectorSubtract( verts[ i ].xyz, info->mins, temp2 );
 				radVertLuxel[ 0 ] = info->mins[ 0 ] + ( temp[ 0 ] * temp2[ 0 ] );
 				radVertLuxel[ 1 ] = info->mins[ 1 ] + ( temp[ 1 ] * temp2[ 1 ] );
 				radVertLuxel[ 2 ] = info->mins[ 2 ] + ( temp[ 2 ] * temp2[ 2 ] );
@@ -2881,7 +2881,7 @@ void IlluminateVertexes( int num ){
 								trace.origin[ 2 ] = verts[ i ].xyz[ 2 ] + ( VERTEX_NUDGE * z1 );
 
 								/* try at nudged origin */
-								trace.cluster = ClusterForPointExtFilter( origin, VERTEX_EPSILON, info->numSurfaceClusters, &surfaceClusters[ info->firstSurfaceCluster ] );
+								trace.cluster = ClusterForPointExtFilter( trace.origin, VERTEX_EPSILON, info->numSurfaceClusters, &surfaceClusters[ info->firstSurfaceCluster ] );
 								if ( trace.cluster < 0 ) {
 									continue;
 								}
