@@ -284,7 +284,6 @@ void WriteRBSPFile( const char *filename ){
 	rbspHeader_t outheader, *header;
 	FILE            *file;
 	time_t t;
-	char marker[ 1024 ];
 	int size;
 
 
@@ -303,9 +302,8 @@ void WriteRBSPFile( const char *filename ){
 	SafeWrite( file, (bspHeader_t*) header, sizeof( *header ) );    /* overwritten later */
 
 	/* add marker lump */
-	time( &t );
-	sprintf( marker, "I LOVE MY Q3MAP2 %s on %s)", Q3MAP_VERSION, asctime( localtime( &t ) ) );
-	AddLump( file, (bspHeader_t*) header, 0, marker, strlen( marker ) + 1 );
+	const char marker[] = "I LOVE MY Q3MAP2";
+	AddLump( file, header, 0, marker, strlen( marker ) + 1 );
 
 	/* add lumps */
 	AddLump( file, (bspHeader_t*) header, LUMP_SHADERS, bspShaders, numBSPShaders * sizeof( bspShader_t ) );
