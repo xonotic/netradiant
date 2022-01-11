@@ -555,8 +555,8 @@ if (BUILD_BINARIES AND FHS_INSTALL AND NOT WIN32 AND NOT APPLE)
         DESTINATION ${RADIANT_SHARE_DIR}/applications
     )
     install(FILES
-        icons/mime/map.xml
-        DESTINATION ${RADIANT_SHARE_DIR}/mime/model
+        icons/x-netradiant-map.xml
+        DESTINATION ${RADIANT_SHARE_DIR}/mime/application
     )
 endif ()
 
