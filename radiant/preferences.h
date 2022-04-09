@@ -357,9 +357,13 @@ public:
 
 ui::Widget m_notebook{ui::null};
 
-virtual ~PrefsDlg(){
-	g_string_free( m_rc_path, true );
-	g_string_free( m_inipath, true );
+virtual ~PrefsDlg() {
+	if (m_rc_path) {
+		g_string_free( m_rc_path, true );
+	}
+	if (m_inipath) {
+		g_string_free( m_inipath, true );
+	}
 }
 
 /*!
