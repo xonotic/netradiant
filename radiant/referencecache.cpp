@@ -124,8 +124,7 @@ bool file_saveBackup( const char* path ){
 		StringOutputStream backup( 256 );
 		backup << StringRange( path, path_get_extension( path ) ) << "bak";
 
-		return ( !file_exists( backup.c_str() ) || file_remove( backup.c_str() ) ) // remove backup
-			   && file_move( path, backup.c_str() ); // rename current to backup
+		return file_move( path, backup.c_str() ); // rename current to backup
 	}
 
 	globalErrorStream() << "map path is not writeable: " << makeQuoted( path ) << "\n";
@@ -137,7 +136,21 @@ bool MapResource_save( const MapFormat& format, scene::Node& root, const char* p
 	fullpath << path << name;
 
 	if ( path_is_absolute( fullpath.c_str() ) ) {
-		if ( !file_exists( fullpath.c_str() ) || file_saveBackup( fullpath.c_str() ) ) {
+		/* We don't want a backup + rename operation if the .map file is
+		 * a symlink. Otherwise we'll break the user's careful symlink setup.
+		 * Just overwrite the original file. Assume the user has versioning. */
+		bool make_backup;
+		struct stat st;
+		if ( lstat(fullpath.c_str(), &st) == 0 ) {
+			make_backup = true;		// file exists
+			if ( (st.st_mode & S_IFMT) == S_IFLNK ) {
+				make_backup = false;  	// .. but it is a symlink
+			}
+		} else {
+			make_backup = false;		// nothing to move
+		}
+
+		if ( !make_backup || file_saveBackup( fullpath.c_str() ) ) {
 			return MapResource_saveFile( format, root, Map_Traverse, fullpath.c_str() );
 		}
 
