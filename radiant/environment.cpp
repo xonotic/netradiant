@@ -281,7 +281,11 @@ void environment_init( int argc, char const* argv[] ){
 
 	{
 		StringOutputStream buffer;
+#ifdef RADIANT_ADDONS_DIR
+		buffer << RADIANT_ADDONS_DIR << "/";
+#else
 		buffer << app_path.c_str() << "../lib/" << RADIANT_BASENAME << "/";
+#endif
 		if ( file_is_directory( buffer.c_str() ) ) {
 			lib_path = buffer.c_str();
 		}
@@ -292,7 +296,11 @@ void environment_init( int argc, char const* argv[] ){
 
 	{
 		StringOutputStream buffer;
+#ifdef RADIANT_DATA_DIR
+		buffer << RADIANT_DATA_DIR << "/";
+#else
 		buffer << app_path.c_str() << "../share/" << RADIANT_BASENAME << "/";
+#endif
 		if ( file_is_directory( buffer.c_str() ) ) {
 			data_path = buffer.c_str();
 		}
