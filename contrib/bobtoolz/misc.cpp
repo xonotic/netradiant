@@ -384,7 +384,7 @@ void MakeNormal( const vec_t* va, const vec_t* vb, const vec_t* vc, vec_t* out )
 }
 
 char* GetFilename( char* buffer, const char* filename ) {
-	strcpy( buffer, GlobalRadiant().getAppPath() );
+	strcpy( buffer, GlobalRadiant().getDataPath() );
 	strcat( buffer, "plugins/" );
 	strcat( buffer, filename );
 	return buffer;
