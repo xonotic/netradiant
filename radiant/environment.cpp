@@ -280,33 +280,34 @@ void environment_init( int argc, char const* argv[] ){
 	}
 
 	{
+#if defined(RADIANT_FHS_INSTALL)
 		StringOutputStream buffer;
-#ifdef RADIANT_ADDONS_DIR
+	#if defined(RADIANT_ADDONS_DIR)
 		buffer << RADIANT_ADDONS_DIR << "/";
+	#else
+		buffer << app_path.c_str() << "../lib/";
+		buffer << RADIANT_LIB_ARCH << "/";
+		buffer << RADIANT_BASENAME << "/";
+	#endif
+		lib_path = buffer.c_str();
 #else
-		buffer << app_path.c_str() << "../lib/" << RADIANT_BASENAME << "/";
+		lib_path = app_path.c_str();
 #endif
-		if ( file_is_directory( buffer.c_str() ) ) {
-			lib_path = buffer.c_str();
-		}
-		else {
-			lib_path = app_path.c_str();
-		}
 	}
 
 	{
+#if defined(RADIANT_FHS_INSTALL)
 		StringOutputStream buffer;
-#ifdef RADIANT_DATA_DIR
+	#if defined(RADIANT_DATA_DIR)
 		buffer << RADIANT_DATA_DIR << "/";
+	#else
+		buffer << app_path.c_str() << "../share/";
+		buffer << RADIANT_BASENAME << "/";
+	#endif
+		data_path = buffer.c_str();
 #else
-		buffer << app_path.c_str() << "../share/" << RADIANT_BASENAME << "/";
+		data_path = app_path.c_str();
 #endif
-		if ( file_is_directory( buffer.c_str() ) ) {
-			data_path = buffer.c_str();
-		}
-		else {
-			data_path = app_path.c_str();
-		}
 	}
 
 	if ( !portable_app_setup() ) {
