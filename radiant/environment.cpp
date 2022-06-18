@@ -374,9 +374,13 @@ void environment_init( int argc, char const* argv[] ){
 
 	if ( !portable_app_setup() ) {
 		char *appdata = getenv( "APPDATA" );
+
 		StringOutputStream home( 256 );
 		home << PathCleaned( appdata );
-		home << "/NetRadiantSettings/";
+		home << "/";
+		home << RADIANT_NAME;
+		home << "/";
+
 		Q_mkdir( home.c_str() );
 		home_path = home.c_str();
 	}
