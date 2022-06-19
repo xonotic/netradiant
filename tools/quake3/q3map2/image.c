@@ -479,11 +479,12 @@ image_t *ImageLoad( const char *filename ){
 
 		/* also look for .dds image in dds/ prefix like Doom3 or DarkPlaces */
 		if ( size <= 0 ) {
-			strcpy( name, "dds/" );
-			strcat( name, image->name );
-			StripExtension( name );
-			strcat( name, ".dds" );
-			size = vfsLoadFile( (const char*) name, (void**) &buffer, 0 );
+			char ddsname[ 1024 ];
+			strcpy( ddsname, "dds/" );
+			strcat( ddsname, image->name );
+			StripExtension( ddsname );
+			strcat( ddsname, ".dds" );
+			size = vfsLoadFile( (const char*) ddsname, (void**) &buffer, 0 );
 		}
 
 		if ( size > 0 ) {
