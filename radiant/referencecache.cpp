@@ -124,7 +124,14 @@ bool file_saveBackup( const char* path ){
 		StringOutputStream backup( 256 );
 		backup << StringRange( path, path_get_extension( path ) ) << "bak";
 
+#if GDEF_OS_WINDOWS
+		// NT symlinks are not supported yet.
+		return ( !file_exists( backup.c_str() ) || file_remove( backup.c_str() ) ) // remove backup
+			   && file_move( path, backup.c_str() ); // rename current to backup
+#else
+		// POSIX symlinks are supported.
 		return file_move( path, backup.c_str() ); // rename current to backup
+#endif
 	}
 
 	globalErrorStream() << "map path is not writeable: " << makeQuoted( path ) << "\n";
@@ -136,6 +143,11 @@ bool MapResource_save( const MapFormat& format, scene::Node& root, const char* p
 	fullpath << path << name;
 
 	if ( path_is_absolute( fullpath.c_str() ) ) {
+#if GDEF_OS_WINDOWS
+		// NT symlinks are not supported yet.
+		if ( !file_exists( fullpath.c_str() ) || file_saveBackup( fullpath.c_str() ) ) {
+#else
+		// POSIX symlinks are supported.
 		/* We don't want a backup + rename operation if the .map file is
 		 * a symlink. Otherwise we'll break the user's careful symlink setup.
 		 * Just overwrite the original file. Assume the user has versioning. */
@@ -151,6 +163,7 @@ bool MapResource_save( const MapFormat& format, scene::Node& root, const char* p
 		}
 
 		if ( !make_backup || file_saveBackup( fullpath.c_str() ) ) {
+#endif
 			return MapResource_saveFile( format, root, Map_Traverse, fullpath.c_str() );
 		}
 
