@@ -504,7 +504,7 @@ image_t *ImageLoad( const char *filename ){
 		/* attempt to load crn */
 		StripExtension( name );
 		strcat( name, ".crn" );
-		size = vfsLoadFile( ( const char* ) name, ( void** ) &buffer, 0 );
+		size = vfsLoadFile( (const char*) name, (void**) &buffer, 0 );
 		if ( size > 0 ) {
 			LoadCRNBuffer( buffer, size, &image->pixels, &image->width, &image->height );
 			break;
