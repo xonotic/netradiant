@@ -32,6 +32,7 @@
 #define INCLUDED_GTKMISC_H
 
 #include <uilib/uilib.h>
+#include "gtkutil/toolbar.h"
 
 void command_connect_accelerator( const char* commandName );
 void command_disconnect_accelerator( const char* commandName );

@@ -3076,16 +3076,20 @@ void MainFrame::Create(){
 	{
 		{
 			ui::Widget hsplit = ui::HPaned(ui::New);
-			m_vSplit = hsplit;
+			m_hSplit = hsplit;
+
 			vbox.pack_start( hsplit, TRUE, TRUE, 0 );
 			hsplit.show();
+
 			{
 				ui::Widget vsplit = ui::VPaned(ui::New);
 				vsplit.show();
 				m_vSplit = vsplit;
+
 				ui::Widget vsplit2 = ui::VPaned(ui::New);
 				vsplit2.show();
-				m_vSplit = vsplit2;
+				m_vSplit2 = vsplit2;
+
 				if ( CurrentStyle() == eRegular ){
 					gtk_paned_add1( GTK_PANED( hsplit ), vsplit );
 					gtk_paned_add2( GTK_PANED( hsplit ), vsplit2 );
@@ -3103,8 +3107,8 @@ void MainFrame::Create(){
 				m_pXYWnd = new XYWnd();
 				m_pXYWnd->SetViewType( XY );
 				ui::Widget xy_window = ui::Widget(create_framed_widget( m_pXYWnd->GetWidget( ) ));
-
 				gtk_paned_add1( GTK_PANED( vsplit ), xy_window );
+
 				{
 					// camera
 					m_pCamWnd = NewCamWnd();

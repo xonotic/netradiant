@@ -726,7 +726,7 @@ public:
 void realise(){
 	m_realiseCallbacks();
 	/* texturebrowser tree update on vfs restart */
-	TextureBrowser_constructTreeStore();
+//	TextureBrowser_constructTreeStore();
 }
 
 void unrealise(){
@@ -1353,24 +1353,24 @@ void Texture_Draw( TextureBrowser& textureBrowser ){
 				glEnable( GL_TEXTURE_2D );
 				glLineWidth( 1 );
 			}
-				// highlight in-use textures
+			// highlight in-use textures
 			else if ( !textureBrowser.m_hideUnused && shader->IsInUse() ) {
 			//1px with float
 				float xf = (float)x;
 				float yf = (float)( y - TextureBrowser_fontHeight( textureBrowser ) );
-					glColor3f( 0.5,1,0.5 );
-					glDisable( GL_TEXTURE_2D );
-					glBegin( GL_LINE_LOOP );
+				glColor3f( 0.5,1,0.5 );
+				glDisable( GL_TEXTURE_2D );
+				glBegin( GL_LINE_LOOP );
 				glVertex2f( xf - 3.5,yf + 3.5 );
 				glVertex2f( xf - 3.5,yf - nHeight - 3.5 );
 				glVertex2f( xf + 3.5 + nWidth,yf - nHeight - 3.5 );
 				glVertex2f( xf + 3.5 + nWidth,yf + 3.5 );
-					glEnd();
-					glEnable( GL_TEXTURE_2D );
-				}
+				glEnd();
+				glEnable( GL_TEXTURE_2D );
+			}
 
 			// draw checkerboard for transparent textures
-			if ( g_TextureBrowser_enableAlpha )
+ 			if ( g_TextureBrowser_enableAlpha )
 			{
 				glDisable( GL_TEXTURE_2D );
 				glBegin( GL_QUADS );
@@ -1945,6 +1945,10 @@ ui::MenuItem TextureBrowser_constructViewMenu( ui::Menu menu ){
 	return textures_menu_item;
 }
 
+void Popup_View_Menu( GtkWidget *widget, GtkMenu *menu ){
+	gtk_menu_popup( menu, NULL, NULL, NULL, NULL, 1, gtk_get_current_event_time() );
+}
+
 ui::MenuItem TextureBrowser_constructToolsMenu( ui::Menu menu ){
 	ui::MenuItem textures_menu_item = ui::MenuItem(new_sub_menu_item_with_mnemonic( "_Tools" ));
 
@@ -2290,22 +2294,44 @@ ui::Widget TextureBrowser_constructWindow( ui::Window toplevel ){
 	table.attach(vbox, {0, 1, 1, 3}, {GTK_FILL, GTK_FILL});
 	vbox.show();
 
-	ui::Widget menu_bar{ui::null};
+	// ui::Widget menu_bar{ui::null};
+	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
 
 	{ // menu bar
-		menu_bar = ui::Widget::from(gtk_menu_bar_new());
+		// menu_bar = ui::Widget::from(gtk_menu_bar_new());
 		auto menu_view = ui::Menu(ui::New);
-		auto view_item = TextureBrowser_constructViewMenu( menu_view );
-		gtk_menu_item_set_submenu( GTK_MENU_ITEM( view_item ), menu_view );
-		gtk_menu_shell_append( GTK_MENU_SHELL( menu_bar ), view_item );
+		// auto view_item = TextureBrowser_constructViewMenu( menu_view );
+		TextureBrowser_constructViewMenu( menu_view );
+		// gtk_menu_item_set_submenu( GTK_MENU_ITEM( view_item ), menu_view );
+		// gtk_menu_shell_append( GTK_MENU_SHELL( menu_bar ), view_item );
 
+		//gtk_table_attach( GTK_TABLE( table ), GTK_WIDGET( toolbar ), 0, 1, 0, 1, GTK_FILL, GTK_FILL, 0, 0 );
+		gtk_box_pack_start( GTK_BOX( vbox ), GTK_WIDGET( toolbar ), FALSE, FALSE, 0 );
+
+		//view menu button
+		{
+			auto button = toolbar_append_button( toolbar, "View", "texbro_view.png" );
+			button.dimensions( 22, 22 );
+			button.connect( "clicked", G_CALLBACK( Popup_View_Menu ), menu_view );
+		}
+		{
+			auto button = toolbar_append_button( toolbar, "Find / Replace...", "texbro_gtk-find-and-replace.png", "FindReplaceTextures" );
+			button.dimensions( 22, 22 );
+		}
+		{
+			auto button = toolbar_append_button( toolbar, "Flush & Reload Shaders", "texbro_refresh.png", "RefreshShaders" );
+			button.dimensions( 22, 22 );
+		}
+		toolbar.show();
+
+/*
 		auto menu_tools = ui::Menu(ui::New);
 		auto tools_item = TextureBrowser_constructToolsMenu( menu_tools );
 		gtk_menu_item_set_submenu( GTK_MENU_ITEM( tools_item ), menu_tools );
 		gtk_menu_shell_append( GTK_MENU_SHELL( menu_bar ), tools_item );
-
-		table.attach(menu_bar, {0, 3, 0, 1}, {GTK_FILL, GTK_SHRINK});
-		menu_bar.show();
+*/
+		// table.attach(menu_bar, {0, 3, 0, 1}, {GTK_FILL, GTK_SHRINK});
+		// menu_bar.show();
 	}
 	{ // Texture TreeView
 		textureBrowser.m_scr_win_tree = ui::ScrolledWindow(ui::New);
@@ -2371,9 +2397,14 @@ ui::Widget TextureBrowser_constructWindow( ui::Window toplevel ){
 		}
 		{ // tag menu bar
 			auto menu_tags = ui::Menu(ui::New);
-			auto tags_item = TextureBrowser_constructTagsMenu( menu_tags );
-			gtk_menu_item_set_submenu( GTK_MENU_ITEM( tags_item ), menu_tags );
-			gtk_menu_shell_append( GTK_MENU_SHELL( menu_bar ), tags_item );
+			// auto tags_item = TextureBrowser_constructTagsMenu( menu_tags );
+			TextureBrowser_constructTagsMenu( menu_tags );
+			// gtk_menu_item_set_submenu( GTK_MENU_ITEM( tags_item ), menu_tags );
+			// gtk_menu_shell_append( GTK_MENU_SHELL( menu_bar ), tags_item );
+
+			auto button = toolbar_append_button( toolbar, "Tags", "texbro_tags.png" );
+			button.dimensions( 22, 22 );
+			button.connect( "clicked", G_CALLBACK( Popup_View_Menu ), menu_tags );
 		}
 		{ // Tag TreeView
 			textureBrowser.m_scr_win_tags = ui::ScrolledWindow(ui::New);
@@ -2785,6 +2816,8 @@ void TextureBrowser_RefreshShaders(){
 
 		ScopeDisableScreenUpdates disableScreenUpdates( "Processing...", "Loading Shaders" );
 		GlobalShaderSystem().refresh();
+		/* texturebrowser tree update on vfs restart */
+		TextureBrowser_constructTreeStore();
 		UpdateAllWindows();
 
 		TextureBrowser_ShowDirectory( GlobalTextureBrowser(), dirName );
@@ -2794,6 +2827,8 @@ void TextureBrowser_RefreshShaders(){
 	else{
 		ScopeDisableScreenUpdates disableScreenUpdates( "Processing...", "Loading Shaders" );
 		GlobalShaderSystem().refresh();
+		/* texturebrowser tree update on vfs restart */
+		TextureBrowser_constructTreeStore();
 		UpdateAllWindows();
 	}
 }
@@ -3057,6 +3092,10 @@ void TextureBrowser_Destroy(){
 	GlobalShaderSystem().detach( g_ShadersObserver );
 
 	Textures_setModeChangedNotify( Callback<void()>() );
+}
+
+ui::Widget TextureBrowser_getGLWidget(){
+	return GlobalTextureBrowser().m_gl_widget;
 }
 
 #if WORKAROUND_WINDOWS_GTK2_GLWIDGET

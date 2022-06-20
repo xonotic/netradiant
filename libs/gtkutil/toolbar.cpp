@@ -37,6 +37,12 @@ void toolbar_append( ui::Toolbar toolbar, ui::ToolItem button, const char* descr
 	toolbar.add(button);
 }
 
+ui::ToolButton toolbar_append_button( ui::Toolbar toolbar, const char* description, const char* icon ){
+	auto button = ui::ToolButton::from(gtk_tool_button_new(new_local_image(icon), nullptr));
+	toolbar_append(toolbar, button, description);
+	return button;
+}
+
 ui::ToolButton toolbar_append_button( ui::Toolbar toolbar, const char* description, const char* icon, const Callback<void()>& callback ){
 	auto button = ui::ToolButton::from(gtk_tool_button_new(new_local_image(icon), nullptr));
 	button_connect_callback(button, callback);
