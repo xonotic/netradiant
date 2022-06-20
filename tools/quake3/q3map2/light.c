@@ -717,7 +717,7 @@ float PointToPolygonFormFactor( const vec3_t point, const vec3_t normal, const w
 	for ( i = 0; i < w->numpoints; i++ )
 	{
 		VectorSubtract( w->p[ i ], point, dirs[ i ] );
-		VectorNormalize( dirs[ i ], dirs[ i ] );
+		VectorFastNormalize( dirs[ i ], dirs[ i ] );
 	}
 
 	/* duplicate first vertex to avoid mod operation */
@@ -743,7 +743,7 @@ float PointToPolygonFormFactor( const vec3_t point, const vec3_t normal, const w
 		angle = acos( dot );
 
 		CrossProduct( dirs[ i ], dirs[ j ], triVector );
-		if ( VectorNormalize( triVector, triNormal ) < 0.0001f ) {
+		if ( VectorFastNormalize( triVector, triNormal ) < 0.0001f ) {
 			continue;
 		}
 
@@ -2301,6 +2301,19 @@ int LightMain( int argc, char **argv ){
 			Sys_Printf( "No lightmaps yo\n" );
 		}
 
+		else if ( !strcmp( argv[ i ], "-bouncecolorratio" ) ) {
+			f = atof( argv[ i + 1 ] );
+			bounceColorRatio *= f;
+			if ( bounceColorRatio > 1 ) {
+				bounceColorRatio = 1;
+			}
+			if ( bounceColorRatio < 0 ) {
+				bounceColorRatio = 0;
+			}
+			Sys_Printf( "Bounce color ratio set to %f\n", bounceColorRatio );
+			i++;
+		}
+
 		else if ( !strcmp( argv[ i ], "-bouncescale" ) ) {
 			f = atof( argv[ i + 1 ] );
 			bounceScale *= f;
@@ -2825,7 +2838,7 @@ int LightMain( int argc, char **argv ){
 			if ( ( atof( argv[ i + 1 ] ) != 0 ) && ( atof( argv[ i + 1 ] )) < 1 ) {
 				noVertexLighting = ( atof( argv[ i + 1 ] ) );
 				i++;
-				Sys_Printf( "Setting vertex lighting globally to %d\n", noVertexLighting );
+				Sys_Printf( "Setting vertex lighting globally to %f\n", noVertexLighting );
 			}
 			else{
 				Sys_Printf( "Disabling vertex lighting\n" );
