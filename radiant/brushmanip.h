@@ -71,6 +71,10 @@ void Scene_BrushSelectByShader( scene::Graph& graph, const char* name );
 void Scene_BrushSelectByShader_Component( scene::Graph& graph, const char* name );
 void Scene_BrushFitTexture_Selected( scene::Graph& graph, float s_repeat, float t_repeat );
 void Scene_BrushFitTexture_Component_Selected( scene::Graph& graph, float s_repeat, float t_repeat );
+void Scene_BrushFitTexture_SelectedW( scene::Graph& graph, float s_repeat, float t_repeat );
+void Scene_BrushFitTexture_Component_SelectedW( scene::Graph& graph, float s_repeat, float t_repeat );
+void Scene_BrushFitTexture_SelectedH( scene::Graph& graph, float s_repeat, float t_repeat );
+void Scene_BrushFitTexture_Component_SelectedH( scene::Graph& graph, float s_repeat, float t_repeat );
 
 void Brush_constructMenu( ui::Menu menu );
 

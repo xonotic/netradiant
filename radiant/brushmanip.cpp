@@ -555,6 +555,28 @@ void Scene_BrushFindReplaceShader_Component_Selected( scene::Graph& graph, const
 }
 
 
+class FaceFitTextureW
+{
+float m_s_repeat, m_t_repeat;
+public:
+FaceFitTextureW( float s_repeat, float t_repeat ) : m_s_repeat( s_repeat ), m_t_repeat( t_repeat ){
+}
+void operator()( Face& face ) const {
+	face.FitTextureW( m_s_repeat, m_t_repeat );
+}
+};
+
+class FaceFitTextureH
+{
+float m_s_repeat, m_t_repeat;
+public:
+FaceFitTextureH( float s_repeat, float t_repeat ) : m_s_repeat( s_repeat ), m_t_repeat( t_repeat ){
+}
+void operator()( Face& face ) const {
+	face.FitTextureH( m_s_repeat, m_t_repeat );
+}
+};
+
 void Scene_BrushFitTexture_Selected( scene::Graph& graph, float s_repeat, float t_repeat ){
 	Scene_ForEachSelectedBrush_ForEachFace(graph, [&](Face &face) {
 		face.FitTexture(s_repeat, t_repeat);
@@ -566,6 +588,26 @@ void Scene_BrushFitTexture_Component_Selected( scene::Graph& graph, float s_repe
 	Scene_ForEachSelectedBrushFace(graph, [&](Face &face) {
 		face.FitTexture(s_repeat, t_repeat);
 	});
+	SceneChangeNotify();
+}
+
+void Scene_BrushFitTexture_SelectedW( scene::Graph& graph, float s_repeat, float t_repeat ){
+	Scene_ForEachSelectedBrush_ForEachFace( graph, FaceFitTextureW( s_repeat, t_repeat ) );
+	SceneChangeNotify();
+}
+
+void Scene_BrushFitTexture_Component_SelectedW( scene::Graph& graph, float s_repeat, float t_repeat ){
+	Scene_ForEachSelectedBrushFace( graph, FaceFitTextureW( s_repeat, t_repeat ) );
+	SceneChangeNotify();
+}
+
+void Scene_BrushFitTexture_SelectedH( scene::Graph& graph, float s_repeat, float t_repeat ){
+	Scene_ForEachSelectedBrush_ForEachFace( graph, FaceFitTextureH( s_repeat, t_repeat ) );
+	SceneChangeNotify();
+}
+
+void Scene_BrushFitTexture_Component_SelectedH( scene::Graph& graph, float s_repeat, float t_repeat ){
+	Scene_ForEachSelectedBrushFace( graph, FaceFitTextureH( s_repeat, t_repeat ) );
 	SceneChangeNotify();
 }
 
@@ -638,8 +680,8 @@ void Scene_BrushSelectByShader_Component( scene::Graph& graph, const char* name 
 	Scene_ForEachSelectedBrush_ForEachFaceInstance(graph, [&](FaceInstance &face) {
 		printf("checking %s = %s\n", face.getFace().GetShader(), name);
 		if (shader_equal(face.getFace().GetShader(), name)) {
-			face.setSelected(SelectionSystem::eFace, true);
-		}
+		face.setSelected( SelectionSystem::eFace, true );
+	}
 	});
 }
 
@@ -649,7 +691,7 @@ void Scene_BrushGetTexdef_Selected( scene::Graph& graph, TextureProjection& proj
 		if (!done) {
 			done = true;
 			face.GetTexdef(projection);
-		}
+}
 	});
 }
 

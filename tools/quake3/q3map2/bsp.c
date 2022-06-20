@@ -44,7 +44,6 @@
 
    ------------------------------------------------------------------------------- */
 
-
 /*
    ProcessAdvertisements()
    copies advertisement info into the BSP structures
@@ -870,8 +869,8 @@ int BSPMain( int argc, char **argv ){
 				Sys_Printf( "The -mv argument is deprecated, use \"-maxlightmapvertices\" instead\n" );
 			}
 			else {
-				Sys_Printf( "Maximum lightmapped surface vertex count set to %d\n", maxLMSurfaceVerts );
-			}
+			Sys_Printf( "Maximum lightmapped surface vertex count set to %d\n", maxLMSurfaceVerts );
+		}
 		}
 		else if ( !strcmp( argv[ i ], "-np" ) ) {
 			npDegrees = atof( argv[ i + 1 ] );
@@ -1003,13 +1002,11 @@ int BSPMain( int argc, char **argv ){
 			colorsRGB = qfalse;
 			Sys_Printf( "Colors are linear\n" );
 		}
-		else if ( !strcmp( argv[ i ], "-altsplit" ) )
-		{
+		else if ( !strcmp( argv[ i ], "-altsplit" ) ) {
 			Sys_Printf( "Alternate BSP splitting (by 27) enabled\n" );
 			bspAlternateSplitWeights = qtrue;
 		}
-		else if ( !strcmp( argv[ i ], "-deep" ) )
-		{
+		else if ( !strcmp( argv[ i ], "-deep" ) ) {
 			Sys_Printf( "Deep BSP tree generation enabled\n" );
 			deepBSP = qtrue;
 		}
@@ -1049,8 +1046,13 @@ int BSPMain( int argc, char **argv ){
 			argv[ i ] = NULL;
 			Sys_Printf( "Use %s as surface file\n", surfaceFilePath );
 		}
-		else{
-			Sys_FPrintf( SYS_WRN, "WARNING: Unknown option \"%s\"\n", argv[ i ] );
+		else if ( !strcmp( argv[ i ], "-noob" ) ) {
+			Sys_Printf( "No oBs!\n" );
+			noob = qtrue;
+		}
+		else
+		{
+			Sys_Printf( "WARNING: Unknown option \"%s\"\n", argv[ i ] );
 		}
 	}
 

@@ -201,7 +201,7 @@ void VFS_Destroy(){
 // Home Paths
 
 #if GDEF_OS_WINDOWS
-#include <shlobj.h>
+															#include <shlobj.h>
 #include <objbase.h>
 const GUID qFOLDERID_SavedGames = {0x4C5C32FF, 0xBB9D, 0x43b0, {0xB5, 0xB4, 0x2D, 0x72, 0xE5, 0x4E, 0xAA, 0xA4}};
 #define qREFKNOWNFOLDERID GUID
@@ -272,10 +272,10 @@ void HomePaths_Realise(){
 				break;
 			}
 			else {
-				path.clear();
-				path << DirectoryCleaned( g_get_home_dir() ) << prefix << "/";
-				g_qeglobals.m_userEnginePath = path.c_str();
-				break;
+			path.clear();
+			path << DirectoryCleaned( g_get_home_dir() ) << prefix << "/";
+			g_qeglobals.m_userEnginePath = path.c_str();
+			break;
 			}
 #endif
 		}
@@ -3216,11 +3216,11 @@ void MainFrame::Create(){
 
 		ui::Widget xz = m_pXZWnd->GetWidget();
 
-		auto split = create_split_views( camera, yz, xy, xz );
+        auto split = create_split_views( camera, yz, xy, xz );
 		vbox.pack_start( split, TRUE, TRUE, 0 );
 
 		{
-		auto frame = create_framed_widget( TextureBrowser_constructWindow( window ) );
+            auto frame = create_framed_widget( TextureBrowser_constructWindow( window ) );
 			g_page_textures = GroupDialog_addPage( "Textures", frame, TextureBrowserExportTitleCaller() );
 
 			WORKAROUND_GOBJECT_SET_GLWIDGET( window, TextureBrowser_getGLWidget() );

@@ -41,6 +41,8 @@
 #define Q3MAP_MOTD      "Your map saw the pretty lights from q3map2's BFG"
 
 
+
+
 /* -------------------------------------------------------------------------------
 
    dependencies
@@ -87,13 +89,13 @@
 
    ------------------------------------------------------------------------------- */
 
-#if GDEF_OS_WINDOWS
-	#define Q_stricmp           stricmp
-	#define Q_strncasecmp       strnicmp
-#else
-	#define Q_stricmp           strcasecmp
-	#define Q_strncasecmp       strncasecmp
-#endif
+	#if GDEF_OS_WINDOWS
+		#define Q_stricmp           stricmp
+		#define Q_strncasecmp       strnicmp
+	#else
+		#define Q_stricmp           strcasecmp
+		#define Q_strncasecmp       strncasecmp
+	#endif
 
 // hack to declare and define in the same file
 #ifdef MAIN_C
@@ -171,6 +173,7 @@
 #define C_ANTIPORTAL            0x00004000  /* like hint, but doesn't generate portals */
 #define C_SKIP                  0x00008000  /* like hint, but skips this face (doesn't split bsp) */
 #define C_NOMARKS               0x00010000  /* no decals */
+#define C_OB                    0x00020000  /* skip -noob for this */
 #define C_DETAIL                0x08000000  /* THIS MUST BE THE SAME AS IN RADIANT! */
 
 
@@ -1535,6 +1538,7 @@ vec_t                       Random( void );
 char                        *Q_strncpyz( char *dst, const char *src, size_t len );
 char                        *Q_strcat( char *dst, size_t dlen, const char *src );
 char                        *Q_strncat( char *dst, size_t dlen, const char *src, size_t slen );
+int                         ShiftBSPMain( int argc, char **argv );
 
 /* help.c */
 void                        HelpMain(const char* arg);
@@ -1989,7 +1993,7 @@ Q_EXTERN game_t games[]
 	,
 								#include "game_smokinguns.h" /* must be after game_quake3.h */
 	,
-								#include "game_tremulous.h" /* LinuxManMikeC: must be after game_quake3.h, depends on #define's set in it */
+								#include "game_tremulous.h" /*LinuxManMikeC: must be after game_quake3.h, depends on #define's set in it */
 	,
 								#include "game_unvanquished.h" /* must be after game_tremulous.h as they share defines! */
 	,
@@ -2009,11 +2013,11 @@ Q_EXTERN game_t games[]
 	,
 								#include "game_sof2.h"
 	,
-								#include "game_jk2.h" /* must be after game_sof2.h as they share defines! */
+								#include "game_jk2.h"   /* must be after game_sof2.h as they share defines! */
 	,
-								#include "game_ja.h" /* must be after game_jk2.h as they share defines! */
+								#include "game_ja.h"    /* must be after game_jk2.h as they share defines! */
 	,
-								#include "game_qfusion.h" /* qfusion game */
+								#include "game_qfusion.h"   /* qfusion game */
 	,
 								#include "game_warsow.h" /* must be after game_qfusion.h as they share defines! */
 	,
@@ -2054,6 +2058,7 @@ Q_EXTERN float jitters[ MAX_JITTERS ];
 
 
 /* commandline arguments */
+Q_EXTERN qboolean nocmdline Q_ASSIGN( qfalse );
 Q_EXTERN qboolean verboseEntities Q_ASSIGN( qfalse );
 Q_EXTERN qboolean force Q_ASSIGN( qfalse );
 Q_EXTERN qboolean infoMode Q_ASSIGN( qfalse );
@@ -2097,6 +2102,7 @@ Q_EXTERN qboolean lightmapFill Q_ASSIGN( qfalse );
 Q_EXTERN int metaAdequateScore Q_ASSIGN( -1 );
 Q_EXTERN int metaGoodScore Q_ASSIGN( -1 );
 Q_EXTERN float metaMaxBBoxDistance Q_ASSIGN( -1 );
+Q_EXTERN qboolean noob Q_ASSIGN( qfalse );
 
 #if Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX
 // Increasing the normalEpsilon to compensate for new logic in SnapNormal(), where
@@ -2226,6 +2232,7 @@ Q_EXTERN char inbase[ MAX_QPATH ];
 Q_EXTERN char globalCelShader[ MAX_QPATH ];
 
 Q_EXTERN float farPlaneDist;                /* rr2do2, rf, mre, ydnar all contributed to this one... */
+Q_EXTERN int farPlaneDistMode;
 
 Q_EXTERN int numportals;
 Q_EXTERN int portalclusters;
@@ -2272,6 +2279,7 @@ Q_EXTERN qboolean keepLights Q_ASSIGN( qfalse );
 Q_EXTERN int sampleSize Q_ASSIGN( DEFAULT_LIGHTMAP_SAMPLE_SIZE );
 Q_EXTERN int minSampleSize Q_ASSIGN( DEFAULT_LIGHTMAP_MIN_SAMPLE_SIZE );
 Q_EXTERN qboolean noVertexLighting Q_ASSIGN( qfalse );
+Q_EXTERN qboolean nolm Q_ASSIGN( qfalse );
 Q_EXTERN qboolean noGridLighting Q_ASSIGN( qfalse );
 
 Q_EXTERN qboolean noTrace Q_ASSIGN( qfalse );
@@ -2347,6 +2355,7 @@ Q_EXTERN float spotScale Q_ASSIGN( 7500.0f );
 Q_EXTERN float areaScale Q_ASSIGN( 0.25f );
 Q_EXTERN float skyScale Q_ASSIGN( 1.0f );
 Q_EXTERN float bounceScale Q_ASSIGN( 0.25f );
+Q_EXTERN float vertexglobalscale Q_ASSIGN( 1.0f );
 
 /* jal: alternative angle attenuation curve */
 Q_EXTERN qboolean lightAngleHL Q_ASSIGN( qfalse );
