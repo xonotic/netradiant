@@ -1153,6 +1153,23 @@ void EntityInspector_clearKeyValue(){
 	}
 }
 
+static gint EntityInspector_clearKeyValueKB( GtkEntry* widget, GdkEventKey* event, gpointer data ){
+	if ( event->keyval == GDK_Delete ) {
+		// Get current selection text
+		StringOutputStream key( 64 );
+		key << gtk_entry_get_text( g_entityKeyEntry );
+
+		if ( strcmp( key.c_str(), "classname" ) != 0 ) {
+			StringOutputStream command;
+			command << "entityDeleteKey -key " << key.c_str();
+			UndoableCommand undo( command.c_str() );
+			Scene_EntitySetKeyValue_Selected( key.c_str(), "" );
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
+
 void EntityInspector_clearAllKeyValues(){
 	UndoableCommand undo( "entityClear" );
 
@@ -1268,8 +1285,18 @@ static gint EntityEntry_keypress( ui::Entry widget, GdkEventKey* event, gpointer
 		}
 		return TRUE;
 	}
-	if ( event->keyval == GDK_KEY_Escape ) {
-		gtk_window_set_focus( widget.window(), NULL );
+	if ( event->keyval == GDK_Tab ) {
+		if ( widget._handle == g_entityKeyEntry._handle ) {
+			gtk_window_set_focus( widget.window(), g_entityValueEntry );
+		}
+		else
+		{
+			gtk_window_set_focus( widget.window(), g_entityKeyEntry );
+		}
+		return TRUE;
+	}
+	if ( event->keyval == GDK_Escape ) {
+		// gtk_window_set_focus( widget.window(), NULL );
 		return TRUE;
 	}
 
@@ -1284,11 +1311,26 @@ void EntityInspector_destroyWindow( ui::Widget widget, gpointer data ){
 	GlobalEntityAttributes_clear();
 }
 
+static gint EntityInspector_destroyWindowKB( GtkWidget* widget, GdkEventKey* event, gpointer data ){
+	//if ( event->keyval == GDK_Escape && GTK_WIDGET_VISIBLE( GTK_WIDGET( widget ) ) ) {
+	if ( event->keyval == GDK_Escape  ) {
+		//globalErrorStream() << "Doom3Light_getBounds: failed to parse default light radius\n";
+		GroupDialog_showPage( g_page_entity );
+		return TRUE;
+	}
+	if ( event->keyval == GDK_Tab  ) {
+		gtk_window_set_focus( GTK_WINDOW( gtk_widget_get_toplevel( GTK_WIDGET( widget ) ) ), GTK_WIDGET( g_entityKeyEntry ) );
+		return TRUE;
+	}
+	return FALSE;
+}
+
 ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
     auto vbox = ui::VBox( FALSE, 2 );
 	vbox.show();
 	gtk_container_set_border_width( GTK_CONTAINER( vbox ), 2 );
 
+	g_signal_connect( G_OBJECT( toplevel ), "key_press_event", G_CALLBACK( EntityInspector_destroyWindowKB ), 0 );
 	vbox.connect( "destroy", G_CALLBACK( EntityInspector_destroyWindow ), 0 );
 
 	{
@@ -1403,6 +1445,7 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 						auto view = ui::TreeView(ui::TreeModel::from(store._handle));
 						gtk_tree_view_set_enable_search(view, FALSE );
 						gtk_tree_view_set_headers_visible(view, FALSE );
+						g_signal_connect( G_OBJECT( view ), "key_press_event", G_CALLBACK( EntityInspector_clearKeyValueKB ), 0 );
 
 						{
 							auto renderer = ui::CellRendererText(ui::New);

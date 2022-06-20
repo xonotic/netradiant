@@ -741,6 +741,7 @@ skipEXfile:
 						temp, scriptline, token );
 			}
 
+			qboolean hasmap = qfalse;
 			while ( 1 )
 			{
 				/* get the next token */
@@ -766,13 +767,19 @@ skipEXfile:
 						if ( !strcmp( token, "}" ) ) {
 							break;
 						}
+						if ( !strcmp( token, "{" ) ) {
+							Sys_Printf( "WARNING9: %s : line %d : opening brace inside shader stage\n", temp, scriptline );
+						}
+						if ( !Q_stricmp( token, "mapComp" ) || !Q_stricmp( token, "mapNoComp" ) || !Q_stricmp( token, "animmapcomp" ) || !Q_stricmp( token, "animmapnocomp" ) ){
+							Sys_Printf( "WARNING7: %s : line %d : unsupported '%s' map directive\n", temp, scriptline, token );
+						}
 						/* skip the shader */
 						if ( !wantShader ) continue;
 
 						/* digest any images */
 						if ( !Q_stricmp( token, "map" ) ||
 							!Q_stricmp( token, "clampMap" ) ) {
-
+							hasmap = qtrue;
 							/* get an image */
 							GetToken( qfalse );
 							if ( token[ 0 ] != '*' && token[ 0 ] != '$' ) {
@@ -781,6 +788,7 @@ skipEXfile:
 						}
 						else if ( !Q_stricmp( token, "animMap" ) ||
 							!Q_stricmp( token, "clampAnimMap" ) ) {
+							hasmap = qtrue;
 							GetToken( qfalse );// skip num
 							while ( TokenAvailable() ){
 								GetToken( qfalse );
@@ -788,6 +796,7 @@ skipEXfile:
 							}
 						}
 						else if ( !Q_stricmp( token, "videoMap" ) ){
+							hasmap = qtrue;
 							GetToken( qfalse );
 							FixDOSName( token );
 							if ( strchr( token, '/' ) == NULL && strchr( token, '\\' ) == NULL ){
@@ -812,6 +821,9 @@ skipEXfile:
 						}
 					}
 				}
+				else if ( !Q_strncasecmp( token, "implicit", 8 ) ){
+					Sys_Printf( "WARNING5: %s : line %d : unsupported %s shader\n", temp, scriptline, token );
+				}
 				/* skip the shader */
 				else if ( !wantShader ) continue;
 
@@ -830,6 +842,7 @@ skipEXfile:
 
 				/* skyparms <outer image> <cloud height> <inner image> */
 				else if ( !Q_stricmp( token, "skyParms" ) ) {
+					hasmap = qtrue;
 					/* get image base */
 					GetToken( qfalse );
 
@@ -853,6 +866,9 @@ skipEXfile:
 					GetToken( qfalse );
 					GetToken( qfalse );
 				}
+				else if ( !Q_stricmp( token, "fogparms" ) ){
+					hasmap = qtrue;
+				}
 			}
 
 			//exclude shader
@@ -863,6 +879,9 @@ skipEXfile:
 						*( pk3Shaders + shader*65 ) = '\0';
 						break;
 					}
+				}
+				if ( !hasmap ){
+					wantShader = qfalse;
 				}
 				if ( wantShader ){
 					if ( ShaderFileExcluded ){
@@ -1080,7 +1099,7 @@ skipEXfile:
 
 /*
    repackBSPMain()
-   repack multiple maps, strip only required shaders
+   repack multiple maps, strip out only required shaders
    works for Q3 type of shaders and ents
  */
 
@@ -1698,6 +1717,10 @@ skipEXrefile:
 							strcat( shaderText, "\n\t}" );
 							break;
 						}
+						if ( !strcmp( token, "{" ) ) {
+							strcat( shaderText, "\n\t{" );
+							Sys_Printf( "WARNING9: %s : line %d : opening brace inside shader stage\n", temp, scriptline );
+						}
 						/* skip the shader */
 						if ( !wantShader ) continue;
 
@@ -1872,11 +1895,6 @@ skipEXrefile:
 			}
 
 			//exclude shader
-			if ( wantShader && !hasmap ){
-				Sys_Printf( "WARNING8: %s : shader has no known maps\n", pk3Shaders + shader*65 );
-				wantShader = qfalse;
-				*( pk3Shaders + shader*65 ) = '\0';
-			}
 			if ( wantShader ){
 				for ( j = 0; j < ExShadersN; j++ ){
 					if ( !Q_stricmp( ExShaders + j*65, pk3Shaders + shader*65 ) ){
@@ -1884,6 +1902,11 @@ skipEXrefile:
 						*( pk3Shaders + shader*65 ) = '\0';
 						break;
 					}
+				}
+				if ( wantShader && !hasmap ){
+					Sys_Printf( "WARNING8: %s : shader has no known maps\n", pk3Shaders + shader*65 );
+					wantShader = qfalse;
+					*( pk3Shaders + shader*65 ) = '\0';
 				}
 				if ( wantShader ){
 					strcat( allShaders, shaderText );
