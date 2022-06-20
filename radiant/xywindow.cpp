@@ -349,6 +349,8 @@ struct xywindow_globals_private_t
 	bool m_bChaseMouse;
 	bool m_bSizePaint;
 
+	bool g_bCrossHairs;
+
 	xywindow_globals_private_t() :
 		d_showgrid( true ),
 
@@ -364,7 +366,9 @@ struct xywindow_globals_private_t
 
 		m_bCamXYUpdate( true ),
 		m_bChaseMouse( true ),
-		m_bSizePaint( true ){
+		m_bSizePaint( true ),
+
+		g_bCrossHairs( false ){
 	}
 
 };
@@ -550,8 +554,6 @@ VIEWTYPE GlobalXYWnd_getCurrentViewType(){
 
 // =============================================================================
 // variables
-
-bool g_bCrossHairs = false;
 
 ui::Menu XYWnd::m_mnuDrop(ui::null);
 
@@ -1365,7 +1367,7 @@ void XYWnd::XY_MouseMoved( int x, int y, unsigned int buttons ){
 			   << "  z:: " << FloatFormat( m_mousePosition[2], 6, 1 );
 		g_pParentWnd->SetStatusText( g_pParentWnd->m_position_status, status.c_str() );
 
-		if ( g_bCrossHairs ) {
+		if ( g_xywindow_globals_private.g_bCrossHairs ) {
 			XYWnd_Update( *this );
 		}
 
@@ -2311,7 +2313,7 @@ void XYWnd::XY_Draw(){
 		PaintSizeInfo( nDim1, nDim2, min, max );
 	}
 
-	if ( g_bCrossHairs ) {
+	if ( g_xywindow_globals_private.g_bCrossHairs ) {
 		glColor4f( 0.2f, 0.9f, 0.2f, 0.8f );
 		glBegin( GL_LINES );
 		if ( m_viewType == XY ) {
@@ -2541,7 +2543,7 @@ void XY_ZoomOut(){
 
 
 void ToggleShowCrosshair(){
-	g_bCrossHairs ^= 1;
+	g_xywindow_globals_private.g_bCrossHairs ^= 1;
 	XY_UpdateAllWindows();
 }
 
@@ -2777,6 +2779,7 @@ void XYWindow_Construct(){
 	GlobalPreferenceSystem().registerPreference( "NewRightClick", make_property_string( g_xywindow_globals.m_bRightClick ) );
 	GlobalPreferenceSystem().registerPreference( "ChaseMouse", make_property_string( g_xywindow_globals_private.m_bChaseMouse ) );
 	GlobalPreferenceSystem().registerPreference( "SizePainting", make_property_string( g_xywindow_globals_private.m_bSizePaint ) );
+	GlobalPreferenceSystem().registerPreference( "ShowCrosshair", make_property_string( g_xywindow_globals_private.g_bCrossHairs ) );
 	GlobalPreferenceSystem().registerPreference( "NoStipple", make_property_string( g_xywindow_globals.m_bNoStipple ) );
 	GlobalPreferenceSystem().registerPreference( "SI_ShowCoords", make_property_string( g_xywindow_globals_private.show_coordinates ) );
 	GlobalPreferenceSystem().registerPreference( "SI_ShowOutlines", make_property_string( g_xywindow_globals_private.show_outline ) );

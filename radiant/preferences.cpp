@@ -281,7 +281,7 @@ void CGameDialog::GameFileImport( int value ){
 	}
 
 	if ( ( *iGame )->mGameFile != m_sGameFile ) {
-		m_sGameFile = ( *iGame )->mGameFile;
+	m_sGameFile = ( *iGame )->mGameFile;
 
 		// do not trigger radiant restart when switching game on startup using Global Preferences dialog
 		if ( !onStartup ) {
