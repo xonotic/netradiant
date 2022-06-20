@@ -2445,13 +2445,13 @@ void PatchInspector_registerShortcuts(){
 }
 
 void Patch_registerShortcuts(){
-	command_connect_accelerator( "InvertCurveTextureX" );
-	command_connect_accelerator( "InvertCurveTextureY" );
+//	command_connect_accelerator( "InvertCurveTextureX" );
+//	command_connect_accelerator( "InvertCurveTextureY" );
 	command_connect_accelerator( "PatchInsertInsertColumn" );
 	command_connect_accelerator( "PatchInsertInsertRow" );
 	command_connect_accelerator( "PatchDeleteLastColumn" );
 	command_connect_accelerator( "PatchDeleteLastRow" );
-	command_connect_accelerator( "NaturalizePatch" );
+//	command_connect_accelerator( "NaturalizePatch" );
 	//command_connect_accelerator("CapCurrentCurve");
 }
 
@@ -2483,6 +2483,8 @@ void SelectNudge_registerShortcuts(){
 	//command_connect_accelerator("SelectNudgeRight");
 	//command_connect_accelerator("SelectNudgeUp");
 	//command_connect_accelerator("SelectNudgeDown");
+	command_connect_accelerator( "UnSelectSelection2" );
+	command_connect_accelerator( "DeleteSelection2" );
 }
 
 void SnapToGrid_registerShortcuts(){
@@ -2499,17 +2501,17 @@ void SurfaceInspector_registerShortcuts(){
 
 
 void register_shortcuts(){
-	PatchInspector_registerShortcuts();
+//	PatchInspector_registerShortcuts();
 	Patch_registerShortcuts();
 	Grid_registerShortcuts();
-	XYWnd_registerShortcuts();
+//	XYWnd_registerShortcuts();
 	CamWnd_registerShortcuts();
 	Manipulators_registerShortcuts();
 	SurfaceInspector_registerShortcuts();
 	TexdefNudge_registerShortcuts();
 	SelectNudge_registerShortcuts();
-	SnapToGrid_registerShortcuts();
-	SelectByType_registerShortcuts();
+//	SnapToGrid_registerShortcuts();
+//	SelectByType_registerShortcuts();
 }
 
 void File_constructToolbar( ui::Toolbar toolbar ){
@@ -3044,7 +3046,7 @@ void MainFrame::Create(){
 		toolbar_append_toggle_button( plugin_toolbar, "Lights (ALT + 0)", "lightinspector.png", "FilterLights" );
 		toolbar_append_toggle_button( plugin_toolbar, "Models (SHIFT + M)", "f-models.bmp", "FilterModels" );
 		toolbar_append_toggle_button( plugin_toolbar, "Triggers (CTRL + SHIFT + T)", "f-triggers.bmp", "FilterTriggers" );
-		toolbar_append_toggle_button( plugin_toolbar, "Decals (SHIFT + D)", "f-decals.bmp", "FilterDecals" );
+//		toolbar_append_toggle_button( plugin_toolbar, "Decals (SHIFT + D)", "f-decals.bmp", "FilterDecals" );
 		space();
 		toolbar_append_button( plugin_toolbar, "InvertFilters", "f-invert.bmp", "InvertFilters" );
 		toolbar_append_button( plugin_toolbar, "ResetFilters", "f-reset.bmp", "ResetFilters" );
@@ -3548,9 +3550,13 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "PasteToCamera", makeCallbackF(PasteToCamera), Accelerator( 'V', (GdkModifierType)GDK_MOD1_MASK ) );
 	GlobalCommands_insert( "CloneSelection", makeCallbackF(Selection_Clone), Accelerator( GDK_KEY_space ) );
 	GlobalCommands_insert( "CloneSelectionAndMakeUnique", makeCallbackF(Selection_Clone_MakeUnique), Accelerator( GDK_KEY_space, (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalCommands_insert( "DeleteSelection", makeCallbackF(deleteSelection), Accelerator( GDK_KEY_BackSpace ) );
+//	GlobalCommands_insert( "DeleteSelection", makeCallbackF(deleteSelection), Accelerator( GDK_KEY_BackSpace ) );
+	GlobalCommands_insert( "DeleteSelection2", makeCallbackF(deleteSelection), Accelerator( GDK_KEY_BackSpace ) );
+	GlobalCommands_insert( "DeleteSelection", makeCallbackF(deleteSelection), Accelerator( 'Z' ) );
 	GlobalCommands_insert( "ParentSelection", makeCallbackF(Scene_parentSelected) );
-	GlobalCommands_insert( "UnSelectSelection", makeCallbackF(Selection_Deselect), Accelerator( GDK_KEY_Escape ) );
+//	GlobalCommands_insert( "UnSelectSelection", makeCallbackF(Selection_Deselect), Accelerator( GDK_KEY_Escape ) );
+	GlobalCommands_insert( "UnSelectSelection2", makeCallbackF(Selection_Deselect), Accelerator( GDK_KEY_Escape ) );
+	GlobalCommands_insert( "UnSelectSelection", makeCallbackF(Selection_Deselect), Accelerator( 'C' ) );
 	GlobalCommands_insert( "InvertSelection", makeCallbackF(Select_Invert), Accelerator( 'I' ) );
 	GlobalCommands_insert( "SelectInside", makeCallbackF(Select_Inside) );
 	GlobalCommands_insert( "SelectTouching", makeCallbackF(Select_Touching) );
