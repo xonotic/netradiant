@@ -52,8 +52,8 @@
 #include "vfs.h"
 #include <unzip.h>
 #include <glib.h>
-#define BAD_MINIZ
-#ifndef BAD_MINIZ
+#define GARUX_DISABLE_BAD_MINIZ
+#ifndef GARUX_DISABLE_BAD_MINIZ
 #include "miniz.h"
 #endif
 
@@ -589,7 +589,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 
 
 qboolean vfsPackFile( const char *filename, const char *packname, const int compLevel ){
-#ifndef BAD_MINIZ
+#ifndef GARUX_DISABLE_BAD_MINIZ
 	int i;
 	char tmp[NAME_MAX], fixed[NAME_MAX];
 	GSList *lst;
