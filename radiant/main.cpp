@@ -534,6 +534,7 @@ int main( int argc, char* argv[] ){
 		}
 		FreeLibrary( lib );
 	}
+	_setmaxstdio(2048);
 #endif
 
 	const char* mapname = NULL;
