@@ -826,6 +826,7 @@ static void DoGtkTextEditor( const char* filename, guint cursorpos, int length )
 
 		// trying to show later
 		text_editor.show();
+		gtk_window_present( GTK_WINDOW( text_editor ) );
 
 #if GDEF_OS_WINDOWS
 		ui::process();
