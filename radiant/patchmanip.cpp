@@ -664,6 +664,8 @@ void Patch_Thicken(){
 
 	DoPatchThickenDlg();
 }
+
+
 #include "ifilter.h"
 
 
@@ -819,11 +821,11 @@ void Patch_constructMenu( ui::Menu menu ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( menu_in_menu );
 		}
-		create_menu_item_with_mnemonic( menu_in_menu, "Insert (2) Columns", "PatchInsertInsertColumn" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Add (2) Columns", "PatchInsertAddColumn" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Insert (2) Columns", "PatchInsertInsertColumn" );
 		menu_separator( menu_in_menu );
-		create_menu_item_with_mnemonic( menu_in_menu, "Insert (2) Rows", "PatchInsertInsertRow" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Add (2) Rows", "PatchInsertAddRow" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Insert (2) Rows", "PatchInsertInsertRow" );
 	}
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Delete" );
