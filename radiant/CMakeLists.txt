@@ -41,6 +41,7 @@ set(RADIANTLIST
     groupdialog.cpp groupdialog.h
     gtkdlgs.cpp gtkdlgs.h
     gtkmisc.cpp gtkmisc.h
+	gtktheme.cpp gtktheme.h
     help.cpp help.h
     image.cpp image.h
     main.cpp main.h

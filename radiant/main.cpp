@@ -502,6 +502,31 @@ void user_shortcuts_save(){
 	SaveCommandMap( path.c_str() );
 }
 
+void add_local_rc_files(){
+#define GARUX_DISABLE_GTKTHEME
+#ifndef GARUX_DISABLE_GTKTHEME
+/* FIXME: HACK: not GTK3 compatible
+ https://developer.gnome.org/gtk2/stable/gtk2-Resource-Files.html#gtk-rc-add-default-file
+ https://developer.gnome.org/gtk3/stable/gtk3-Resource-Files.html#gtk-rc-add-default-file
+ > gtk_rc_add_default_file has been deprecated since version 3.0 and should not be used in newly-written code.
+ > Use GtkStyleContext with a custom GtkStyleProvider instead
+*/
+
+	{
+		StringOutputStream path( 512 );
+		path << AppPath_get() << ".gtkrc-2.0.radiant";
+		gtk_rc_add_default_file( path.c_str() );
+	}
+#ifdef WIN32
+	{
+		StringOutputStream path( 512 );
+		path << AppPath_get() << ".gtkrc-2.0.win";
+		gtk_rc_add_default_file( path.c_str() );
+	}
+#endif
+#endif // GARUX_DISABLE_GTKTHEME
+}
+
 /* HACK: If ui::main is not called yet,
 gtk_main_quit will not quit, so tell main
 to not call ui::main. This happens when a
@@ -561,9 +586,9 @@ int main( int argc, char* argv[] ){
 	}
 
 	// Gtk already removed parsed `--options`
-	if ( argc == 2 ) {
-		if ( strlen( argv[ 1 ] ) > 1 ) {
-			mapname = argv[ 1 ];
+	if (argc == 2) {
+		if ( strlen( argv[1] ) > 1 ) {
+					mapname = argv[1];
 
 			if ( g_str_has_suffix( mapname, ".map" ) ) {
 				if ( !g_path_is_absolute( mapname ) ) {
@@ -581,7 +606,7 @@ int main( int argc, char* argv[] ){
 			}
 		}
 	}
-	else if ( argc > 2 ) {
+	else if (argc > 2) {
 		g_print ( "%s\n", "too many arguments" );
 		return -1;
 	}
@@ -603,6 +628,8 @@ int main( int argc, char* argv[] ){
 	environment_init(argc, (char const **) argv);
 
 	paths_init();
+
+	add_local_rc_files();
 
 	show_splash();
 
@@ -672,7 +699,7 @@ int main( int argc, char* argv[] ){
 	restart to load another format is merged. */
 	if ( !g_dontStart )
 	{
-		ui::main();
+	ui::main();
 	}
 
 	// avoid saving prefs when the app is minimized

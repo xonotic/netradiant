@@ -2302,6 +2302,7 @@ ui::Widget TextureBrowser_constructWindow( ui::Window toplevel ){
 		auto menu_view = ui::Menu(ui::New);
 		// auto view_item = TextureBrowser_constructViewMenu( menu_view );
 		TextureBrowser_constructViewMenu( menu_view );
+		gtk_menu_set_title( menu_view, "View" );
 		// gtk_menu_item_set_submenu( GTK_MENU_ITEM( view_item ), menu_view );
 		// gtk_menu_shell_append( GTK_MENU_SHELL( menu_bar ), view_item );
 
@@ -2313,6 +2314,9 @@ ui::Widget TextureBrowser_constructWindow( ui::Window toplevel ){
 			auto button = toolbar_append_button( toolbar, "View", "texbro_view.png" );
 			button.dimensions( 22, 22 );
 			button.connect( "clicked", G_CALLBACK( Popup_View_Menu ), menu_view );
+
+			//to show detached menu over floating tex bro
+			gtk_menu_attach_to_widget( GTK_MENU( menu_view ), GTK_WIDGET( button ), NULL );
 		}
 		{
 			auto button = toolbar_append_button( toolbar, "Find / Replace...", "texbro_gtk-find-and-replace.png", "FindReplaceTextures" );
