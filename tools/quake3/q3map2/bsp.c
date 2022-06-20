@@ -637,6 +637,8 @@ void ProcessModels( const char *portalFilePath, const char *lineFilePath ){
 	/* restore -v setting */
 	verbose = oldVerbose;
 
+	Sys_FPrintf( SYS_VRB, "%9i bspModels in total\n", numBSPModels );
+
 	/* write fogs */
 	EmitFogs();
 

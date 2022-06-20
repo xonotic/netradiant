@@ -59,7 +59,7 @@ void Global_constructPreferences( PreferencesPage& page ){
 
 void Interface_constructPreferences( PreferencesPage& page ){
 #if GDEF_OS_WINDOWS
-	page.appendCheckBox( "", "Default Text Editor", g_TextEditor_useWin32Editor );
+	page.appendCheckBox( "", "External Shader Editor", g_TextEditor_useWin32Editor );
 #else
 	{
 		ui::CheckButton use_custom = page.appendCheckBox( "Text Editor", "Custom", g_TextEditor_useCustomEditor );
