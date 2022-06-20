@@ -101,7 +101,7 @@ void QE_InitVFS(){
 		if ( !string_equal( homepath, enginepath ) )
 		{
 		// ~/.<gameprefix>/<fs_game>
-		if ( userRoot && !string_equal( globalRoot, homepath ) && !g_disableHomePath ) {
+		if ( homepath && !string_equal( enginepath, homepath ) && !g_disableHomePath ) {
 			StringOutputStream userGamePath( 256 );
 				userGamePath << homepath << gamename << '/';
 			GlobalFileSystem().initDirectory( userGamePath.c_str() );
@@ -120,7 +120,7 @@ void QE_InitVFS(){
 	if ( !string_equal( homepath, enginepath ) )
 	{
 	// ~/.<gameprefix>/<fs_main>
-	if ( userRoot && !string_equal( globalRoot, homepath ) && !g_disableHomePath ) {
+	if ( homepath && !string_equal( enginepath, homepath ) && !g_disableHomePath ) {
 		StringOutputStream userBasePath( 256 );
 			userBasePath << homepath << basegame << '/';
 		GlobalFileSystem().initDirectory( userBasePath.c_str() );
