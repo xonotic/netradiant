@@ -588,7 +588,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 }
 
 
-qboolean vfsPackFile( const char *filename, const char *packname ){
+qboolean vfsPackFile( const char *filename, const char *packname, const int compLevel ){
 #ifndef BAD_MINIZ
 	int i;
 	char tmp[NAME_MAX], fixed[NAME_MAX];
@@ -611,7 +611,7 @@ qboolean vfsPackFile( const char *filename, const char *packname ){
 				mz_zip_writer_init_from_reader( &zip, packname );
 
 				mz_bool success = MZ_TRUE;
-				success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, 10 );
+				success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
 				if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
 					Error( "Failed creating zip archive \"%s\"!\n", packname );
 				}
@@ -625,7 +625,7 @@ qboolean vfsPackFile( const char *filename, const char *packname ){
 					Error( "Failed creating zip archive \"%s\"!\n", packname );
 				}
 				mz_bool success = MZ_TRUE;
-				success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, 10 );
+				success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
 				if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
 					Error( "Failed creating zip archive \"%s\"!\n", packname );
 				}
@@ -664,7 +664,7 @@ qboolean vfsPackFile( const char *filename, const char *packname ){
 		}
 		else{
 			mz_bool success = MZ_TRUE;
-			success &= mz_zip_add_mem_to_archive_file_in_place_with_time( packname, filename, bufferptr, i, 0, 0, 10, DOS_time, DOS_date );
+			success &= mz_zip_add_mem_to_archive_file_in_place_with_time( packname, filename, bufferptr, i, 0, 0, compLevel, DOS_time, DOS_date );
 				if ( !success ){
 					Error( "Failed creating zip archive \"%s\"!\n", packname );
 				}
