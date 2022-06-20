@@ -716,6 +716,7 @@ int BSPMain( int argc, char **argv ){
 	/* note it */
 	Sys_Printf( "--- BSP ---\n" );
 
+	doingBSP = qtrue;
 	SetDrawSurfacesBuffer();
 	mapDrawSurfs = safe_malloc0( sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
 	numMapDrawSurfs = 0;
