@@ -630,8 +630,10 @@ ui::Window BuildDialog(){
 
 PathsDialog g_PathsDialog;
 
+bool g_strEnginePath_was_empty_1st_start = false;
+
 void EnginePath_verify(){
-	if ( !file_exists( g_strEnginePath.c_str() ) ) {
+	if ( !file_exists( g_strEnginePath.c_str() ) || g_strEnginePath_was_empty_1st_start ) {
 		g_PathsDialog.Create();
 		g_PathsDialog.DoModal();
 		g_PathsDialog.Destroy();
@@ -3088,9 +3090,9 @@ void MainFrame::Create(){
 			vbox.pack_start( hsplit, TRUE, TRUE, 0 );
 			hsplit.show();
 			{
-			ui::Widget vsplit = ui::VPaned(ui::New);
+				ui::Widget vsplit = ui::VPaned(ui::New);
 				vsplit.show();
-			m_vSplit = vsplit;
+				m_vSplit = vsplit;
 				ui::Widget vsplit2 = ui::VPaned(ui::New);
 				vsplit2.show();
 				m_vSplit = vsplit2;
@@ -3103,10 +3105,10 @@ void MainFrame::Create(){
 					gtk_paned_add1( GTK_PANED( hsplit ), vsplit2 );
 				}
 
-			// console
-			ui::Widget console_window = Console_constructWindow( window );
-			gtk_paned_pack2( GTK_PANED( vsplit ), console_window, FALSE, TRUE );
-
+				// console
+				ui::Widget console_window = Console_constructWindow( window );
+				gtk_paned_pack2( GTK_PANED( vsplit ), console_window, FALSE, TRUE );
+				
 				// xy
 				m_pXYWnd = new XYWnd();
 				m_pXYWnd->SetViewType( XY );
@@ -3668,7 +3670,10 @@ void MainFrame_Construct(){
 	GlobalPreferenceSystem().registerPreference( "YZWnd", make_property<WindowPositionTracker_String>(g_posYZWnd) );
 	GlobalPreferenceSystem().registerPreference( "XZWnd", make_property<WindowPositionTracker_String>(g_posXZWnd) );
 
+	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
+	if ( g_strEnginePath.empty() )
 	{
+		g_strEnginePath_was_empty_1st_start = true;
 		const char* ENGINEPATH_ATTRIBUTE =
 #if GDEF_OS_WINDOWS
 			"enginepath_win32"
@@ -3685,9 +3690,8 @@ void MainFrame_Construct(){
 		path << DirectoryCleaned( g_pGameDescription->getRequiredKeyValue( ENGINEPATH_ATTRIBUTE ) );
 
 		g_strEnginePath = transformPath( path.c_str() ).c_str();
+		GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
 	}
-
-	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
 
 	GlobalPreferenceSystem().registerPreference( "DisableEnginePath", make_property_string( g_disableEnginePath ) );
 	GlobalPreferenceSystem().registerPreference( "DisableHomePath", make_property_string( g_disableHomePath ) );
