@@ -674,6 +674,7 @@ $(INSTALLDIR)/radiant.$(EXE): \
 	radiant/error.o \
 	radiant/feedback.o \
 	radiant/filetypes.o \
+	radiant/filterbar.o \
 	radiant/filters.o \
 	radiant/findtexturedialog.o \
 	radiant/glwidget.o \

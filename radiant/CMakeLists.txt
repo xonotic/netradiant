@@ -34,6 +34,7 @@ set(RADIANTLIST
     error.cpp error.h
     feedback.cpp feedback.h
     filetypes.cpp filetypes.h
+    filterbar.cpp filterbar.h
     filters.cpp filters.h
     findtexturedialog.cpp findtexturedialog.h
     grid.cpp grid.h

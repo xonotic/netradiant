@@ -100,6 +100,7 @@
 #include "feedback.h"
 #include "referencecache.h"
 #include "texwindow.h"
+#include "filterbar.h"
 
 #if GDEF_OS_WINDOWS
 #include <process.h>
@@ -3030,38 +3031,8 @@ void MainFrame::Create(){
 			}
 		}
 		if ( g_Layout_enableFilterToolbar.m_value ){
-			auto filter_toolbar = create_filter_toolbar();
-			filter_toolbar.show();
-
-			auto space = [&]() {
-				auto btn = gtk_separator_tool_item_new();
-					gtk_widget_show(GTK_WIDGET(btn));
-					gtk_container_add(GTK_CONTAINER(filter_toolbar), GTK_WIDGET(btn));
-			};
-
-			toolbar_append_toggle_button( filter_toolbar, "World (ALT + 1)", "f-world.bmp", "FilterWorldBrushes" );
-			toolbar_append_toggle_button( filter_toolbar, "Details (CTRL + D)", "f-details.bmp", "FilterDetails" );
-			toolbar_append_toggle_button( filter_toolbar, "Structural (CTRL + SHIFT + D)", "f-structural.bmp", "FilterStructural" );
-			toolbar_append_toggle_button( filter_toolbar, "Patches (CTRL + P)", "patch_wireframe.png", "FilterPatches" );
-			space();
-			toolbar_append_toggle_button( filter_toolbar, "Areaportals (ALT + 3)", "f-areaportal.bmp", "FilterAreaportals" );
-			toolbar_append_toggle_button( filter_toolbar, "Translucent (ALT + 4)", "f-translucent.bmp", "FilterTranslucent" );
-			toolbar_append_toggle_button( filter_toolbar, "Liquids (ALT + 5)", "f-liquids.bmp", "FilterLiquids" );
-			toolbar_append_toggle_button( filter_toolbar, "Caulk (ALT + 6)", "f-caulk.bmp", "FilterCaulk" );
-			toolbar_append_toggle_button( filter_toolbar, "Clips (ALT + 7)", "f-clip.bmp", "FilterClips" );
-			toolbar_append_toggle_button( filter_toolbar, "HintsSkips (CTRL + H)", "f-hint.bmp", "FilterHintsSkips" );
-			//toolbar_append_toggle_button( filter_toolbar, "Paths (ALT + 8)", "texture_lock.bmp", "FilterPaths" );
-			space();
-			toolbar_append_toggle_button( filter_toolbar, "Entities (ALT + 2)", "f-entities.bmp", "FilterEntities" );
-			toolbar_append_toggle_button( filter_toolbar, "Lights (ALT + 0)", "lightinspector.png", "FilterLights" );
-			toolbar_append_toggle_button( filter_toolbar, "Models (SHIFT + M)", "f-models.bmp", "FilterModels" );
-			toolbar_append_toggle_button( filter_toolbar, "Triggers (CTRL + SHIFT + T)", "f-triggers.bmp", "FilterTriggers" );
-			//toolbar_append_toggle_button( filter_toolbar, "Decals (SHIFT + D)", "f-decals.bmp", "FilterDecals" );
-			space();
-			toolbar_append_button( filter_toolbar, "InvertFilters", "f-invert.bmp", "InvertFilters" );
-			toolbar_append_button( filter_toolbar, "ResetFilters", "f-reset.bmp", "ResetFilters" );
-
-			PFbox.pack_start( filter_toolbar, FALSE, FALSE, 0 );
+			ui::Toolbar filter_toolbar = create_filter_toolbar();
+			PFbox.pack_start( filter_toolbar, TRUE, TRUE, 0 );
 		}
 	}
 

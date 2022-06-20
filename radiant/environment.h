@@ -35,7 +35,7 @@ extern int g_argc;
 extern char const** g_argv;
 
 #if defined( WIN32 )
-extern char openCmdMap[260];
+extern char* openCmdMap;
 #endif
 
 
