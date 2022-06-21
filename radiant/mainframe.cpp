@@ -3114,6 +3114,9 @@ void MainFrame::Create(){
 			auto plugin_toolbar = create_plugin_toolbar();
 			if ( g_Layout_enableFilterToolbar.m_value ){
 				PFbox.pack_start( plugin_toolbar, FALSE, FALSE, 0 );
+				// Force the toolbar to display all childrens
+				// without collapsing them to a menu.
+				gtk_toolbar_set_show_arrow( plugin_toolbar, FALSE );
 			}
 			else{
 				PFbox.pack_start( plugin_toolbar, TRUE, TRUE, 0 );
