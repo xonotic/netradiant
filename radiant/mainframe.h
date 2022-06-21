@@ -245,6 +245,7 @@ void UpdateAllWindows();
 
 
 void ClipperChangeNotify();
+void ClipperMode();
 
 void DefaultMode();
 

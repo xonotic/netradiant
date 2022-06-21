@@ -113,6 +113,7 @@ void Draw( const char *label, float scale );
 VIEWTYPE g_clip_viewtype;
 bool g_bSwitch = true;
 bool g_clip_useCaulk = false;
+bool g_quick_clipper = false;
 ClipPoint g_Clip1;
 ClipPoint g_Clip2;
 ClipPoint g_Clip3;
@@ -261,6 +262,10 @@ void Clip(){
 		g_Clip3.Reset();
 		Clip_Update();
 		ClipperChangeNotify();
+		if( g_quick_clipper ){
+			g_quick_clipper = false;
+			ClipperMode();
+		}
 	}
 }
 
@@ -275,6 +280,10 @@ void SplitClip(){
 		g_Clip3.Reset();
 		Clip_Update();
 		ClipperChangeNotify();
+		if( g_quick_clipper ){
+			g_quick_clipper = false;
+			ClipperMode();
+		}
 	}
 }
 
@@ -936,6 +945,10 @@ unsigned int Clipper_buttons(){
 	return RAD_LBUTTON;
 }
 
+unsigned int Clipper_quick_buttons(){
+	return RAD_RBUTTON | RAD_CONTROL;
+}
+
 void XYWnd::DropClipPoint( int pointx, int pointy ){
 	Vector3 point;
 
@@ -1312,7 +1325,12 @@ void XYWnd::XY_MouseDown( int x, int y, unsigned int buttons ){
 	else if ( buttons == Zoom_buttons() ) {
 		Zoom_Begin();
 	}
-	else if ( ClipMode() && buttons == Clipper_buttons() ) {
+	else if ( ClipMode() && ( buttons == Clipper_buttons() || buttons == Clipper_quick_buttons() ) ) {
+		Clipper_OnLButtonDown( x, y );
+	}
+	else if ( !ClipMode() && buttons == Clipper_quick_buttons() ) {
+		ClipperMode();
+		g_quick_clipper = true;
 		Clipper_OnLButtonDown( x, y );
 	}
 	else if ( buttons == NewBrushDrag_buttons() && GlobalSelectionSystem().countSelected() == 0 ) {
@@ -1340,7 +1358,7 @@ void XYWnd::XY_MouseUp( int x, int y, unsigned int buttons ){
 	else if ( m_zoom_started ) {
 		Zoom_End();
 	}
-	else if ( ClipMode() && buttons == Clipper_buttons() ) {
+	else if ( ClipMode() && ( buttons == Clipper_buttons() || buttons == Clipper_quick_buttons() ) ) {
 		Clipper_OnLButtonUp( x, y );
 	}
 	else if ( m_bNewBrushDrag ) {
