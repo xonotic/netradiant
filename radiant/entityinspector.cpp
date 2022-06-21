@@ -140,7 +140,7 @@ void release(){
 	delete this;
 }
 void apply(){
-	Scene_EntitySetKeyValue_Selected_Undoable( m_key.c_str(), m_check.active() ? "1" : "0" );
+	Scene_EntitySetKeyValue_Selected_Undoable( m_key.c_str(), m_check.active() ? "1" : "" );
 }
 typedef MemberCaller<BooleanAttribute, void(), &BooleanAttribute::apply> ApplyCaller;
 
@@ -1157,16 +1157,7 @@ void EntityInspector_clearKeyValue(){
 
 static gint EntityInspector_clearKeyValueKB( GtkEntry* widget, GdkEventKey* event, gpointer data ){
 	if ( event->keyval == GDK_Delete ) {
-		// Get current selection text
-		StringOutputStream key( 64 );
-		key << gtk_entry_get_text( g_entityKeyEntry );
-
-		if ( strcmp( key.c_str(), "classname" ) != 0 ) {
-			StringOutputStream command;
-			command << "entityDeleteKey -key " << key.c_str();
-			UndoableCommand undo( command.c_str() );
-			Scene_EntitySetKeyValue_Selected( key.c_str(), "" );
-		}
+		EntityInspector_clearKeyValue();
 		return TRUE;
 	}
 	return FALSE;
@@ -1208,14 +1199,14 @@ static gint EntityClassList_button_press( ui::Widget widget, GdkEventButton *eve
 }
 
 static gint EntityClassList_keypress( ui::Widget widget, GdkEventKey* event, gpointer data ){
-	unsigned int code = gdk_keyval_to_upper( event->keyval );
-
 	if ( event->keyval == GDK_KEY_Return ) {
 		EntityClassList_createEntity();
 		return TRUE;
 	}
 
 	// select the entity that starts with the key pressed
+/*
+	unsigned int code = gdk_keyval_to_upper( event->keyval );
 	if ( code <= 'Z' && code >= 'A' && event->state == 0 ) {
 		auto view = ui::TreeView(g_entityClassList);
 		GtkTreeModel* model;
@@ -1249,6 +1240,7 @@ static gint EntityClassList_keypress( ui::Widget widget, GdkEventKey* event, gpo
 
 		return TRUE;
 	}
+*/
 	return FALSE;
 }
 
@@ -1278,7 +1270,7 @@ static void SpawnflagCheck_toggled( ui::Widget widget, gpointer data ){
 static gint EntityEntry_keypress( ui::Entry widget, GdkEventKey* event, gpointer data ){
 	if ( event->keyval == GDK_KEY_Return ) {
 		if ( widget._handle == g_entityKeyEntry._handle ) {
-			g_entityValueEntry.text( "" );
+			// g_entityValueEntry.text( "" );
 			gtk_window_set_focus( widget.window(), g_entityValueEntry  );
 		}
 		else
@@ -1364,7 +1356,7 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 					ui::ListStore store = ui::ListStore::from(gtk_list_store_new( 2, G_TYPE_STRING, G_TYPE_POINTER ));
 
 					auto view = ui::TreeView( ui::TreeModel::from( store._handle ));
-					gtk_tree_view_set_enable_search(view, FALSE );
+					// gtk_tree_view_set_enable_search(view, FALSE );
 					gtk_tree_view_set_headers_visible( view, FALSE );
 					view.connect( "button_press_event", G_CALLBACK( EntityClassList_button_press ), 0 );
 					view.connect( "key_press_event", G_CALLBACK( EntityClassList_keypress ), 0 );
