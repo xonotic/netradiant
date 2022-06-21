@@ -238,8 +238,14 @@ ui::Toolbar create_filter_toolbar(){
 			space();
 
 			{
-				auto button = toolbar_append_toggle_button( toolbar, "Areaportals (ALT + 3)\nRightClick: toggle tex\n\tnoDraw\n\tnoDrawNonSolid", "f-areaportal.png", "FilterAreaportals" );
-				g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Areaportals_button_press ), 0 );
+				if ( g_pGameDescription->mGameType == "doom3" ) {
+					auto button = toolbar_append_toggle_button( toolbar, "Areaportals (ALT + 3)\nRightClick: toggle tex\n\tnoDraw\n\tnoDrawNonSolid", "f-areaportal.png", "FilterVisportals" );
+					g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Areaportals_button_press ), 0 );
+				}
+				else{
+					auto button = toolbar_append_toggle_button( toolbar, "Areaportals (ALT + 3)\nRightClick: toggle tex\n\tnoDraw\n\tnoDrawNonSolid", "f-areaportal.png", "FilterAreaportals" );
+					g_signal_connect( G_OBJECT( button ), "button_press_event", G_CALLBACK( Areaportals_button_press ), 0 );
+				}
 			}
 
 			toolbar_append_toggle_button( toolbar, "Translucent (ALT + 4)", "f-translucent.png", "FilterTranslucent" );
