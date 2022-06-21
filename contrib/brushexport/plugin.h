@@ -22,7 +22,11 @@
 #if !defined( INCLUDED_BRUSH_EXPORT_H )
 #define INCLUDED_BRUSH_EXPORT_H
 
+#include <uilib/uilib.h>
+
 #define PLUGIN_NAME "BrushExport"
 #define PLUGIN_VERSION "2.0"
+
+extern ui::Widget g_pRadiantWnd;
 
 #endif

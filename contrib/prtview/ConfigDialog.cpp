@@ -29,8 +29,6 @@
 #include "prtview.h"
 #include "portals.h"
 
-ui::Window config_dialog{ui::null};
-
 static void dialog_button_callback( ui::Widget widget, gpointer data ){
 	int *loop, *ret;
 
@@ -61,7 +59,9 @@ static int DoColor( PackedColour *c ){
 	clr.green = (guint16) (GetBValue(*c) * (65535 / 255));
 
 	auto dlg = ui::Widget::from(gtk_color_selection_dialog_new( "Choose Color" ));
-	gtk_window_set_transient_for( GTK_WINDOW( dlg ), config_dialog );
+	gtk_window_set_transient_for( GTK_WINDOW( dlg ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_position( GTK_WINDOW( dlg ),GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_modal( GTK_WINDOW( dlg ), TRUE );
 	gtk_color_selection_set_current_color( GTK_COLOR_SELECTION( gtk_color_selection_dialog_get_color_selection(GTK_COLOR_SELECTION_DIALOG(dlg)) ), &clr );
 	dlg.connect( "delete_event", G_CALLBACK( dialog_delete_callback ), NULL );
 	dlg.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
@@ -241,12 +241,14 @@ void DoConfigDialog( ui::Window main_window ){
 	int loop = 1, ret = IDCANCEL;
 	ModalDialog dialog;
 
-	auto dlg = main_window.create_dialog_window( "Portal Viewer Configuration", G_CALLBACK( custom_dialog_delete_callback ), &dialog );
-	
-	dlg.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
+	auto dlg = ui::Window( ui::window_type::TOP );
+	gtk_window_set_title( dlg, "Portal Viewer Configuration" );
+	dlg.connect( "delete_event",
+						G_CALLBACK( dialog_delete_callback ), NULL );
+	dlg.connect( "destroy",
+						G_CALLBACK( gtk_widget_destroy ), NULL );
 	g_object_set_data( G_OBJECT( dlg ), "loop", &loop );
 	g_object_set_data( G_OBJECT( dlg ), "ret", &ret );
-	config_dialog = dlg;
 
 	auto vbox = ui::VBox( FALSE, 5 );
 	vbox.show();

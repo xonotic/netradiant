@@ -500,6 +500,9 @@ void Entity_normalizeColor(){
 							 g_entity_globals.color_entity[1],
 							 g_entity_globals.color_entity[2] );
 
+					StringOutputStream command( 256 );
+					command << "entityNormalizeColour " << buffer;
+					UndoableCommand undo( command.c_str() );
 					Scene_EntitySetKeyValue_Selected( "_color", buffer );
 				}
 			}
@@ -509,10 +512,8 @@ void Entity_normalizeColor(){
 
 void Entity_setColour(){
 	if ( GlobalSelectionSystem().countSelected() != 0 ) {
-		bool normalize = false;
 		const scene::Path& path = GlobalSelectionSystem().ultimateSelected().path();
 		Entity* entity = Node_getEntity( path.top() );
-
 		if ( entity != 0 ) {
 			const char* strColor = entity->getKeyValue( "_color" );
 			if ( !string_empty( strColor ) ) {
@@ -521,21 +522,15 @@ void Entity_setColour(){
 					g_entity_globals.color_entity = rgb;
 				}
 			}
-
-			if ( g_pGameDescription->mGameType == "doom3" ) {
-				normalize = false;
-			}
-
 			if ( color_dialog( MainFrame_getWindow(), g_entity_globals.color_entity ) ) {
-				if ( normalize ) {
-					NormalizeColor( g_entity_globals.color_entity );
-				}
-
 				char buffer[128];
 				sprintf( buffer, "%g %g %g", g_entity_globals.color_entity[0],
 						 g_entity_globals.color_entity[1],
 						 g_entity_globals.color_entity[2] );
 
+				StringOutputStream command( 256 );
+				command << "entitySetColour " << buffer;
+				UndoableCommand undo( command.c_str() );
 				Scene_EntitySetKeyValue_Selected( "_color", buffer );
 			}
 		}

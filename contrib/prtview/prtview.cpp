@@ -198,8 +198,10 @@ static const char *PLUGIN_COMMANDS =
 	Q3R_CMD_LOAD;
 
 
+ui::Widget g_pRadiantWnd{ui::null};
 
 const char* QERPlug_Init( void *hApp, void* pMainWidget ){
+	g_pRadiantWnd = ui::Window::from(pMainWidget);
 	main_window = ui::Window::from(pMainWidget);
 	ASSERT_TRUE( main_window );
 

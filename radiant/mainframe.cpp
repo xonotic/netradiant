@@ -143,7 +143,7 @@ struct layout_globals_t
 };
 
 layout_globals_t g_layout_globals;
-glwindow_globals_t g_glwindow_globals;
+//glwindow_globals_t g_glwindow_globals;
 
 
 // VFS
@@ -2163,6 +2163,7 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( camera_menu );
 		}
+		create_menu_item_with_mnemonic( camera_menu, "Focus on Selected", "CameraFocusOnSelected" );
 		create_menu_item_with_mnemonic( camera_menu, "_Center", "CenterView" );
 		create_menu_item_with_mnemonic( camera_menu, "_Up Floor", "UpFloor" );
 		create_menu_item_with_mnemonic( camera_menu, "_Down Floor", "DownFloor" );
@@ -2289,6 +2290,9 @@ ui::MenuItem create_selection_menu(){
 		create_menu_item_with_mnemonic( menu_in_menu, "Nudge Right", "SelectNudgeRight" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Nudge Up", "SelectNudgeUp" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Nudge Down", "SelectNudgeDown" );
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu_in_menu, "Nudge +Z", "MoveSelectionUP" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Nudge -Z", "MoveSelectionDOWN" );
 	}
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Rotate" );
@@ -2432,7 +2436,7 @@ ui::MenuItem create_help_menu(){
 	create_game_help_menu( menu );
 
 	create_menu_item_with_mnemonic( menu, "Bug report", makeCallbackF(OpenBugReportURL) );
-	create_menu_item_with_mnemonic( menu, "Shortcuts list", makeCallbackF(DoCommandListDlg) );
+	create_menu_item_with_mnemonic( menu, "Shortcuts", makeCallbackF(DoCommandListDlg) );
 	create_menu_item_with_mnemonic( menu, "_About...", makeCallbackF(DoAbout) );
 
 	return help_menu_item;
@@ -2496,8 +2500,8 @@ void TexdefNudge_registerShortcuts(){
 }
 
 void SelectNudge_registerShortcuts(){
-	command_connect_accelerator( "MoveSelectionDOWN" );
-	command_connect_accelerator( "MoveSelectionUP" );
+	//command_connect_accelerator( "MoveSelectionDOWN" );
+	//command_connect_accelerator( "MoveSelectionUP" );
 	//command_connect_accelerator("SelectNudgeLeft");
 	//command_connect_accelerator("SelectNudgeRight");
 	//command_connect_accelerator("SelectNudgeUp");
@@ -3706,8 +3710,8 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ToggleEntityInspector", makeCallbackF(EntityInspector_ToggleShow), Accelerator( 'N' ) );
 	GlobalCommands_insert( "EntityList", makeCallbackF(EntityList_toggleShown), Accelerator( 'L' ) );
 
-//	GlobalCommands_insert( "ShowHidden", FreeCaller<Select_ShowAllHidden>(), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
-//	GlobalCommands_insert( "HideSelected", FreeCaller<HideSelected>(), Accelerator( 'H' ) );
+//	GlobalCommands_insert( "ShowHidden", makeCallbackF( Select_ShowAllHidden ), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
+//	GlobalCommands_insert( "HideSelected", makeCallbackF( HideSelected ), Accelerator( 'H' ) );
 
 	Select_registerCommands();
 
@@ -3878,7 +3882,7 @@ void MainFrame_Destroy(){
 
 
 void GLWindow_Construct(){
-	GlobalPreferenceSystem().registerPreference( "MouseButtons", make_property_string( g_glwindow_globals.m_nMouseType ) );
+//	GlobalPreferenceSystem().registerPreference( "MouseButtons", make_property_string( g_glwindow_globals.m_nMouseType ) );
 }
 
 void GLWindow_Destroy(){
