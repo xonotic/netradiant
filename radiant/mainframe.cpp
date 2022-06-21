@@ -3334,7 +3334,7 @@ void MainFrame::Create(){
 
 		ui::Widget xz = m_pXZWnd->GetWidget();
 
-		m_hSplit = create_split_views( camera, yz, xy, xz, m_vSplit, m_vSplit2 );
+		m_hSplit = create_split_views( camera, xy, yz, xz, m_vSplit, m_vSplit2 );
 		vbox.pack_start( m_hSplit, TRUE, TRUE, 0 );
 
 		{
@@ -3372,8 +3372,8 @@ void MainFrame::Create(){
 		hsplit.show();
 
 		/* Before merging NetRadiantCustom:
-		ui::Widget split = create_split_views( camera, yz, xy, xz ); */
-		m_hSplit = create_split_views( camera, yz, xy, xz, m_vSplit, m_vSplit2 );
+		ui::Widget split = create_split_views( camera, xy, yz, xz ); */
+		m_hSplit = create_split_views( camera, xy, yz, xz, m_vSplit, m_vSplit2 );
 
 		ui::Widget vsplit = ui::VPaned(ui::New);
 		vsplit.show();
