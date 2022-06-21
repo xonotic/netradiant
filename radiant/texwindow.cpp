@@ -3121,10 +3121,6 @@ void TextureBrowser_Destroy(){
 	Textures_setModeChangedNotify( Callback<void()>() );
 }
 
-ui::Widget TextureBrowser_getGLWidget(){
-	return GlobalTextureBrowser().m_gl_widget;
-}
-
 #if WORKAROUND_WINDOWS_GTK2_GLWIDGET
 ui::GLArea TextureBrowser_getGLWidget(){
 	return GlobalTextureBrowser().m_gl_widget;
