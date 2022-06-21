@@ -3,6 +3,6 @@
 
 #include <uilib/uilib.h>
 
-extern ui::Widget g_pRadiantWnd;
+static ui::Window main_window{ui::null};
 
 #endif

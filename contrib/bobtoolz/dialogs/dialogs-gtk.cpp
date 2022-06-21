@@ -213,7 +213,7 @@ EMessageBoxReturn DoMessageBox( const char* lpText, const char* lpCaption, EMess
 	int loop = 1;
 
 	auto window = ui::Window( ui::window_type::TOP );
-	gtk_window_set_transient_for( GTK_WINDOW( window ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_transient_for( GTK_WINDOW( window ), main_window );
 	window.connect( "delete_event", G_CALLBACK( custom_dialog_delete_callback ), NULL );
 	window.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
 	gtk_window_set_title( window, lpCaption );
@@ -408,7 +408,7 @@ EMessageBoxReturn DoPolygonBox( PolygonRS* rs ){
 	int loop = 1;
 
 	auto window = ui::Window( ui::window_type::TOP );
-	gtk_window_set_transient_for( GTK_WINDOW( window ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_transient_for( GTK_WINDOW( window ), main_window );
 
 	window.connect( "delete_event", G_CALLBACK( custom_dialog_delete_callback ), NULL );
 	window.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
@@ -1278,7 +1278,7 @@ EMessageBoxReturn DoResetTextureBox( ResetTextureRS* rs, ui::Window main_window 
 	int loop = 1;
 
 	auto window = main_window.create_dialog_window( "Texture Reset", G_CALLBACK( custom_dialog_delete_callback ), &dialog );
-	gtk_window_set_transient_for( GTK_WINDOW( window ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_transient_for( GTK_WINDOW( window ), main_window );
 	gtk_window_set_modal( GTK_WINDOW( window ), TRUE );
 
 	window.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
