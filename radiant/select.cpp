@@ -1162,7 +1162,7 @@ void DoRotateDlg(){
 				}
 				{
 					auto adj = ui::Adjustment( 0, -359, 359, 1, 10, 0 );
-					auto spin = ui::SpinButton( adj, 1, 0 );
+					auto spin = ui::SpinButton( adj, 1, 1 );
 					spin.show();
                     table.attach(spin, {1, 2, 0, 1}, {GTK_EXPAND | GTK_FILL, 0});
                     spin.dimensions(64, -1);
@@ -1174,7 +1174,7 @@ void DoRotateDlg(){
 				}
 				{
 					auto adj = ui::Adjustment( 0, -359, 359, 1, 10, 0 );
-					auto spin = ui::SpinButton( adj, 1, 0 );
+					auto spin = ui::SpinButton( adj, 1, 1 );
 					spin.show();
                     table.attach(spin, {1, 2, 1, 2}, {GTK_EXPAND | GTK_FILL, 0});
                     spin.dimensions(64, -1);
@@ -1184,7 +1184,7 @@ void DoRotateDlg(){
 				}
 				{
 					auto adj = ui::Adjustment( 0, -359, 359, 1, 10, 0 );
-					auto spin = ui::SpinButton( adj, 1, 0 );
+					auto spin = ui::SpinButton( adj, 1, 1 );
 					spin.show();
                     table.attach(spin, {1, 2, 2, 3}, {GTK_EXPAND | GTK_FILL, 0});
                     spin.dimensions(64, -1);

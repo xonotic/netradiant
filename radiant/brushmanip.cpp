@@ -139,17 +139,22 @@ void Brush_ConstructPrism( Brush& brush, const AABB& bounds, std::size_t sides, 
 		double sv = sin( i * 3.14159265 * 2 / sides );
 		double cv = cos( i * 3.14159265 * 2 / sides );
 
-		planepts[0][( axis + 1 ) % 3] = static_cast<float>( floor( mid[( axis + 1 ) % 3] + radius * cv + 0.5 ) );
-		planepts[0][( axis + 2 ) % 3] = static_cast<float>( floor( mid[( axis + 2 ) % 3] + radius * sv + 0.5 ) );
+//		planepts[0][( axis + 1 ) % 3] = static_cast<float>( floor( mid[( axis + 1 ) % 3] + radius * cv + 0.5 ) );
+//		planepts[0][( axis + 2 ) % 3] = static_cast<float>( floor( mid[( axis + 2 ) % 3] + radius * sv + 0.5 ) );
+		planepts[0][( axis + 1 ) % 3] = static_cast<float>( mid[( axis + 1 ) % 3] + radius * cv );
+		planepts[0][( axis + 2 ) % 3] = static_cast<float>( mid[( axis + 2 ) % 3] + radius * sv );
 		planepts[0][axis] = mins[axis];
 
 		planepts[1][( axis + 1 ) % 3] = planepts[0][( axis + 1 ) % 3];
 		planepts[1][( axis + 2 ) % 3] = planepts[0][( axis + 2 ) % 3];
 		planepts[1][axis] = maxs[axis];
 
-		planepts[2][( axis + 1 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 1 ) % 3] - radius * sv + 0.5 ) );
-		planepts[2][( axis + 2 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 2 ) % 3] + radius * cv + 0.5 ) );
+//		planepts[2][( axis + 1 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 1 ) % 3] - radius * sv + 0.5 ) );
+//		planepts[2][( axis + 2 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 2 ) % 3] + radius * cv + 0.5 ) );
+		planepts[2][( axis + 1 ) % 3] = static_cast<float>( planepts[0][( axis + 1 ) % 3] - radius * sv );
+		planepts[2][( axis + 2 ) % 3] = static_cast<float>( planepts[0][( axis + 2 ) % 3] + radius * cv );
 		planepts[2][axis] = maxs[axis];
+		//globalOutputStream() << planepts[0] << "   " << planepts[2] << "  #" << i << "   sin " << sv << "  cos " << cv << "\n";
 
 		brush.addPlane( planepts[0], planepts[1], planepts[2], shader, projection );
 	}
@@ -190,16 +195,20 @@ void Brush_ConstructCone( Brush& brush, const AABB& bounds, std::size_t sides, c
 		double sv = sin( i * 3.14159265 * 2 / sides );
 		double cv = cos( i * 3.14159265 * 2 / sides );
 
-		planepts[0][0] = static_cast<float>( floor( mid[0] + radius * cv + 0.5 ) );
-		planepts[0][1] = static_cast<float>( floor( mid[1] + radius * sv + 0.5 ) );
+		planepts[0][0] = static_cast<float>( mid[0] + radius * cv );
+		planepts[0][1] = static_cast<float>( mid[1] + radius * sv );
+//		planepts[0][0] = static_cast<float>( floor( mid[0] + radius * cv + 0.5 ) );
+//		planepts[0][1] = static_cast<float>( floor( mid[1] + radius * sv + 0.5 ) );
 		planepts[0][2] = mins[2];
 
 		planepts[1][0] = mid[0];
 		planepts[1][1] = mid[1];
 		planepts[1][2] = maxs[2];
 
-		planepts[2][0] = static_cast<float>( floor( planepts[0][0] - radius * sv + 0.5 ) );
-		planepts[2][1] = static_cast<float>( floor( planepts[0][1] + radius * cv + 0.5 ) );
+		planepts[2][0] = static_cast<float>( planepts[0][0] - radius * sv );
+		planepts[2][1] = static_cast<float>( planepts[0][1] + radius * cv );
+//		planepts[2][0] = static_cast<float>( floor( planepts[0][0] - radius * sv + 0.5 ) );
+//		planepts[2][1] = static_cast<float>( floor( planepts[0][1] + radius * cv + 0.5 ) );
 		planepts[2][2] = maxs[2];
 
 		brush.addPlane( planepts[0], planepts[1], planepts[2], shader, projection );
