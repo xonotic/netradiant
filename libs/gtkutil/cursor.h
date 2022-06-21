@@ -30,10 +30,13 @@
 typedef struct _GdkCursor GdkCursor;
 typedef struct _GdkEventMotion GdkEventMotion;
 
+// Note: NetRadiantCustom disables them but we still make use of them.
+#if 1
 GdkCursor* create_blank_cursor();
 void set_cursor( ui::Widget widget, GdkCursorType cursor_type );
 void blank_cursor( ui::Widget widget );
 void default_cursor( ui::Widget widget );
+#endif
 void Sys_GetCursorPos( ui::Widget widget, int *x, int *y );
 void Sys_SetCursorPos( ui::Widget widget, int x, int y );
 
@@ -107,7 +110,7 @@ void motion_delta( int x, int y, unsigned int state ){
 class FreezePointer
 {
 unsigned int handle_motion;
-int recorded_x, recorded_y, last_x, last_y;
+int recorded_x, recorded_y, last_x, last_y, center_x, center_y;
 typedef void ( *MotionDeltaFunction )( int x, int y, unsigned int state, void* data );
 MotionDeltaFunction m_function;
 void* m_data;

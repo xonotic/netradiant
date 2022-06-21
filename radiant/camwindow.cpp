@@ -1324,6 +1324,8 @@ void CamWnd::EnableFreeMove(){
 
 	gtk_window_set_focus( m_parent, m_gl_widget );
 	m_freemove_handle_focusout = m_gl_widget.connect( "focus_out_event", G_CALLBACK( camwindow_freemove_focusout ), this );
+	/* Note: We chose to replace m_parent by m_gl_widget but NetRadiantCustom does:
+	m_freezePointer.freeze_pointer( m_parent, m_gl_widget, Camera_motionDelta, &m_Camera ); */
 	m_freezePointer.freeze_pointer( m_gl_widget, Camera_motionDelta, &m_Camera );
 
 	CamWnd_Update( *this );

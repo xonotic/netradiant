@@ -27,13 +27,15 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+// Note: NetRadiantCustom disables them but we still make use of them.
+#if 1
 GdkCursor* create_blank_cursor(){
-	return gdk_cursor_new( GDK_BLANK_CURSOR );
+	return gdk_cursor_new(GDK_BLANK_CURSOR);
 }
 
 void set_cursor( ui::Widget widget, GdkCursorType cursor_type ){
 	GdkCursor* cursor = gdk_cursor_new( cursor_type );
-	gdk_window_set_cursor( gtk_widget_get_window( widget ), cursor );
+	gdk_window_set_cursor( gtk_widget_get_window(widget), cursor );
 	gdk_cursor_unref( cursor );
 }
 
@@ -44,6 +46,7 @@ void blank_cursor( ui::Widget widget ){
 void default_cursor( ui::Widget widget ){
 	gdk_window_set_cursor( gtk_widget_get_window( widget ), NULL );
 }
+#endif
 
 void Sys_GetCursorPos( ui::Widget widget, int *x, int *y ){
 	GdkDisplay *display = gtk_widget_get_display( GTK_WIDGET( widget ) );
@@ -218,6 +221,7 @@ void FreezePointer::unfreeze_pointer(ui::Widget widget)
 	/* The pointer was visible during all the move operation,
 	so, keep the current position. */
 #else
+	// Note: NetRadiantCustom still uses window instead of widget.
 	Sys_SetCursorPos( widget, recorded_x, recorded_y );
 #endif
 

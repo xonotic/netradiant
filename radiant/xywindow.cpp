@@ -824,7 +824,7 @@ XYWnd::XYWnd() :
 	m_parent( ui::null ),
 	m_window_observer( NewWindowObserver() ),
 	m_XORRectangle( m_gl_widget ),
-	m_chasemouse_handler( 0 ) {
+	m_chasemouse_handler( 0 ){
 
 	m_bActive = false;
 	m_buttonstate = 0;
@@ -1101,9 +1101,9 @@ void entitycreate_activated( ui::Widget item ){
 	else {
 		GlobalRadiant().m_pfnMessageBox( MainFrame_getWindow(),
 			"There's already a worldspawn in your map!",
-			"Info",
-			eMB_OK,
-			eMB_ICONDEFAULT );
+										 "Info",
+										 eMB_OK,
+										 eMB_ICONDEFAULT );
 	}
 }
 
@@ -1215,6 +1215,8 @@ void XYWnd::Move_Begin(){
 		Move_End();
 	}
 	m_move_started = true;
+	/* Note: NetRadiantCustom did this instead:
+	g_xywnd_freezePointer.freeze_pointer( m_parent  ? m_parent : MainFrame_getWindow(), m_gl_widget, XYWnd_moveDelta, this ); */
 	g_xywnd_freezePointer.freeze_pointer( m_gl_widget, XYWnd_moveDelta, this );
 	m_move_focusOut = m_gl_widget.connect( "focus_out_event", G_CALLBACK( XYWnd_Move_focusOut ), this );
 }
@@ -1260,6 +1262,8 @@ void XYWnd::Zoom_Begin(){
 	}
 	m_zoom_started = true;
 	g_dragZoom = 0;
+	/* Note: NetRadiantCustom did this instead:
+	g_xywnd_freezePointer.freeze_pointer( m_parent ? m_parent : MainFrame_getWindow(), m_gl_widget, XYWnd_zoomDelta, this ); */
 	g_xywnd_freezePointer.freeze_pointer( m_parent ? m_parent : MainFrame_getWindow(), XYWnd_zoomDelta, this );
 	m_zoom_focusOut = m_gl_widget.connect( "focus_out_event", G_CALLBACK( XYWnd_Zoom_focusOut ), this );
 }
