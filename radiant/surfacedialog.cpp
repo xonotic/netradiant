@@ -412,7 +412,7 @@ void DoSurface( void ){
 
 	}
 	getSurfaceInspector().Update();
-	getSurfaceInspector().importData();
+	//getSurfaceInspector().importData(); //happens in .ShowDlg() anyway
 	getSurfaceInspector().ShowDlg();
 }
 
@@ -433,12 +433,12 @@ void SurfaceInspector_FitTexture(){
 
 void SurfaceInspector_FitTextureW(){
 	UndoableCommand undo( "textureAutoFitW" );
-	Select_FitTextureW( getSurfaceInspector().m_fitHorizontal, getSurfaceInspector().m_fitVertical );
+	Select_FitTexture( getSurfaceInspector().m_fitHorizontal, 0 );
 }
 
 void SurfaceInspector_FitTextureH(){
 	UndoableCommand undo( "textureAutoFitH" );
-	Select_FitTextureH( getSurfaceInspector().m_fitHorizontal, getSurfaceInspector().m_fitVertical );
+	Select_FitTexture( 0, getSurfaceInspector().m_fitVertical );
 }
 
 static void OnBtnPatchdetails( ui::Widget widget, gpointer data ){

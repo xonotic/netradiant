@@ -703,8 +703,10 @@ typedef MemberCaller<ListAttribute, void(), &ListAttribute::update> UpdateCaller
 
 namespace
 {
+GtkWidget* g_entity_split0 = 0;
 ui::Widget g_entity_split1{ui::null};
 ui::Widget g_entity_split2{ui::null};
+int g_entitysplit0_position;
 int g_entitysplit1_position;
 int g_entitysplit2_position;
 
@@ -1304,18 +1306,18 @@ static gint EntityEntry_keypress( ui::Entry widget, GdkEventKey* event, gpointer
 }
 
 void EntityInspector_destroyWindow( ui::Widget widget, gpointer data ){
+	g_entitysplit0_position = gtk_paned_get_position( GTK_PANED( g_entity_split0 ) );
 	g_entitysplit1_position = gtk_paned_get_position( GTK_PANED( g_entity_split1 ) );
 	g_entitysplit2_position = gtk_paned_get_position( GTK_PANED( g_entity_split2 ) );
-
 	g_entityInspector_windowConstructed = false;
 	GlobalEntityAttributes_clear();
 }
 
-static gint EntityInspector_destroyWindowKB( GtkWidget* widget, GdkEventKey* event, gpointer data ){
+static gint EntityInspector_hideWindowKB( GtkWidget* widget, GdkEventKey* event, gpointer data ){
 	//if ( event->keyval == GDK_Escape && GTK_WIDGET_VISIBLE( GTK_WIDGET( widget ) ) ) {
 	if ( event->keyval == GDK_Escape  ) {
-		//globalErrorStream() << "Doom3Light_getBounds: failed to parse default light radius\n";
-		GroupDialog_showPage( g_page_entity );
+		//GroupDialog_showPage( g_page_entity );
+		gtk_widget_hide( GTK_WIDGET( GroupDialog_getWindow() ) );
 		return TRUE;
 	}
 	if ( event->keyval == GDK_Tab  ) {
@@ -1330,7 +1332,7 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 	vbox.show();
 	gtk_container_set_border_width( GTK_CONTAINER( vbox ), 2 );
 
-	g_signal_connect( G_OBJECT( toplevel ), "key_press_event", G_CALLBACK( EntityInspector_destroyWindowKB ), 0 );
+	g_signal_connect( G_OBJECT( toplevel ), "key_press_event", G_CALLBACK( EntityInspector_hideWindowKB ), 0 );
 	vbox.connect( "destroy", G_CALLBACK( EntityInspector_destroyWindow ), 0 );
 
 	{
@@ -1342,7 +1344,8 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 
 		{
 			ui::Widget split2 = ui::VPaned(ui::New);
-			gtk_paned_add1( GTK_PANED( split1 ), split2 );
+			//gtk_paned_add1( GTK_PANED( split1 ), split2 );
+			gtk_paned_pack1( GTK_PANED( split1 ), split2, FALSE, FALSE );
 			split2.show();
 
 			g_entity_split2 = split2;
@@ -1351,7 +1354,8 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 				// class list
 				auto scr = ui::ScrolledWindow(ui::New);
 				scr.show();
-				gtk_paned_add1( GTK_PANED( split2 ), scr );
+				//gtk_paned_add1( GTK_PANED( split2 ), scr );
+				gtk_paned_pack1( GTK_PANED( split2 ), scr, FALSE, FALSE );
 				gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW( scr ), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS );
 				gtk_scrolled_window_set_shadow_type( GTK_SCROLLED_WINDOW( scr ), GTK_SHADOW_IN );
 
@@ -1388,7 +1392,8 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 			{
 				auto scr = ui::ScrolledWindow(ui::New);
 				scr.show();
-				gtk_paned_add2( GTK_PANED( split2 ), scr );
+				//gtk_paned_add2( GTK_PANED( split2 ), scr );
+				gtk_paned_pack2( GTK_PANED( split2 ), scr, FALSE, FALSE );
 				gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW( scr ), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS );
 				gtk_scrolled_window_set_shadow_type( GTK_SCROLLED_WINDOW( scr ), GTK_SHADOW_IN );
 
@@ -1405,14 +1410,16 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 		}
 
 		{
-			ui::Widget split2 = ui::VPaned(ui::New);
-			gtk_paned_add2( GTK_PANED( split1 ), split2 );
-			split2.show();
+			ui::Widget split0 = ui::VPaned(ui::New);
+			//gtk_paned_add2( GTK_PANED( split1 ), split0 );
+			gtk_paned_pack2( GTK_PANED( split1 ), split0, FALSE, FALSE );
+			split0.show();
+			g_entity_split0 = split0;
 
 			{
                 auto vbox2 = ui::VBox( FALSE, 2 );
 				vbox2.show();
-				gtk_paned_pack1( GTK_PANED( split2 ), vbox2, FALSE, FALSE );
+				gtk_paned_pack1( GTK_PANED( split0 ), vbox2, FALSE, FALSE );
 
 				{
 					// Spawnflags (4 colums wide max, or window gets too wide.)
@@ -1549,27 +1556,23 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 
 				viewport.add(g_attributeBox);
 				scr.add(viewport);
-				gtk_paned_pack2( GTK_PANED( split2 ), scr, FALSE, FALSE );
+				gtk_paned_pack2( GTK_PANED( split0 ), scr, FALSE, FALSE );
 			}
 		}
 	}
 
 
 	{
-		// show the sliders in any case
-		if ( g_entitysplit2_position > 22 ) {
-			gtk_paned_set_position( GTK_PANED( g_entity_split2 ), g_entitysplit2_position );
-		}
-		else {
+		// show the sliders in any case //no need, gtk can care
+		/*if ( g_entitysplit2_position < 22 ) {
 			g_entitysplit2_position = 22;
-			gtk_paned_set_position( GTK_PANED( g_entity_split2 ), 22 );
-		}
-		if ( ( g_entitysplit1_position - g_entitysplit2_position ) > 27 ) {
-			gtk_paned_set_position( GTK_PANED( g_entity_split1 ), g_entitysplit1_position );
-		}
-		else {
-			gtk_paned_set_position( GTK_PANED( g_entity_split1 ), g_entitysplit2_position + 27 );
-		}
+		}*/
+		gtk_paned_set_position( GTK_PANED( g_entity_split2 ), g_entitysplit2_position );
+		/*if ( ( g_entitysplit1_position - g_entitysplit2_position ) < 27 ) {
+			g_entitysplit1_position = g_entitysplit2_position + 27;
+		}*/
+		gtk_paned_set_position( GTK_PANED( g_entity_split1 ), g_entitysplit1_position );
+		gtk_paned_set_position( GTK_PANED( g_entity_split0 ), g_entitysplit0_position );
 	}
 
 	g_entityInspector_windowConstructed = true;
@@ -1617,6 +1620,7 @@ EntityInspector g_EntityInspector;
 void EntityInspector_construct(){
 	GlobalEntityClassManager().attach( g_EntityInspector );
 
+	GlobalPreferenceSystem().registerPreference( "EntitySplit0", make_property_string( g_entitysplit0_position ) );
 	GlobalPreferenceSystem().registerPreference( "EntitySplit1", make_property_string( g_entitysplit1_position ) );
 	GlobalPreferenceSystem().registerPreference( "EntitySplit2", make_property_string( g_entitysplit2_position ) );
 

@@ -46,6 +46,7 @@
 class FindTextureDialog : public Dialog
 {
 public:
+WindowPositionTracker m_position_tracker;
 static void setReplaceStr( const char* name );
 static void setFindStr( const char* name );
 static bool isOpen();
@@ -122,6 +123,7 @@ static gint replace_focus_in( ui::Widget widget, GdkEventFocus *event, gpointer 
 
 FindTextureDialog::FindTextureDialog(){
 	m_bSelectedOnly = FALSE;
+	//m_position_tracker.setPosition( c_default_window_pos );
 }
 
 FindTextureDialog::~FindTextureDialog(){
@@ -133,6 +135,8 @@ ui::Window FindTextureDialog::BuildDialog(){
 	ui::Entry entry{ui::null};
 
 	auto dlg = ui::Window(create_floating_window( "Find / Replace Texture(s)", m_parent ));
+
+	m_position_tracker.connect( dlg );
 
 	auto hbox = ui::HBox( FALSE, 5 );
 	hbox.show();
@@ -230,7 +234,10 @@ void FindTextureDialog::setReplaceStr( const char* name ){
 }
 
 void FindTextureDialog::show(){
+	// workaround for strange gtk behaviour - modifying the contents of a window while it is not visible causes the window position to change without sending a configure_event
+	g_FindTextureDialog.m_position_tracker.sync( g_FindTextureDialog.GetWidget() );
 	g_FindTextureDialog.ShowDlg();
+	gtk_window_present( g_FindTextureDialog.GetWidget() );
 }
 
 
@@ -250,8 +257,11 @@ void FindTextureDialog_selectTexture( const char* name ){
 	g_FindTextureDialog.updateTextures( name );
 }
 
+#include "preferencesystem.h"
+
 void FindTextureDialog_Construct(){
 	GlobalCommands_insert( "FindReplaceTextures", FindTextureDialog::ShowCaller() );
+	GlobalPreferenceSystem().registerPreference( "FindReplacehWnd",  make_property_string<WindowPositionTracker_String>( g_FindTextureDialog.m_position_tracker ) );
 }
 
 void FindTextureDialog_Destroy(){

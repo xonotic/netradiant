@@ -2568,7 +2568,7 @@ void Clipper_constructToolbar( ui::Toolbar toolbar ){
 }
 
 void XYWnd_constructToolbar( ui::Toolbar toolbar ){
-	toolbar_append_button( toolbar, "Change views", "view_change.png", "NextView" );
+	toolbar_append_button( toolbar, "Change views (CTRL + TAB)", "view_change.png", "NextView" );
 }
 
 void Manipulators_constructToolbar( ui::Toolbar toolbar ){
@@ -2615,7 +2615,7 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 
 	ComponentModes_constructToolbar( toolbar );
 
-	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft || style == MainFrame::eFloating ) {
+	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
 		space();
 
 		XYWnd_constructToolbar( toolbar );
@@ -2642,20 +2642,15 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 	space();
 
 	/*auto g_view_entities_button =*/ toolbar_append_button( toolbar, "Entities (N)", "entities.png", "ToggleEntityInspector" );
-	auto g_view_console_button = toolbar_append_button( toolbar, "Console (O)", "console.png", "ToggleConsole" );
-	auto g_view_textures_button = toolbar_append_button( toolbar, "Texture Browser (T)", "texture_browser.png", "ToggleTextures" );
+	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
+		auto g_view_console_button = toolbar_append_button( toolbar, "Console (O)", "console.png", "ToggleConsole" );
+		auto g_view_textures_button = toolbar_append_button( toolbar, "Texture Browser (T)", "texture_browser.png", "ToggleTextures" );
+	}
 	// TODO: call light inspector
 	//GtkButton* g_view_lightinspector_button = toolbar_append_button(toolbar, "Light Inspector", "lightinspector.png", "ToggleLightInspector");
 
 	space();
 	/*auto g_refresh_models_button =*/ toolbar_append_button( toolbar, "Refresh Models", "refresh_models.png", "RefreshReferences" );
-
-
-	// disable the console and texture button in the regular layouts
-	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
-		gtk_widget_set_sensitive( g_view_console_button , FALSE );
-		gtk_widget_set_sensitive( g_view_textures_button , FALSE );
-	}
 
 	return toolbar;
 }
@@ -3055,6 +3050,10 @@ void MainFrame::Create(){
 	vbox.pack_end(main_statusbar, FALSE, TRUE, 2);
 
 	GroupDialog_constructWindow( window );
+
+	/* want to realize it immediately; otherwise gtk paned splits positions wont be set correctly for floating group dlg */
+	gtk_widget_realize ( GTK_WIDGET( GroupDialog_getWindow() ) );
+
 	g_page_entity = GroupDialog_addPage( "Entities", EntityInspector_constructWindow( GroupDialog_getWindow() ), RawStringExportCaller( "Entities" ) );
 
 	if ( FloatingGroupDialog() ) {

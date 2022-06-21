@@ -1176,7 +1176,7 @@ void TextureBrowser_trackingDelta( int x, int y, unsigned int state, void* data 
 
 void TextureBrowser_Tracking_MouseUp( TextureBrowser& textureBrowser ){
 	textureBrowser.m_move_started = false;
-	/* Note: NetRadiantCustom did this instead:
+	/* NetRadiantCustom did this instead:
 	textureBrowser.m_freezePointer.unfreeze_pointer( textureBrowser.m_gl_widget ); */
 
 	textureBrowser.m_freezePointer.unfreeze_pointer( textureBrowser.m_gl_widget );
@@ -1187,7 +1187,7 @@ void TextureBrowser_Tracking_MouseDown( TextureBrowser& textureBrowser ){
 		TextureBrowser_Tracking_MouseUp( textureBrowser );
 	}
 	textureBrowser.m_move_started = true;
-	/* Note: NetRadiantCustom did this instead:
+	/* NetRadiantCustom did this instead:
 	textureBrowser.m_freezePointer.freeze_pointer( textureBrowser.m_parent, textureBrowser.m_gl_widget, TextureBrowser_trackingDelta, &textureBrowser ); */
 	textureBrowser.m_freezePointer.freeze_pointer( textureBrowser.m_gl_widget, TextureBrowser_trackingDelta, &textureBrowser );
 }
@@ -2207,7 +2207,7 @@ void TextureBrowser_checkTagFile(){
 		}
 		else
 		{
-			globalErrorStream() << "Unable to find default tag file " << default_filename.c_str() << ". No tag support.\n";
+			globalOutputStream() << "Unable to find default tag file " << default_filename.c_str() << ". No tag support. Plugins -> ShaderPlug -> Create tag file: to start using tags\n";
 		}
 	}
 }

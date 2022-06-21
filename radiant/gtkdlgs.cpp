@@ -507,6 +507,7 @@ void DoAbout(){
 				{
                     auto button = create_dialog_button( "Credits", G_CALLBACK( about_button_credits ), 0 );
 					vbox2.pack_start( button, FALSE, FALSE, 0 );
+					gtk_widget_set_sensitive( GTK_WIDGET( button ), FALSE);
 				}
 				{
                     auto button = create_dialog_button( "Changes", G_CALLBACK( about_button_changelog ), 0 );
@@ -515,6 +516,7 @@ void DoAbout(){
 				{
                     auto button = create_dialog_button( "Issues", G_CALLBACK( about_button_issues ), 0 );
 					vbox2.pack_start( button, FALSE, FALSE, 0 );
+					gtk_widget_set_sensitive( GTK_WIDGET( button ), FALSE);
 				}
 			}
 		}
