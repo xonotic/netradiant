@@ -73,9 +73,12 @@ void Create();
 void SaveWindowInfo();
 void Shutdown();
 
+public:
 ui::Widget m_vSplit{ui::null};
 ui::Widget m_hSplit{ui::null};
 ui::Widget m_vSplit2{ui::null};
+
+private:
 
 XYWnd* m_pXYWnd;
 XYWnd* m_pYZWnd;

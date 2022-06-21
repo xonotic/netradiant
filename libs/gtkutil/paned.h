@@ -19,11 +19,11 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <gtk/gtk.h>
-#include <uilib/uilib.h>
-
 #if !defined( INCLUDED_GTKUTIL_PANED_H )
 #define INCLUDED_GTKUTIL_PANED_H
+
+#include <gtk/gtk.h>
+#include <uilib/uilib.h>
 
 class PanedState
 {
@@ -36,6 +36,5 @@ gboolean hpaned_allocate( ui::Widget widget, GtkAllocation* allocation, PanedSta
 gboolean vpaned_allocate( ui::Widget widget, GtkAllocation* allocation, PanedState* paned );
 gboolean paned_position( ui::Widget widget, gpointer dummy, PanedState* paned );
 
-ui::HPaned create_split_views( ui::Widget topleft, ui::Widget topright, ui::Widget botleft, ui::Widget botright );
-
+ui::Widget create_split_views( ui::Widget topleft, ui::Widget botleft, ui::Widget topright, ui::Widget botright, ui::Widget& vsplit1, ui::Widget& vsplit2 );
 #endif
