@@ -59,6 +59,7 @@
 
 typedef struct
 {
+	char* unzFilePath;
 	char*   name;
 	unzFile zipfile;
 	unz_file_pos zippos;
@@ -75,6 +76,7 @@ static int g_numDirs;
 char g_strForbiddenDirs[VFS_MAXDIRS][PATH_MAX + 1];
 int g_numForbiddenDirs = 0;
 static gboolean g_bUsePak = TRUE;
+char g_strLoadedFileLocation[1024];
 
 // =============================================================================
 // Static functions
@@ -124,6 +126,8 @@ static void vfsInitPakFile( const char *filename ){
 	}
 	unzGoToFirstFile( uf );
 
+	char* unzFilePath = strdup( filename );
+
 	for ( i = 0; i < gi.number_entry; i++ )
 	{
 		char filename_inzip[NAME_MAX];
@@ -151,6 +155,7 @@ static void vfsInitPakFile( const char *filename ){
 		file->name = strdup( filename_lower );
 		file->size = file_info.uncompressed_size;
 		file->zipfile = uf;
+		file->unzFilePath = unzFilePath;
 		file->zippos = pos;
 
 		if ( ( i + 1 ) < gi.number_entry ) {
@@ -337,6 +342,7 @@ void vfsShutdown(){
 	while ( g_pakFiles )
 	{
 		VFS_PAKFILE* file = (VFS_PAKFILE*)g_pakFiles->data;
+		free( file->unzFilePath );
 		free( file->name );
 		free( file );
 		g_pakFiles = g_slist_remove( g_pakFiles, file );
@@ -434,6 +440,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 
 	// filename is a full path
 	if ( index == -1 ) {
+		strcpy( g_strLoadedFileLocation, filename );
 		long len;
 		FILE *f;
 
@@ -475,6 +482,8 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 		strcat( tmp, filename );
 		if ( access( tmp, R_OK ) == 0 ) {
 			if ( count == index ) {
+				strcpy( g_strLoadedFileLocation, tmp );
+
 				long len;
 				FILE *f;
 
@@ -523,6 +532,10 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 		}
 
 		if ( count == index ) {
+			strcpy( g_strLoadedFileLocation, file->unzFilePath );
+			strcat( g_strLoadedFileLocation, " :: " );
+			strcat( g_strLoadedFileLocation, filename );
+
 
 		if ( unzGoToFilePos( file->zipfile, &file->zippos ) != UNZ_OK ) {
 			return -1;
