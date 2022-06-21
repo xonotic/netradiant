@@ -127,6 +127,7 @@ guint m_zoom_focusOut;
 void ZoomIn();
 void ZoomOut();
 void ZoomInWithMouse( int pointx, int pointy );
+void FocusOnBounds( AABB& bounds );
 
 void Redraw();
 
@@ -252,6 +253,7 @@ inline void XYWnd_Update( XYWnd& xywnd ){
 	xywnd.queueDraw();
 }
 
+void XY_Centralize();
 
 struct xywindow_globals_t
 {

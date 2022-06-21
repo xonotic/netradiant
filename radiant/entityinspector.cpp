@@ -35,6 +35,7 @@
 #include <set>
 #include <gdk/gdkkeysyms.h>
 #include <uilib/uilib.h>
+#include <gtk/gtkstock.h>
 
 
 #include "os/path.h"
@@ -63,6 +64,8 @@
 #include "mainframe.h"
 #include "textureentry.h"
 #include "groupdialog.h"
+
+#include "select.h"
 
 ui::Entry numeric_entry_new(){
 	auto entry = ui::Entry(ui::New);
@@ -766,6 +769,8 @@ GtkCheckButton* g_entitySpawnflagsCheck[MAX_FLAGS];
 ui::Entry g_entityKeyEntry{ui::null};
 ui::Entry g_entityValueEntry{ui::null};
 
+GtkToggleButton* g_focusToggleButton;
+
 ui::ListStore g_entlist_store{ui::null};
 ui::ListStore g_entprops_store{ui::null};
 const EntityClass* g_current_flags = 0;
@@ -1396,6 +1401,21 @@ static gint EntityInspector_hideWindowKB( GtkWidget* widget, GdkEventKey* event,
 	return FALSE;
 }
 
+void EntityInspector_selectTargeting( GtkButton *button, gpointer user_data ){
+	bool focus = gtk_toggle_button_get_active( g_focusToggleButton );
+	Select_ConnectedEntities( true, false, focus );
+}
+
+void EntityInspector_selectTargets( GtkButton *button, gpointer user_data ){
+	bool focus = gtk_toggle_button_get_active( g_focusToggleButton );
+	Select_ConnectedEntities( false, true, focus );
+}
+
+void EntityInspector_selectConnected( GtkButton *button, gpointer user_data ){
+	bool focus = gtk_toggle_button_get_active( g_focusToggleButton );
+	Select_ConnectedEntities( true, true, focus );
+}
+
 ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
     auto vbox = ui::VBox( FALSE, 2 );
 	vbox.show();
@@ -1596,21 +1616,72 @@ ui::Widget EntityInspector_constructWindow( ui::Window toplevel ){
 				}
 
 				{
-					auto hbox = ui::HBox( TRUE, 4 );
+					auto hbox = ui::HBox( FALSE, 4 );
 					hbox.show();
 					vbox2.pack_start( hbox, FALSE, TRUE, 0 );
 
 					{
 						auto button = ui::Button( "Clear All" );
+#define GARUX_DISABLE_BUTTON_NOFOCUS
+#ifndef GARUX_DISABLE_BUTTON_NOFOCUS
+						GTK_WIDGET_UNSET_FLAGS( GTK_WIDGET( button ), GTK_CAN_FOCUS );
+#endif // GARUX_DISABLE_BUTTON_NOFOCUS
 						button.show();
 						button.connect( "clicked", G_CALLBACK( EntityInspector_clearAllKeyValues ), 0 );
 						hbox.pack_start( button, TRUE, TRUE, 0 );
 					}
 					{
 						auto button = ui::Button( "Delete Key" );
+#ifndef GARUX_DISABLE_BUTTON_NOFOCUS
+						GTK_WIDGET_UNSET_FLAGS( GTK_WIDGET( button ), GTK_CAN_FOCUS );
+#endif // GARUX_DISABLE_BUTTON_NOFOCUS
 						button.show();
 						button.connect( "clicked", G_CALLBACK( EntityInspector_clearKeyValue ), 0 );
 						hbox.pack_start( button, TRUE, TRUE, 0 );
+					}
+					{
+						GtkButton* button = GTK_BUTTON( gtk_button_new_with_label( "<" ) );
+						gtk_widget_set_tooltip_text( GTK_WIDGET( button ), "Select targeting entities" );
+#ifndef GARUX_DISABLE_BUTTON_NOFOCUS
+						GTK_WIDGET_UNSET_FLAGS( GTK_WIDGET( button ), GTK_CAN_FOCUS );
+#endif // GARUX_DISABLE_BUTTON_NOFOCUS
+						gtk_widget_show( GTK_WIDGET( button ) );
+						g_signal_connect( G_OBJECT( button ), "clicked", G_CALLBACK( EntityInspector_selectTargeting ), 0 );
+						gtk_box_pack_start( hbox, GTK_WIDGET( button ), FALSE, FALSE, 0 );
+					}
+					{
+						GtkButton* button = GTK_BUTTON( gtk_button_new_with_label( ">" ) );
+						gtk_widget_set_tooltip_text( GTK_WIDGET( button ), "Select targets" );
+#ifndef GARUX_DISABLE_BUTTON_NOFOCUS
+						GTK_WIDGET_UNSET_FLAGS( GTK_WIDGET( button ), GTK_CAN_FOCUS );
+#endif // GARUX_DISABLE_BUTTON_NOFOCUS
+						gtk_widget_show( GTK_WIDGET( button ) );
+						g_signal_connect( G_OBJECT( button ), "clicked", G_CALLBACK( EntityInspector_selectTargets ), 0 );
+						gtk_box_pack_start( hbox, GTK_WIDGET( button ), FALSE, FALSE, 0 );
+					}
+					{
+						GtkButton* button = GTK_BUTTON( gtk_button_new_with_label( "<->" ) );
+						gtk_widget_set_tooltip_text( GTK_WIDGET( button ), "Select connected entities" );
+#ifndef GARUX_DISABLE_BUTTON_NOFOCUS
+						GTK_WIDGET_UNSET_FLAGS( GTK_WIDGET( button ), GTK_CAN_FOCUS );
+#endif // GARUX_DISABLE_BUTTON_NOFOCUS
+						gtk_widget_show( GTK_WIDGET( button ) );
+						g_signal_connect( G_OBJECT( button ), "clicked", G_CALLBACK( EntityInspector_selectConnected ), 0 );
+						gtk_box_pack_start( hbox, GTK_WIDGET( button ), FALSE, FALSE, 0 );
+					}
+					{
+						GtkWidget* button = gtk_toggle_button_new();
+						GtkImage* image = GTK_IMAGE( gtk_image_new_from_stock( GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_SMALL_TOOLBAR ) );
+						gtk_widget_show( GTK_WIDGET( image ) );
+						gtk_container_add( GTK_CONTAINER( button ), GTK_WIDGET( image ) );
+						gtk_button_set_relief( GTK_BUTTON( button ), GTK_RELIEF_NONE );
+#ifndef GARUX_DISABLE_BUTTON_NOFOCUS
+						GTK_WIDGET_UNSET_FLAGS( button, GTK_CAN_FOCUS );
+#endif // GARUX_DISABLE_BUTTON_NOFOCUS
+						gtk_box_pack_start( hbox, button, FALSE, FALSE, 0 );
+						gtk_widget_set_tooltip_text( button, "Focus on Selected" );
+						gtk_widget_show( button );
+						g_focusToggleButton = GTK_TOGGLE_BUTTON( button );
 					}
 				}
 			}

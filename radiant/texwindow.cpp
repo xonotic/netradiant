@@ -1129,16 +1129,15 @@ IShader* Texture_At( TextureBrowser& textureBrowser, int mx, int my ){
    By mouse click
    ==============
  */
-void SelectTexture( TextureBrowser& textureBrowser, int mx, int my, guint32 flags ){
+void SelectTexture( TextureBrowser& textureBrowser, int mx, int my, guint32 flags, bool texturizeSelection ){
 	if ( ( flags & GDK_SHIFT_MASK ) == 0 ) {
 		IShader* shader = Texture_At( textureBrowser, mx, my );
 		if ( shader != 0 ) {
 			TextureBrowser_SetSelectedShader( textureBrowser, shader->getName() );
 			TextureBrowser_textureSelected( shader->getName() );
 
-			if ( !FindTextureDialog_isOpen() && !textureBrowser.m_rmbSelected ) {
-				UndoableCommand undo( "textureNameSetSelected" );
-				Select_SetShader( shader->getName() );
+			if ( !FindTextureDialog_isOpen() && !textureBrowser.m_rmbSelected && !texturizeSelection ) {
+				Select_SetShader_Undo( shader->getName() );
 			}
 		}
 	}
@@ -1184,8 +1183,8 @@ void TextureBrowser_Tracking_MouseDown( TextureBrowser& textureBrowser ){
 	textureBrowser.m_freezePointer.freeze_pointer( textureBrowser.m_gl_widget, TextureBrowser_trackingDelta, &textureBrowser );
 }
 
-void TextureBrowser_Selection_MouseDown( TextureBrowser& textureBrowser, guint32 flags, int pointx, int pointy ){
-	SelectTexture( textureBrowser, pointx, textureBrowser.height - 1 - pointy, flags );
+void TextureBrowser_Selection_MouseDown( TextureBrowser& textureBrowser, guint32 flags, int pointx, int pointy, bool texturizeSelection ){
+	SelectTexture( textureBrowser, pointx, textureBrowser.height - 1 - pointy, flags, texturizeSelection );
 }
 
 void TextureBrowser_Selection_MouseUp( TextureBrowser& textureBrowser, guint32 flags, int pointx, int pointy ){
@@ -1540,7 +1539,7 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 		if ( event->button == 3 ) {
 			if ( textureBrowser->m_tags ) {
 				textureBrowser->m_rmbSelected = true;
-				TextureBrowser_Selection_MouseDown( *textureBrowser, event->state, static_cast<int>( event->x ), static_cast<int>( event->y ) );
+				TextureBrowser_Selection_MouseDown( *textureBrowser, event->state, static_cast<int>( event->x ), static_cast<int>( event->y ), false );
 
 				BuildStoreAssignedTags( textureBrowser->m_assigned_store, textureBrowser->shader.c_str(), textureBrowser );
 				BuildStoreAvailableTags( textureBrowser->m_available_store, textureBrowser->m_assigned_store, textureBrowser->m_all_tags, textureBrowser );
@@ -1556,8 +1555,8 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 				TextureBrowser_Tracking_MouseDown( *textureBrowser );
 			}
 		}
-		else if ( event->button == 1 ) {
-			TextureBrowser_Selection_MouseDown( *textureBrowser, event->state, static_cast<int>( event->x ), static_cast<int>( event->y ) );
+		else if ( event->button == 1 || event->button == 2 ) {
+			TextureBrowser_Selection_MouseDown( *textureBrowser, event->state, static_cast<int>( event->x ), static_cast<int>( event->y ), event->button == 2 );
 
 			if ( textureBrowser->m_tags ) {
 				textureBrowser->m_rmbSelected = false;
@@ -1569,7 +1568,6 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 		#define GARUX_DISABLE_2BUTTON
 		#ifndef GARUX_DISABLE_2BUTTON
 		CopiedString texName = textureBrowser->shader;
-		//const char* sh = texName.c_str();
 		char* sh = const_cast<char*>( texName.c_str() );
 		char* dir = strrchr( sh, '/' );
 		if( dir != NULL ){
@@ -2151,6 +2149,7 @@ void TextureBrowser_searchTags(){
 				TextureDirectory_loadTexture( path.c_str(), name.c_str() );
 			}
 		}
+		TextureBrowser_SetHideUnused( textureBrowser, false );
 		textureBrowser.m_searchedTags = true;
 		g_TextureBrowser_currentDirectory = tags_searched;
 
