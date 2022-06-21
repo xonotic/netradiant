@@ -784,9 +784,8 @@ static void editor_close( ui::Widget widget, gpointer data ){
 static void CreateGtkTextEditor(){
 	auto dlg = ui::Window( ui::window_type::TOP );
 
-	dlg.connect( "delete_event",
-					  G_CALLBACK( editor_delete ), 0 );
-	gtk_window_set_default_size( dlg, 400, 300 );
+	dlg.connect( "", G_CALLBACK( editor_delete ), 0 );
+	gtk_window_set_default_size( dlg, 400, 600 );
 
 	auto vbox = ui::VBox( FALSE, 5 );
 	vbox.show();
