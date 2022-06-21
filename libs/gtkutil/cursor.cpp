@@ -234,7 +234,7 @@ void FreezePointer::freeze_pointer(ui::Widget widget, FreezePointer::MotionDelta
 	//gdk_window_set_cursor ( GTK_WIDGET( window )->window, cursor );
 	/*	is needed to fix activating neighbour widgets, that happens, if using upper one	*/
 	gtk_grab_add( widget );
-	weedjet = widget;
+	m_weedjet = widget;
 #else
  	GdkCursor* cursor = create_blank_cursor();
  	//GdkGrabStatus status =
@@ -267,7 +267,8 @@ void FreezePointer::freeze_pointer(ui::Widget widget, FreezePointer::MotionDelta
 	handle_motion = widget.connect( "motion_notify_event", G_CALLBACK( motion_delta ), this );
 }
 
-void FreezePointer::unfreeze_pointer(ui::Widget widget)
+// Only NetRadiantCustom uses centerize code.
+void FreezePointer::unfreeze_pointer(ui::Widget widget, bool centerize)
 {
 	g_signal_handler_disconnect( G_OBJECT( widget ), handle_motion );
 
@@ -280,7 +281,12 @@ void FreezePointer::unfreeze_pointer(ui::Widget widget)
 #else
 	// NetRadiantCustom still uses window instead of widget.
 #if 0 // NetRadiantCustom
-	Sys_SetCursorPos( window, recorded_x, recorded_y );
+	if ( centerize ){
+		Sys_SetCursorPos( window, center_x, center_y );
+	}
+	else{
+		Sys_SetCursorPos( window, recorded_x, recorded_y );
+	}
 #else
 	Sys_SetCursorPos( widget, recorded_x, recorded_y );
 #endif
@@ -288,7 +294,11 @@ void FreezePointer::unfreeze_pointer(ui::Widget widget)
 
 //	gdk_window_set_cursor( GTK_WIDGET( window )->window, 0 );
 	gdk_pointer_ungrab( GDK_CURRENT_TIME );
+
 #if 0 // NetRadiantCustom
-	gtk_grab_remove( weedjet );
+	if ( m_weedjet )
+	{
+		gtk_grab_remove( m_weedjet );
+	}
 #endif
 }

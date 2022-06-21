@@ -1344,7 +1344,8 @@ void CamWnd::DisableFreeMove(){
 	CamWnd_Remove_Handlers_FreeMove( *this );
 	CamWnd_Add_Handlers_Move( *this );
 
-	m_freezePointer.unfreeze_pointer( m_gl_widget );
+	m_freezePointer.unfreeze_pointer( m_gl_widget, true );
+
 	g_signal_handler_disconnect( G_OBJECT( m_gl_widget ), m_freemove_handle_focusout );
 
 	CamWnd_Update( *this );

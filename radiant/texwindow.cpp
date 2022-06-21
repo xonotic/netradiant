@@ -1177,9 +1177,8 @@ void TextureBrowser_trackingDelta( int x, int y, unsigned int state, void* data 
 void TextureBrowser_Tracking_MouseUp( TextureBrowser& textureBrowser ){
 	textureBrowser.m_move_started = false;
 	/* NetRadiantCustom did this instead:
-	textureBrowser.m_freezePointer.unfreeze_pointer( textureBrowser.m_gl_widget ); */
-
-	textureBrowser.m_freezePointer.unfreeze_pointer( textureBrowser.m_gl_widget );
+	textureBrowser.m_freezePointer.unfreeze_pointer( textureBrowser.m_parent, false ); */
+	textureBrowser.m_freezePointer.unfreeze_pointer( textureBrowser.m_gl_widget, false );
 }
 
 void TextureBrowser_Tracking_MouseDown( TextureBrowser& textureBrowser ){
@@ -1562,7 +1561,8 @@ gboolean TextureBrowser_button_press( ui::Widget widget, GdkEventButton* event, 
 		#define GARUX_DISABLE_2BUTTON
 		#ifndef GARUX_DISABLE_2BUTTON
 		CopiedString texName = textureBrowser->shader;
-		const char* sh = textureBrowser->shader.c_str();
+		//const char* sh = texName.c_str();
+		char* sh = const_cast<char*>( texName.c_str() );
 		char* dir = strrchr( sh, '/' );
 		if( dir != NULL ){
 			*(dir + 1) = '\0';

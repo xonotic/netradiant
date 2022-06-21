@@ -237,7 +237,7 @@ inline bool Tokeniser_getFloat( Tokeniser& tokeniser, float& f ){
 		globalErrorStream() << "Warning: " << Unsigned( tokeniser.getLine() ) << ":" << Unsigned( tokeniser.getColumn() ) << ": expected parse problem at '" << token << "': wanted '#number'\nProcessing anyway\n";
 	#define GARUX_DISABLE_QNAN_FALLBACK
 	#ifndef GARUX_DISABLE_QNAN_FALLBACK
-		*strstr( token, ".#" ) = '\0';
+//		*strstr( token, ".#" ) = '\0';
 	#endif
 		return true;
 	}

@@ -22,6 +22,7 @@
 #if !defined( INCLUDED_GTKUTIL_CURSOR_H )
 #define INCLUDED_GTKUTIL_CURSOR_H
 
+// This is probably removable if set_cursor is not used.
 #include <gdk/gdk.h>
 #include <uilib/uilib.h>
 
@@ -111,7 +112,7 @@ class FreezePointer
 {
 unsigned int handle_motion;
 int recorded_x, recorded_y, last_x, last_y, center_x, center_y;
-ui::Widget weedjet{ui::null};
+ui::Widget m_weedjet{ui::null};
 typedef void ( *MotionDeltaFunction )( int x, int y, unsigned int state, void* data );
 MotionDeltaFunction m_function;
 void* m_data;
@@ -127,8 +128,8 @@ void freeze_pointer( ui::Window window, ui::Widget widget, MotionDeltaFunction f
 void freeze_pointer( ui::Widget widget, MotionDeltaFunction function, void* data );
 
 /* NetRadiantCustom does this instead:
-void unfreeze_pointer( ui::Window window ); */
-void unfreeze_pointer( ui::Widget widget );
+void unfreeze_pointer( ui::Window window, bool centerize ); */
+void unfreeze_pointer( ui::Widget widget, bool centerize );
 };
 
 #endif

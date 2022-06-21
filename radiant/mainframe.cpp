@@ -1691,6 +1691,27 @@ void ClipperMode(){
 }
 
 
+void ToggleRotateScaleModes(){
+	if ( g_currentToolMode == RotateMode ) {
+		ScaleMode();
+	}
+	else
+	{
+		RotateMode();
+	}
+}
+
+void ToggleDragScaleModes(){
+	if ( g_currentToolMode == DragMode ) {
+		ScaleMode();
+	}
+	else
+	{
+		DragMode();
+	}
+}
+
+
 void Texdef_Rotate( float angle ){
 	StringOutputStream command;
 	command << "brushRotateTexture -angle " << angle;
@@ -2510,13 +2531,18 @@ void SurfaceInspector_registerShortcuts(){
 	command_connect_accelerator( "FitTexture" );
 }
 
-
 void TexBro_registerShortcuts(){
 	command_connect_accelerator( "FindReplaceTextures" );
 	command_connect_accelerator( "RefreshShaders" );
+}
+
+void Misc_registerShortcuts(){
 	//refresh models
 	command_connect_accelerator( "RefreshReferences" );
+	command_connect_accelerator( "MouseRotateOrScale" );
+	command_connect_accelerator( "MouseDragOrScale" );
 }
+
 
 void register_shortcuts(){
 //	PatchInspector_registerShortcuts();
@@ -2531,6 +2557,7 @@ void register_shortcuts(){
 //	SnapToGrid_registerShortcuts();
 //	SelectByType_registerShortcuts();
 	TexBro_registerShortcuts();
+	Misc_registerShortcuts();
 }
 
 void File_constructToolbar( ui::Toolbar toolbar ){
@@ -2582,7 +2609,7 @@ void XYWnd_constructToolbar( ui::Toolbar toolbar ){
 void Manipulators_constructToolbar( ui::Toolbar toolbar ){
 	toolbar_append_toggle_button( toolbar, "Translate (W)", "select_mousetranslate.png", "MouseTranslate" );
 	toolbar_append_toggle_button( toolbar, "Rotate (R)", "select_mouserotate.png", "MouseRotate" );
-	toolbar_append_toggle_button( toolbar, "Scale", "select_mousescale.png", "MouseScale" );
+	toolbar_append_toggle_button( toolbar, "Scale (Q)", "select_mousescale.png", "MouseScale" );
 	toolbar_append_toggle_button( toolbar, "Resize (Q)", "select_mouseresize.png", "MouseDrag" );
 
 	Clipper_constructToolbar( toolbar );
@@ -3606,7 +3633,9 @@ void MainFrame_Construct(){
 	GlobalToggles_insert( "MouseTranslate", makeCallbackF(TranslateMode), ToggleItem::AddCallbackCaller( g_translatemode_button ), Accelerator( 'W' ) );
 	GlobalToggles_insert( "MouseRotate", makeCallbackF(RotateMode), ToggleItem::AddCallbackCaller( g_rotatemode_button ), Accelerator( 'R' ) );
 	GlobalToggles_insert( "MouseScale", makeCallbackF(ScaleMode), ToggleItem::AddCallbackCaller( g_scalemode_button ) );
-	GlobalToggles_insert( "MouseDrag", makeCallbackF(DragMode), ToggleItem::AddCallbackCaller( g_dragmode_button ), Accelerator( 'Q' ) );
+	GlobalToggles_insert( "MouseDrag", makeCallbackF(DragMode), ToggleItem::AddCallbackCaller( g_dragmode_button ) );
+	GlobalCommands_insert( "MouseRotateOrScale", makeCallbackF(ToggleRotateScaleModes) );
+	GlobalCommands_insert( "MouseDragOrScale", makeCallbackF(ToggleDragScaleModes), Accelerator( 'Q' ) );
 
 #ifndef GARUX_DISABLE_GTKTHEME
 	GlobalCommands_insert( "gtkThemeDlg", makeCallbackF(gtkThemeDlg) );

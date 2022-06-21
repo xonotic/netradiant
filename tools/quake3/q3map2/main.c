@@ -284,10 +284,10 @@ void tex2list( char* texlist, int *texnum, char* EXtex, int *EXtexnum ){
 	StripExtension( token );
 	FixDOSName( token );
 	for ( i = 0; i < *texnum; i++ ){
-		if ( !Q_stricmp( texlist[i], token ) ) return;
+		if ( !Q_stricmp( texlist + i*65, token ) ) return;
 	}
 	for ( i = 0; i < *EXtexnum; i++ ){
-		if ( !Q_stricmp( EXtex[i], token ) ) return;
+		if ( !Q_stricmp( EXtex + i*65, token ) ) return;
 	}
 	strcpy ( texlist + (*texnum)*65, token );
 	(*texnum)++;
@@ -341,7 +341,7 @@ void res2list( char* data, int *num ){
 	}
 	if ( *( data + (*num)*65 ) == '\0') return;
 	for ( i = 0; i < *num; i++ ){
-		if ( !Q_stricmp( data[i], data[*num] ) ) return;
+		if ( !Q_stricmp( data + i*65, data + (*num)*65 ) ) return;
 	}
 	(*num)++;
 	return;
@@ -1053,7 +1053,8 @@ skipEXfile:
 	Sys_Printf( "\n\t.bsp and stuff\n" );
 
 	sprintf( temp, "maps/%s.bsp", nameOFmap );
-	if ( vfsPackFile( temp, packname, 10 ) ){
+	//if ( vfsPackFile( temp, packname, 10 ) ){
+	if ( vfsPackFile_Absolute_Path( source, temp, packname, 10 ) ){
 			Sys_Printf( "++%s\n", temp );
 		}
 	else{
@@ -1414,7 +1415,7 @@ skipEXrefile:
 		epair_t *ep;
 		for ( ep = entities[0].epairs; ep != NULL; ep = ep->next )
 		{
-			if ( !!Q_strncasecmp( ep->key, "vertexremapshader", 17 ) ) {
+			if ( !Q_strncasecmp( ep->key, "vertexremapshader", 17 ) ) {
 				sscanf( ep->value, "%*[^;] %*[;] %s", pk3Shaders + pk3ShadersN*65 );
 				res2list( pk3Shaders, &pk3ShadersN );
 			}
@@ -1861,7 +1862,7 @@ skipEXrefile:
 					strcat( shaderText, " " );
 					strcat( shaderText, token );
 				}
-				else if ( !!Q_strncasecmp( token, "implicit", 8 ) ){
+				else if ( !Q_strncasecmp( token, "implicit", 8 ) ){
 					Sys_Printf( "WARNING5: %s : %s shader\n", pk3Shaders + shader*65, token );
 					hasmap = qtrue;
 					if ( line == scriptline ){
