@@ -270,7 +270,7 @@ std::list<CGameDescription*> mGames;
 
 CGameDialog() :
 	m_sGameFile( "" ),
-	m_bGamePrompt( true ),
+	m_bGamePrompt( false ),
 	m_bSkipGamePromptOnce( false ),
 	m_bForceLogConsole( false ){
 }
@@ -357,13 +357,13 @@ public:
 
 ui::Widget m_notebook{ui::null};
 
-virtual ~PrefsDlg() {
+virtual ~PrefsDlg(){
 	if (m_rc_path) {
-		g_string_free( m_rc_path, true );
+	g_string_free( m_rc_path, true );
 	}
 	if (m_inipath) {
-		g_string_free( m_inipath, true );
-	}
+	g_string_free( m_inipath, true );
+}
 }
 
 /*!

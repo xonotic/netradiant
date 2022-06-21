@@ -958,20 +958,20 @@ bool PreferencesDialog_isRestartRequired(){
 }
 
 void PreferencesDialog_restartIfRequired(){
-	if ( !g_restart_required.empty() ) {
-		StringOutputStream message( 256 );
+		if ( !g_restart_required.empty() ) {
+			StringOutputStream message( 256 );
 		message << "Preference changes require a restart:\n\n";
 
-		for ( std::vector<const char*>::iterator i = g_restart_required.begin(); i != g_restart_required.end(); ++i )
-		{
-			message << ( *i ) << '\n';
-		}
+			for ( std::vector<const char*>::iterator i = g_restart_required.begin(); i != g_restart_required.end(); ++i )
+			{
+				message << ( *i ) << '\n';
+			}
 
 		message << "\nRestart now?";
 
 		auto ret = ui::alert( MainFrame_getWindow(), message.c_str(), "Restart " RADIANT_NAME "?", ui::alert_type::YESNO, ui::alert_icon::Question );
 
-		g_restart_required.clear();
+			g_restart_required.clear();
 
 		if ( ret == ui::alert_response::YES ) {
 			g_GamesDialog.m_bSkipGamePromptOnce = true;

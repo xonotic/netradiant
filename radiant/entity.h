@@ -33,6 +33,7 @@ void Scene_EntitySetClassname_Selected( const char* classname );
 
 
 const char* misc_model_dialog( ui::Widget parent );
+void Entity_setColour();
 
 void Entity_constructMenu( ui::Menu menu );
 
