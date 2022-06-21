@@ -209,6 +209,20 @@ bool portable_app_setup(){
 	return false;
 }
 
+
+const char* openCmdMap;
+
+void cmdMap(){
+	openCmdMap = NULL;
+	for ( int i = 1; i < g_argc; ++i )
+	{
+		//if ( !stricmp( g_argv[i] + strlen(g_argv[i]) - 4, ".map" ) ){
+		if( string_equal_suffix_nocase( g_argv[i], ".map" ) ){
+			openCmdMap = g_argv[i];
+		}
+	}
+}
+
 #if GDEF_OS_POSIX
 
 #include <stdlib.h>
@@ -337,23 +351,12 @@ void environment_init( int argc, char const* argv[] ){
 	}
 
 	gamedetect();
+	cmdMap();
 }
 
 #elif GDEF_OS_WINDOWS
 
 #include <windows.h>
-
-char* openCmdMap;
-
-void cmdMap(){
-	openCmdMap = NULL;
-	for ( int i = 1; i < g_argc; ++i )
-	{
-		if ( !stricmp( g_argv[i] + strlen(g_argv[i]) - 4, ".map" ) ){
-			openCmdMap = g_argv[i];
-		}
-	}
-}
 
 void environment_init( int argc, char const* argv[] ){
 	args_init( argc, argv );

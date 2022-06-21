@@ -213,7 +213,7 @@
 #define HINT_PRIORITY           1000        /* ydnar: force hint splits first and antiportal/areaportal splits last */
 #define ANTIPORTAL_PRIORITY     -1000
 #define AREAPORTAL_PRIORITY     -1000
-#define DETAIL_PRIORITY         -3000
+#define DETAIL_PRIORITY     -3000
 
 #define PSIDE_FRONT             1
 #define PSIDE_BACK              2
@@ -286,7 +286,7 @@
 #define RAD_LUXEL_SIZE          3
 #define SUPER_LUXEL_SIZE        4
 #define SUPER_FLAG_SIZE         4
-#define FLAG_FORCE_SUBSAMPLING  1
+#define FLAG_FORCE_SUBSAMPLING 1
 #define FLAG_ALREADY_SUBSAMPLED 2
 #define SUPER_ORIGIN_SIZE       3
 #define SUPER_NORMAL_SIZE       4
@@ -848,7 +848,7 @@ typedef struct face_s
 	struct face_s       *next;
 	int planenum;
 	int priority;
-	//qboolean checked;
+	//qboolean			checked;
 	int compileFlags;
 	winding_t           *w;
 }
@@ -1490,7 +1490,7 @@ typedef struct rawLightmap_s
 	float                   *bspLuxels[ MAX_LIGHTMAPS ];
 	float                   *radLuxels[ MAX_LIGHTMAPS ];
 	float                   *superLuxels[ MAX_LIGHTMAPS ];
-	unsigned char           *superFlags;
+	unsigned char               *superFlags;
 	float                   *superOrigins;
 	float                   *superNormals;
 	int                     *superClusters;
@@ -2064,7 +2064,6 @@ Q_EXTERN float jitters[ MAX_JITTERS ];
 Q_EXTERN qboolean doingBSP Q_ASSIGN( qfalse );
 
 /* commandline arguments */
-Q_EXTERN qboolean nocmdline Q_ASSIGN( qfalse );
 Q_EXTERN qboolean verboseEntities Q_ASSIGN( qfalse );
 Q_EXTERN qboolean force Q_ASSIGN( qfalse );
 Q_EXTERN qboolean infoMode Q_ASSIGN( qfalse );
@@ -2083,9 +2082,10 @@ Q_EXTERN qboolean nofog Q_ASSIGN( qfalse );
 Q_EXTERN qboolean noHint Q_ASSIGN( qfalse );                        /* ydnar */
 Q_EXTERN qboolean renameModelShaders Q_ASSIGN( qfalse );            /* ydnar */
 Q_EXTERN qboolean skyFixHack Q_ASSIGN( qfalse );                    /* ydnar */
-Q_EXTERN qboolean bspAlternateSplitWeights Q_ASSIGN( qfalse );      /* 27 */
-Q_EXTERN qboolean deepBSP Q_ASSIGN( qfalse );                       /* div0 */
+Q_EXTERN qboolean bspAlternateSplitWeights Q_ASSIGN( qfalse );                      /* 27 */
+Q_EXTERN qboolean deepBSP Q_ASSIGN( qfalse );                   /* div0 */
 Q_EXTERN qboolean maxAreaFaceSurface Q_ASSIGN( qfalse );                    /* divVerent */
+Q_EXTERN qboolean nocmdline Q_ASSIGN( qfalse );
 
 Q_EXTERN int patchSubdivisions Q_ASSIGN( 8 );                       /* ydnar: -patchmeta subdivisions */
 
@@ -2581,7 +2581,7 @@ Q_EXTERN int allocatedBSPBrushSides Q_ASSIGN( 0 );
 Q_EXTERN bspBrushSide_t*    bspBrushSides Q_ASSIGN( NULL );
 
 Q_EXTERN int numBSPLightBytes Q_ASSIGN( 0 );
-Q_EXTERN byte *bspLightBytes Q_ASSIGN( NULL );
+Q_EXTERN byte               *bspLightBytes Q_ASSIGN( NULL );
 
 //%	Q_EXTERN int				numBSPGridPoints Q_ASSIGN( 0 );
 //%	Q_EXTERN byte				*bspGridPoints Q_ASSIGN( NULL );
@@ -2593,11 +2593,11 @@ Q_EXTERN int numBSPVisBytes Q_ASSIGN( 0 );
 Q_EXTERN byte bspVisBytes[ MAX_MAP_VISIBILITY ];
 
 Q_EXTERN int numBSPDrawVerts Q_ASSIGN( 0 );
-Q_EXTERN bspDrawVert_t *bspDrawVerts Q_ASSIGN( NULL );
+Q_EXTERN bspDrawVert_t          *bspDrawVerts Q_ASSIGN( NULL );
 
 Q_EXTERN int numBSPDrawIndexes Q_ASSIGN( 0 );
 Q_EXTERN int allocatedBSPDrawIndexes Q_ASSIGN( 0 );
-Q_EXTERN int *bspDrawIndexes Q_ASSIGN( NULL );
+Q_EXTERN int                *bspDrawIndexes Q_ASSIGN( NULL );
 
 Q_EXTERN int numBSPDrawSurfaces Q_ASSIGN( 0 );
 Q_EXTERN bspDrawSurface_t   *bspDrawSurfaces Q_ASSIGN( NULL );
@@ -2626,7 +2626,7 @@ Q_EXTERN qboolean compile_map;
 			} \
 			if ( !allocated || allocated > 2147483647 / (int)sizeof( *ptr ) ) \
 			{ \
-				Error( #ptr " over 2 GB" ); \
+				Error( # ptr " over 2 GB" ); \
 			} \
 			ptr = realloc( ptr, sizeof( *ptr ) * allocated ); \
 			if ( !ptr ) { \
@@ -2644,7 +2644,7 @@ Q_EXTERN qboolean compile_map;
 
 #define AUTOEXPAND_BY_REALLOC0( ptr, reqitem, allocated, def ) _AUTOEXPAND_BY_REALLOC( ptr, reqitem, allocated, def, qtrue )
 
-#define AUTOEXPAND_BY_REALLOC_BSP( suffix, def ) AUTOEXPAND_BY_REALLOC( bsp##suffix, numBSP##suffix, allocatedBSP##suffix, def )
+#define AUTOEXPAND_BY_REALLOC_BSP( suffix, def ) AUTOEXPAND_BY_REALLOC( bsp ## suffix, numBSP ## suffix, allocatedBSP ## suffix, def )
 
 #define AUTOEXPAND_BY_REALLOC0_BSP( suffix, def ) AUTOEXPAND_BY_REALLOC0( bsp##suffix, numBSP##suffix, allocatedBSP##suffix, def )
 

@@ -954,6 +954,7 @@ ui::Window BuildMenuDialog_construct( ModalDialog& modal, ProjectList& projectLi
 namespace
 {
 CopiedString g_buildMenu;
+CopiedString g_lastExecutedBuild;
 }
 
 void LoadBuildMenu();
@@ -994,6 +995,7 @@ BuildMenuItem( const char* name, ui::MenuItem item )
 	: m_name( name ), m_item( item ){
 }
 void run(){
+	g_lastExecutedBuild = m_name;
 	RunBSP( m_name );
 }
 typedef MemberCaller<BuildMenuItem, void(), &BuildMenuItem::run> RunCaller;
@@ -1066,4 +1068,14 @@ void BuildMenu_Construct(){
 }
 void BuildMenu_Destroy(){
 	SaveBuildMenu();
+}
+
+
+void Build_runRecentExecutedBuild(){
+	if( g_lastExecutedBuild.empty() ){
+		g_BuildMenuItems.begin()->run();
+	}
+	else{
+		RunBSP( g_lastExecutedBuild.c_str() );
+	}
 }

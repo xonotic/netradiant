@@ -666,13 +666,10 @@ int main( int argc, char* argv[] ){
 
 	hide_splash();
 
-#ifdef WIN32
 	if( openCmdMap && *openCmdMap ){
 		Map_LoadFile( openCmdMap );
 	}
-	else
-#endif // WIN32
-	if ( mapname != NULL ) {
+	else if ( mapname != NULL ) {
 		Map_LoadFile( mapname );
 	}
 	else if ( g_bLoadLastMap && !g_strLastMap.empty() ) {

@@ -34,9 +34,6 @@ const char *environment_get_data_path();
 extern int g_argc;
 extern char const** g_argv;
 
-#if defined( WIN32 )
-extern char* openCmdMap;
-#endif
-
+extern const char* openCmdMap;
 
 #endif
