@@ -227,7 +227,15 @@ void bsp_init(){
 	name.append( mapname, path_get_filename_base_end( mapname ) - mapname );
 	name += ".bsp";
 
-	build_set_variable( "MapFile", mapname );
+	if( region_active ){
+		StringOutputStream name( 256 );
+		name << StringRange( mapname, path_get_filename_base_end( mapname ) ) << ".reg";
+		build_set_variable( "MapFile", name.c_str() );
+	}
+	else{
+		build_set_variable( "MapFile", mapname );
+	}
+
 	build_set_variable( "BspFile", name.c_str() );
 }
 

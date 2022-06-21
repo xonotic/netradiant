@@ -34,6 +34,7 @@
 #include "plugin.h"
 
 ui::Image new_plugin_image( const char* filename ){
+	// NetRadiantCustom look for AppPath (DataPath) plugins dir before GameToolsPath plugins dir.
 	{
 		StringOutputStream fullpath( 256 );
 		fullpath << GameToolsPath_get() << g_pluginsDir << "bitmaps/" << filename;
@@ -133,6 +134,7 @@ ui::Toolbar create_plugin_toolbar(){
 	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
 	gtk_orientable_set_orientation( GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL );
 	gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
+//	gtk_toolbar_set_show_arrow( toolbar, TRUE );
 	toolbar.show();
 
 	g_plugin_toolbar = toolbar;

@@ -1321,7 +1321,17 @@ void ConstructRegionStartpoint( scene::Node* startpoint, const Vector3& region_m
 
    ===========================================================
  */
-bool region_active;
+bool region_active = false;
+
+ConstReferenceCaller<bool, void(const Callback<void(bool)> &), PropertyImpl<bool>::Export> g_region_caller( region_active );
+
+ToggleItem g_region_item( g_region_caller );
+
+/*void Map_ToggleRegion(){
+	region_active = !region_active;
+	g_region_item.update();
+}*/
+
 Vector3 region_mins( g_MinWorldCoord, g_MinWorldCoord, g_MinWorldCoord );
 Vector3 region_maxs( g_MaxWorldCoord, g_MaxWorldCoord, g_MaxWorldCoord );
 
@@ -1448,6 +1458,7 @@ void Scene_Exclude_Region( bool exclude ){
  */
 void Map_RegionOff(){
 	region_active = false;
+	g_region_item.update();
 
 	region_maxs[0] = g_MaxWorldCoord - 64;
 	region_mins[0] = g_MinWorldCoord + 64;
@@ -1461,6 +1472,7 @@ void Map_RegionOff(){
 
 void Map_ApplyRegion( void ){
 	region_active = true;
+	g_region_item.update();
 
 	Scene_Exclude_Region( false );
 }
@@ -1477,6 +1489,7 @@ void Map_RegionSelectedBrushes( void ){
 	if ( GlobalSelectionSystem().countSelected() != 0
 		 && GlobalSelectionSystem().Mode() == SelectionSystem::ePrimitive ) {
 		region_active = true;
+		g_region_item.update();
 		Select_GetBounds( region_mins, region_maxs );
 
 		Scene_Exclude_Selected( false );
@@ -2269,7 +2282,8 @@ void Map_Construct(){
 	GlobalCommands_insert( "RegionOff", makeCallbackF(RegionOff) );
 	GlobalCommands_insert( "RegionSetXY", makeCallbackF(RegionXY) );
 	GlobalCommands_insert( "RegionSetBrush", makeCallbackF(RegionBrush) );
-	GlobalCommands_insert( "RegionSetSelection", makeCallbackF(RegionSelected), Accelerator( 'R', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	//GlobalCommands_insert( "RegionSetSelection", makeCallbackF(RegionSelected), Accelerator( 'R', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalToggles_insert( "RegionSetSelection", makeCallbackF(RegionSelected), ToggleItem::AddCallbackCaller( g_region_item ), Accelerator( 'R', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 
 	GlobalPreferenceSystem().registerPreference( "LastMap", make_property_string( g_strLastMap ) );
 	GlobalPreferenceSystem().registerPreference( "LoadLastMap", make_property_string( g_bLoadLastMap ) );

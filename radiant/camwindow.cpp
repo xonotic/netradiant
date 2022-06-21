@@ -1429,7 +1429,7 @@ void render( const Matrix4& modelview, const Matrix4& projection ){
    Cam_Draw
    ==============
  */
-
+/*
 void ShowStatsToggle(){
 	g_camwindow_globals_private.m_showStats ^= 1;
 }
@@ -1439,6 +1439,22 @@ void ShowStatsExport( const Callback<void(bool)> &importer ){
 }
 
 FreeCaller<void(const Callback<void(bool)>&), ShowStatsExport> g_show_stats_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
+ToggleItem g_show_stats( g_show_stats_callback );
+*/
+
+void ShowStatsToggle(){
+	g_camwindow_globals_private.m_showStats ^= 1;
+//	g_show_stats.update();
+	UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowStatsToggle> ShowStatsToggleCaller;
+void ShowStatsExport( const Callback<void(bool)> & importer ){
+	importer( g_camwindow_globals_private.m_showStats );
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowStatsExport> ShowStatsExportCaller;
+
+ShowStatsExportCaller g_show_stats_caller;
 Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
 ToggleItem g_show_stats( g_show_stats_callback );
 
@@ -1531,9 +1547,9 @@ void CamWnd::Cam_Draw(){
 		break;
 	}
 
-	if ( !g_xywindow_globals.m_bNoStipple ) {
+//	if ( !g_xywindow_globals.m_bNoStipple ) {
 		globalstate |= RENDER_LINESTIPPLE | RENDER_POLYGONSTIPPLE;
-	}
+//	}
 
 	{
 		CamRenderer renderer( globalstate, m_state_select2, m_state_select1, m_view.getViewer() );

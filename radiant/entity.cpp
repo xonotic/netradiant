@@ -575,7 +575,7 @@ const char *misc_model_dialog( ui::Widget parent ){
 	}
 	return 0;
 }
-
+/*
 struct LightRadii {
 	static void Export(const EntityCreator &self, const Callback<void(bool)> &returnz) {
 		returnz(self.getLightRadii());
@@ -600,7 +600,21 @@ void Entity_constructPage( PreferenceGroup& group ){
 void Entity_registerPreferencesPage(){
 	PreferencesDialog_addDisplayPage( makeCallbackF(Entity_constructPage) );
 }
+*/
 
+void ShowLightRadiiToggle(){
+	GlobalEntityCreator().setLightRadii( !GlobalEntityCreator().getLightRadii() );
+	UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowLightRadiiToggle> ShowLightRadiiToggleCaller;
+void ShowLightRadiiExport( const Callback<void(bool)> & importer ){
+	GlobalEntityCreator().getLightRadii();
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowLightRadiiExport> ShowLightRadiiExportCaller;
+
+ShowLightRadiiExportCaller g_show_lightradii_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_lightradii_callback( g_show_lightradii_caller );
+ToggleItem g_show_lightradii( g_show_lightradii_callback );
 
 void Entity_constructMenu( ui::Menu menu ){
 	create_menu_item_with_mnemonic( menu, "_Regroup", "GroupSelection" );
@@ -622,10 +636,12 @@ void Entity_Construct(){
 	GlobalCommands_insert( "GroupSelection", makeCallbackF(Entity_groupSelected) );
 	GlobalCommands_insert( "UngroupSelection", makeCallbackF(Entity_ungroupSelected) );
 
+	GlobalToggles_insert( "ShowLightRadiuses", makeCallbackF( ShowLightRadiiToggle ), ToggleItem::AddCallbackCaller( g_show_lightradii ) );
+
 	GlobalPreferenceSystem().registerPreference( "SI_Colors5", make_property_string( g_entity_globals.color_entity ) );
 	GlobalPreferenceSystem().registerPreference( "LastLightIntensity", make_property_string( g_iLastLightIntensity ) );
 
-	Entity_registerPreferencesPage();
+//	Entity_registerPreferencesPage();
 }
 
 void Entity_Destroy(){

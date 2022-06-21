@@ -903,8 +903,6 @@ void ColorScheme_Original(){
 	g_xywindow_globals.color_gridback = Vector3( 1.0f, 1.0f, 1.0f );
 	g_xywindow_globals.color_gridminor = Vector3( 0.75f, 0.75f, 0.75f );
 	g_xywindow_globals.color_gridmajor = Vector3( 0.5f, 0.5f, 0.5f );
-	g_xywindow_globals.color_gridminor_alt = Vector3( 0.5f, 0.0f, 0.0f );
-	g_xywindow_globals.color_gridmajor_alt = Vector3( 1.0f, 0.0f, 0.0f );
 	g_xywindow_globals.color_gridblock = Vector3( 0.0f, 0.0f, 1.0f );
 	g_xywindow_globals.color_gridtext = Vector3( 0.0f, 0.0f, 0.0f );
 	g_xywindow_globals.color_selbrushes = Vector3( 1.0f, 0.0f, 0.0f );
@@ -1093,8 +1091,6 @@ ChooseColour m_textureback;
 ChooseColour m_xyback;
 ChooseColour m_gridmajor;
 ChooseColour m_gridminor;
-ChooseColour m_gridmajor_alt;
-ChooseColour m_gridminor_alt;
 ChooseColour m_gridtext;
 ChooseColour m_gridblock;
 ChooseColour m_cameraback;
@@ -1109,8 +1105,6 @@ ColoursMenu() :
 	m_xyback( ColourGetCaller( g_xywindow_globals.color_gridback ), ColourSetCaller( g_xywindow_globals.color_gridback ) ),
 	m_gridmajor( ColourGetCaller( g_xywindow_globals.color_gridmajor ), ColourSetCaller( g_xywindow_globals.color_gridmajor ) ),
 	m_gridminor( ColourGetCaller( g_xywindow_globals.color_gridminor ), ColourSetCaller( g_xywindow_globals.color_gridminor ) ),
-	m_gridmajor_alt( ColourGetCaller( g_xywindow_globals.color_gridmajor_alt ), ColourSetCaller( g_xywindow_globals.color_gridmajor_alt ) ),
-	m_gridminor_alt( ColourGetCaller( g_xywindow_globals.color_gridminor_alt ), ColourSetCaller( g_xywindow_globals.color_gridminor_alt ) ),
 	m_gridtext( ColourGetCaller( g_xywindow_globals.color_gridtext ), ColourSetCaller( g_xywindow_globals.color_gridtext ) ),
 	m_gridblock( ColourGetCaller( g_xywindow_globals.color_gridblock ), ColourSetCaller( g_xywindow_globals.color_gridblock ) ),
 	m_cameraback( ColourGetCaller( g_camwindow_globals.color_cameraback ), ColourSetCaller( g_camwindow_globals.color_cameraback ) ),
@@ -1149,19 +1143,17 @@ ui::MenuItem create_colours_menu(){
 	menu_separator( menu_in_menu );
 
 	create_menu_item_with_mnemonic( menu_in_menu, "_Texture Background...", "ChooseTextureBackgroundColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Camera Background...", "ChooseCameraBackgroundColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Background...", "ChooseGridBackgroundColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Major...", "ChooseGridMajorColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Minor...", "ChooseGridMinorColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Grid Major Small...", "ChooseSmallGridMajorColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Grid Minor Small...", "ChooseSmallGridMinorColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Text...", "ChooseGridTextColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Block...", "ChooseGridBlockColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Default Brush...", "ChooseBrushColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Camera Background...", "ChooseCameraBackgroundColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Selected Brush...", "ChooseSelectedBrushColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Default Brush (2D)...", "ChooseBrushColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Selected Brush and Sizing (2D)...", "ChooseSelectedBrushColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Selected Brush (Camera)...", "ChooseCameraSelectedBrushColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Clipper...", "ChooseClipperColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Active View name...", "ChooseOrthoViewNameColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Active View Name and Outline...", "ChooseOrthoViewNameColor" );
 
 	return colours_menu_item;
 }
@@ -2046,6 +2038,7 @@ void ClipperChangeNotify(){
 
 LatchedValue<int> g_Layout_viewStyle( 0, "Window Layout" );
 LatchedValue<bool> g_Layout_enableDetachableMenus( true, "Detachable Menus" );
+LatchedValue<bool> g_Layout_enableMainToolbar( true, "Main Toolbar" );
 LatchedValue<bool> g_Layout_enablePatchToolbar( true, "Patch Toolbar" );
 LatchedValue<bool> g_Layout_enablePluginToolbar( true, "Plugin Toolbar" );
 LatchedValue<bool> g_Layout_enableFilterToolbar( true, "Filter Toolbar" );
@@ -2228,20 +2221,21 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( menu_in_menu );
 		}
-		create_menu_item_with_mnemonic( menu_in_menu, "Show Size Info", "ToggleSizePaint" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Show Crosshair", "ToggleCrosshairs" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Show Grid", "ToggleGrid" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Entity _Angles", "ShowAngles" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Entity _Names", "ShowNames" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Light Radiuses", "ShowLightRadiuses" );
 
 		menu_separator( menu_in_menu );
 
-		create_check_menu_item_with_mnemonic( menu_in_menu, "Show _Angles", "ShowAngles" );
-		create_check_menu_item_with_mnemonic( menu_in_menu, "Show _Names", "ShowNames" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Size Info", "ToggleSizePaint" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Crosshair", "ToggleCrosshairs" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Grid", "ToggleGrid" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Blocks", "ShowBlocks" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show C_oordinates", "ShowCoordinates" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Window Outline", "ShowWindowOutline" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Axes", "ShowAxes" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Workzone", "ShowWorkzone" );
-		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Stats", "ShowStats" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Camera Stats", "ShowStats" );
 	}
 
 	{
@@ -2253,13 +2247,7 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 	}
 	menu_separator( menu );
 	{
-//		GtkMenu* menu_in_menu = create_sub_menu_with_mnemonic( menu, "Hide/Show" );
-//		if ( g_Layout_enableDetachableMenus.m_value ) {
-//			menu_tearoff( menu_in_menu );
-//		}
-//		create_menu_item_with_mnemonic( menu_in_menu, "Hide Selected", "HideSelected" );
-//		create_menu_item_with_mnemonic( menu_in_menu, "Show Hidden", "ShowHidden" );
-		create_menu_item_with_mnemonic( menu, "Hide Selected", "HideSelected" );
+		create_check_menu_item_with_mnemonic( menu, "Hide Selected", "HideSelected" );
 		create_menu_item_with_mnemonic( menu, "Show Hidden", "ShowHidden" );
 	}
 	menu_separator( menu );
@@ -2271,10 +2259,10 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		create_menu_item_with_mnemonic( menu_in_menu, "_Off", "RegionOff" );
 		create_menu_item_with_mnemonic( menu_in_menu, "_Set XY", "RegionSetXY" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Set _Brush", "RegionSetBrush" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Set Se_lected Brushes", "RegionSetSelection" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Set Se_lected Brushes", "RegionSetSelection" );
 	}
 
-	command_connect_accelerator( "CenterXYView" );
+	//command_connect_accelerator( "CenterXYView" );
 
 	return view_menu_item;
 }
@@ -2622,7 +2610,9 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
 	gtk_orientable_set_orientation( GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL );
 	gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
-
+//	gtk_toolbar_set_show_arrow( toolbar, TRUE );
+	//gtk_orientable_set_orientation( GTK_ORIENTABLE( toolbar ), GTK_ORIENTATION_HORIZONTAL );
+	//toolbar_append_space( toolbar );
 	toolbar.show();
 
 	auto space = [&]() {
@@ -2675,20 +2665,22 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 
 	space();
 
-	toolbar_append_toggle_button( toolbar, "Texture Lock (SHIFT +T)", "texture_lock.png", "TogTexLock" );
+	toolbar_append_toggle_button( toolbar, "Texture Lock (SHIFT + T)", "texture_lock.png", "TogTexLock" );
 
 	space();
 
-	/*auto g_view_entities_button =*/ toolbar_append_button( toolbar, "Entities (N)", "entities.png", "ToggleEntityInspector" );
-	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
-		auto g_view_console_button = toolbar_append_button( toolbar, "Console (O)", "console.png", "ToggleConsole" );
-		auto g_view_textures_button = toolbar_append_button( toolbar, "Texture Browser (T)", "texture_browser.png", "ToggleTextures" );
+	toolbar_append_button( toolbar, "Entities (N)", "entities.png", "ToggleEntityInspector" );
+	// disable the console and texture button in the regular layouts
+	if ( style != MainFrame::eRegular && style != MainFrame::eRegularLeft ) {
+		toolbar_append_button( toolbar, "Console (O)", "console.png", "ToggleConsole" );
+		toolbar_append_button( toolbar, "Texture Browser (T)", "texture_browser.png", "ToggleTextures" );
 	}
 	// TODO: call light inspector
 	//GtkButton* g_view_lightinspector_button = toolbar_append_button(toolbar, "Light Inspector", "lightinspector.png", "ToggleLightInspector");
 
 	space();
-	/*auto g_refresh_models_button =*/ toolbar_append_button( toolbar, "Refresh Models", "refresh_models.png", "RefreshReferences" );
+
+	toolbar_append_button( toolbar, "Refresh Models", "refresh_models.png", "RefreshReferences" );
 
 	return toolbar;
 }
@@ -3058,8 +3050,10 @@ void MainFrame::Create(){
     auto main_menu = create_main_menu( CurrentStyle() );
 	vbox.pack_start( main_menu, FALSE, FALSE, 0 );
 
-    auto main_toolbar = create_main_toolbar( CurrentStyle() );
-	vbox.pack_start( main_toolbar, FALSE, FALSE, 0 );
+	if( g_Layout_enableMainToolbar.m_value ){
+		GtkToolbar* main_toolbar = create_main_toolbar( CurrentStyle() );
+		gtk_box_pack_start( GTK_BOX( vbox ), GTK_WIDGET( main_toolbar ), FALSE, FALSE, 0 );
+	}
 
 	if ( g_Layout_enablePluginToolbar.m_value || g_Layout_enableFilterToolbar.m_value ){
 		auto PFbox = ui::HBox( FALSE, 3 );
@@ -3552,6 +3546,10 @@ void Layout_constructPreferences( PreferencesPage& page ){
 		"", "Detachable Menus",
 		make_property( g_Layout_enableDetachableMenus )
 		);
+	page.appendCheckBox(
+		"", "Main Toolbar",
+		make_property( g_Layout_enableMainToolbar )
+		);
 	if ( !string_empty( g_pGameDescription->getKeyValue( "no_patch" ) ) ) {
 		page.appendCheckBox(
 			"", "Patch Toolbar",
@@ -3707,8 +3705,10 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ToggleEntityInspector", makeCallbackF(EntityInspector_ToggleShow), Accelerator( 'N' ) );
 	GlobalCommands_insert( "EntityList", makeCallbackF(EntityList_toggleShown), Accelerator( 'L' ) );
 
-	GlobalCommands_insert( "ShowHidden", makeCallbackF(Select_ShowAllHidden), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalCommands_insert( "HideSelected", makeCallbackF(HideSelected), Accelerator( 'H' ) );
+//	GlobalCommands_insert( "ShowHidden", FreeCaller<Select_ShowAllHidden>(), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
+//	GlobalCommands_insert( "HideSelected", FreeCaller<HideSelected>(), Accelerator( 'H' ) );
+
+	Hide_registerCommands();
 
 	GlobalToggles_insert( "DragVertices", makeCallbackF(SelectVertexMode), ToggleItem::AddCallbackCaller( g_vertexMode_button ), Accelerator( 'V' ) );
 	GlobalToggles_insert( "DragEdges", makeCallbackF(SelectEdgeMode), ToggleItem::AddCallbackCaller( g_edgeMode_button ), Accelerator( 'E' ) );
@@ -3753,8 +3753,6 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ChooseGridBackgroundColor", makeCallback( g_ColoursMenu.m_xyback ) );
 	GlobalCommands_insert( "ChooseGridMajorColor", makeCallback( g_ColoursMenu.m_gridmajor ) );
 	GlobalCommands_insert( "ChooseGridMinorColor", makeCallback( g_ColoursMenu.m_gridminor ) );
-	GlobalCommands_insert( "ChooseSmallGridMajorColor", makeCallback( g_ColoursMenu.m_gridmajor_alt ) );
-	GlobalCommands_insert( "ChooseSmallGridMinorColor", makeCallback( g_ColoursMenu.m_gridminor_alt ) );
 	GlobalCommands_insert( "ChooseGridTextColor", makeCallback( g_ColoursMenu.m_gridtext ) );
 	GlobalCommands_insert( "ChooseGridBlockColor", makeCallback( g_ColoursMenu.m_gridblock ) );
 	GlobalCommands_insert( "ChooseBrushColor", makeCallback( g_ColoursMenu.m_brush ) );
@@ -3805,6 +3803,7 @@ void MainFrame_Construct(){
 	GlobalSelectionSystem().addSelectionChangeCallback( ComponentModeSelectionChangedCaller() );
 
 	GlobalPreferenceSystem().registerPreference( "DetachableMenus", make_property_string( g_Layout_enableDetachableMenus.m_latched ) );
+	GlobalPreferenceSystem().registerPreference( "MainToolBar", make_property_string( g_Layout_enableMainToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "PatchToolBar", make_property_string( g_Layout_enablePatchToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "PluginToolBar", make_property_string( g_Layout_enablePluginToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "FilterToolBar", make_property_string( g_Layout_enableFilterToolbar.m_latched ) );
@@ -3858,6 +3857,7 @@ void MainFrame_Construct(){
 
 	g_Layout_viewStyle.useLatched();
 	g_Layout_enableDetachableMenus.useLatched();
+	g_Layout_enableMainToolbar.useLatched();
 	g_Layout_enablePatchToolbar.useLatched();
 	g_Layout_enablePluginToolbar.useLatched();
 	g_Layout_enableFilterToolbar.useLatched();
