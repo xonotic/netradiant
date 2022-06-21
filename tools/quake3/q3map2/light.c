@@ -1780,7 +1780,7 @@ void TraceGrid( int num ){
 			 */
 			ColorToBytesNonZero(color, bgp->ambient[i], gridScale * gridAmbientScale);
 		} else {
-			ColorToBytes(color, bgp->ambient[i], gridScale * gridAmbientScale);
+		ColorToBytes( color, bgp->ambient[ i ], gridScale * gridAmbientScale );
 		}
 		ColorToBytes( gp->directed[ i ], bgp->directed[ i ], gridScale );
 	}
@@ -2045,8 +2045,8 @@ void LightWorld( const char *BSPFilePath, qboolean fastAllocate, qboolean noBoun
 		UnparseEntities();
 
 		if ( storeForReal ) {
-			Sys_Printf( "Writing %s\n", BSPFilePath );
-			WriteBSPFile( BSPFilePath );
+		Sys_Printf( "Writing %s\n", BSPFilePath );
+		WriteBSPFile( BSPFilePath );
 		}
 
 		/* note it */
@@ -2153,7 +2153,7 @@ int LightMain( int argc, char **argv ){
 	const char  *value;
 	int lightmapMergeSize = 0;
 	qboolean lightSamplesInsist = qfalse;
-	qboolean fastAllocate = qfalse;
+	qboolean fastAllocate = qtrue;
 	qboolean noBounceStore = qfalse;
 
 	/* note it */
@@ -2745,6 +2745,11 @@ int LightMain( int argc, char **argv ){
 		else if ( !strcmp( argv[ i ], "-slowallocate" ) ) {
 			fastAllocate = qfalse;
 			Sys_Printf( "Slow lightmap allocation mode enabled (default)\n" );
+		}
+
+		else if ( !strcmp( argv[ i ], "-slowallocate" ) ) {
+			fastAllocate = qfalse;
+			Sys_Printf( "Slow allocation mode enabled\n" );
 		}
 
 		else if ( !strcmp( argv[ i ], "-fastgrid" ) ) {
