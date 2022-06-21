@@ -29,6 +29,27 @@
 
 // Note: NetRadiantCustom disables them but we still make use of them.
 #if 1
+/* Note: here is an alternative implementation,
+it may be useful to try it on platforms were
+	gdk_cursor_new(GDK_BLANK_CURSOR)
+does not work:
+
+GdkCursor* create_blank_cursor(){
+	GdkPixmap *pixmap;
+	GdkBitmap *mask;
+	char buffer [( 32 * 32 ) / 8];
+	memset( buffer, 0, ( 32 * 32 ) / 8 );
+	GdkColor white = {0, 0xffff, 0xffff, 0xffff};
+	GdkColor black = {0, 0x0000, 0x0000, 0x0000};
+	pixmap = gdk_bitmap_create_from_data( 0, buffer, 32, 32 );
+	mask   = gdk_bitmap_create_from_data( 0, buffer, 32, 32 );
+	GdkCursor *cursor = gdk_cursor_new_from_pixmap( pixmap, mask, &white, &black, 1, 1 );
+	gdk_drawable_unref( pixmap );
+	gdk_drawable_unref( mask );
+
+	return cursor;
+}
+*/
 GdkCursor* create_blank_cursor(){
 	return gdk_cursor_new(GDK_BLANK_CURSOR);
 }
@@ -152,6 +173,7 @@ gboolean FreezePointer::motion_delta(ui::Widget widget, GdkEventMotion *event, F
 	return FALSE;
 }
 
+// Note: NetRadiantCustom pass both parent and widget.
 void FreezePointer::freeze_pointer(ui::Widget widget, FreezePointer::MotionDeltaFunction function, void *data)
 {
 	/* FIXME: This bug can happen if the pointer goes outside of the
