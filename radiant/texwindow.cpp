@@ -113,7 +113,7 @@ bool g_TextureBrowser_shaderlistOnly = false;
 bool g_TextureBrowser_fixedSize = true;
 bool g_TextureBrowser_filterMissing = false;
 bool g_TextureBrowser_filterFallback = true;
-bool g_TextureBrowser_enableAlpha = true;
+bool g_TextureBrowser_enableAlpha = false;
 }
 
 CopiedString g_notex;

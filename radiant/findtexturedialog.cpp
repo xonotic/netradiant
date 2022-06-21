@@ -158,7 +158,8 @@ ui::Window FindTextureDialog::BuildDialog(){
     table.attach(label, {0, 1, 0, 1}, {GTK_FILL, 0});
 	gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
 
-	label = ui::Label( "Replace:" );
+	label = ui::Label( "Replace:*" );
+	gtk_widget_set_tooltip_text( label, "Empty = search mode" );
 	label.show();
     table.attach(label, {0, 1, 1, 2}, {GTK_FILL, 0});
 	gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
@@ -172,6 +173,7 @@ ui::Window FindTextureDialog::BuildDialog(){
 	GlobalTextureEntryCompletion::instance().connect( entry );
 
 	entry = ui::Entry(ui::New);
+	gtk_widget_set_tooltip_text( entry, "Empty = search mode" );
 	entry.show();
     table.attach(entry, {1, 2, 1, 2}, {GTK_EXPAND | GTK_FILL, 0});
 	entry.connect( "focus_in_event",
