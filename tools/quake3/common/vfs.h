@@ -39,6 +39,11 @@
 #if GDEF_OS_WINDOWS
 #include <wtypes.h>
 #include <io.h>
+
+#ifndef R_OK
+#define R_OK 04
+#endif
+
 #define S_ISDIR( mode ) ( mode & _S_IFDIR )
 #else // !GDEF_OS_WINDOWS
 #include <dirent.h>

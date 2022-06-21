@@ -1,4 +1,4 @@
-/*
+﻿/*
    Copyright (C) 1999-2006 Id Software, Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
@@ -261,7 +261,7 @@ void HomePaths_Realise(){
 			if ( shfolder ) {
 				FreeLibrary( shfolder );
 			}
-			if ( SHGetFolderPath( NULL, CSIDL_PERSONAL, NULL, 0, mydocsdir ) ) {
+			if ( SUCCEEDED( SHGetFolderPath( NULL, CSIDL_PERSONAL, NULL, 0, mydocsdir ) ) ) {
 				path.clear();
 				path << DirectoryCleaned( mydocsdir ) << "My Games/" << ( prefix + 1 ) << "/";
 				// win32: only add it if it already exists

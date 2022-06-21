@@ -1828,7 +1828,7 @@ static void SubsampleRawLuxel_r( rawLightmap_t *lm, trace_t *trace, vec3_t sampl
 	int b, samples, mapped, lighted;
 	int cluster[ 4 ];
 	vec4_t luxel[ 4 ];
-	vec3_t deluxel[ 3 ];
+	vec3_t deluxel[ 4 ];
 	vec3_t origin[ 4 ], normal[ 4 ];
 	float biasDirs[ 4 ][ 2 ] = { { -1.0f, -1.0f }, { 1.0f, -1.0f }, { -1.0f, 1.0f }, { 1.0f, 1.0f } };
 	vec3_t color, direction = { 0, 0, 0 }, total;
@@ -3172,7 +3172,6 @@ void IlluminateVertexes( int num ){
 void SetupBrushesFlags( unsigned int mask_any, unsigned int test_any, unsigned int mask_all, unsigned int test_all ){
 	int i, j, b;
 	unsigned int compileFlags, allCompileFlags;
-	qboolean inside;
 	bspBrush_t      *brush;
 	bspBrushSide_t  *side;
 	bspShader_t     *shader;
@@ -3199,10 +3198,9 @@ void SetupBrushesFlags( unsigned int mask_any, unsigned int test_any, unsigned i
 		brush = &bspBrushes[ b ];
 
 		/* check all sides */
-		inside = qtrue;
 		compileFlags = 0;
 		allCompileFlags = ~( 0u );
-		for ( j = 0; j < brush->numSides && inside; j++ )
+		for ( j = 0; j < brush->numSides; j++ )
 		{
 			/* do bsp shader calculations */
 			side = &bspBrushSides[ brush->firstSide + j ];

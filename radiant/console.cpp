@@ -140,6 +140,9 @@ ui::Widget Console_constructWindow( ui::Window toplevel ){
 	return scr;
 }
 
+//#pragma GCC push_options
+//#pragma GCC optimize ("O0")
+
 class GtkTextBufferOutputStream : public TextOutputStream
 {
 GtkTextBuffer* textBuffer;
@@ -148,72 +151,74 @@ GtkTextTag* tag;
 public:
 GtkTextBufferOutputStream( GtkTextBuffer* textBuffer, GtkTextIter* iter, GtkTextTag* tag ) : textBuffer( textBuffer ), iter( iter ), tag( tag ){
 }
-std::size_t write( const char* buffer, std::size_t length ){
+std::size_t __attribute__((optimize("O0"))) write( const char* buffer, std::size_t length ){
 	gtk_text_buffer_insert_with_tags( textBuffer, iter, buffer, gint( length ), tag, NULL );
 	return length;
 }
 };
+
+//#pragma GCC pop_options
 
 // This function is meant to be used with gtk_idle_add. It will free its argument.
 static gboolean Gtk_Idle_Print( gpointer data ){
 	Gtk_Idle_Print_Data *args = reinterpret_cast<Gtk_Idle_Print_Data *>(data);
 	g_assert(g_console);
 
-	auto buffer = gtk_text_view_get_buffer( g_console );
+			auto buffer = gtk_text_view_get_buffer( g_console );
 
-	GtkTextIter iter;
-	gtk_text_buffer_get_end_iter( buffer, &iter );
+			GtkTextIter iter;
+			gtk_text_buffer_get_end_iter( buffer, &iter );
 
-	static auto end = gtk_text_buffer_create_mark( buffer, "end", &iter, FALSE );
+			static auto end = gtk_text_buffer_create_mark( buffer, "end", &iter, FALSE );
 
-	const GdkColor yellow = { 0, 0xb0ff, 0xb0ff, 0x0000 };
-	const GdkColor red = { 0, 0xffff, 0x0000, 0x0000 };
+			const GdkColor yellow = { 0, 0xb0ff, 0xb0ff, 0x0000 };
+			const GdkColor red = { 0, 0xffff, 0x0000, 0x0000 };
 
-	static auto error_tag = gtk_text_buffer_create_tag( buffer, "red_foreground", "foreground-gdk", &red, NULL );
-	static auto warning_tag = gtk_text_buffer_create_tag( buffer, "yellow_foreground", "foreground-gdk", &yellow, NULL );
-	static auto standard_tag = gtk_text_buffer_create_tag( buffer, "black_foreground", NULL );
-	GtkTextTag* tag;
+			static auto error_tag = gtk_text_buffer_create_tag( buffer, "red_foreground", "foreground-gdk", &red, NULL );
+			static auto warning_tag = gtk_text_buffer_create_tag( buffer, "yellow_foreground", "foreground-gdk", &yellow, NULL );
+			static auto standard_tag = gtk_text_buffer_create_tag( buffer, "black_foreground", NULL );
+			GtkTextTag* tag;
 	switch ( args->level )
-	{
-	case SYS_WRN:
-		tag = warning_tag;
-		break;
-	case SYS_ERR:
-		tag = error_tag;
-		break;
-	case SYS_STD:
-	case SYS_VRB:
-	default:
-		tag = standard_tag;
-		break;
-	}
+			{
+			case SYS_WRN:
+				tag = warning_tag;
+				break;
+			case SYS_ERR:
+				tag = error_tag;
+				break;
+			case SYS_STD:
+			case SYS_VRB:
+			default:
+				tag = standard_tag;
+				break;
+			}
 
-	{
-		GtkTextBufferOutputStream textBuffer( buffer, &iter, tag );
-		if ( !globalCharacterSet().isUTF8() ) {
-			BufferedTextOutputStream<GtkTextBufferOutputStream> buffered( textBuffer );
+			{
+				GtkTextBufferOutputStream textBuffer( buffer, &iter, tag );
+				if ( !globalCharacterSet().isUTF8() ) {
+					BufferedTextOutputStream<GtkTextBufferOutputStream> buffered( textBuffer );
 			buffered << StringRange( args->buf, args->buf + args->length );
-		}
-		else
-		{
+				}
+				else
+				{
 			textBuffer << StringRange( args->buf, args->buf + args->length );
-		}
-	}
+				}
+			}
 
-	// update console widget immediatly if we're doing something time-consuming
+			// update console widget immediatly if we're doing something time-consuming
 	if ( args->contains_newline ) {
-		gtk_text_view_scroll_mark_onscreen( g_console, end );
+				gtk_text_view_scroll_mark_onscreen( g_console, end );
 
-		if ( !ScreenUpdates_Enabled() && gtk_widget_get_realized( g_console ) ) {
-			ScreenUpdates_process();
-		}
-	}
+				if ( !ScreenUpdates_Enabled() && gtk_widget_get_realized( g_console ) ) {
+					ScreenUpdates_process();
+				}
+			}
 
 	free( args->buf );
 	free( args );
 
 	return FALSE; // call this once, not repeatedly
-}
+		}
 
 // Print logs to the in-game console and/or to the log file.
 // This function is thread safe.
