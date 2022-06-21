@@ -2722,7 +2722,11 @@ ui::Widget create_main_statusbar( ui::Widget pStatusLabel[c_count_status] ){
 		gtk_frame_set_shadow_type( frame, GTK_SHADOW_IN );
 
 		auto label = ui::Label( "Label" );
-		gtk_label_set_ellipsize( label, PANGO_ELLIPSIZE_END );
+		if( i == c_texture_status )
+			gtk_label_set_ellipsize( label, PANGO_ELLIPSIZE_START );
+		else
+			gtk_label_set_ellipsize( label, PANGO_ELLIPSIZE_END );
+
 		gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
 		gtk_misc_set_padding( GTK_MISC( label ), 4, 2 );
 		label.show();

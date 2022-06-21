@@ -2202,7 +2202,7 @@ void SelectBrush( int entitynum, int brushnum ){
 }
 
 
-class BrushFindIndexWalker : public scene::Graph::Walker
+class BrushFindIndexWalker : public scene::Traversable::Walker
 {
 mutable const scene::Node* m_node;
 std::size_t& m_count;
@@ -2211,9 +2211,9 @@ BrushFindIndexWalker( const scene::Node& node, std::size_t& count )
 	: m_node( &node ), m_count( count ){
 }
 
-bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	if ( Node_isPrimitive( path.top() ) ) {
-		if ( m_node == path.top().get_pointer() ) {
+bool pre( scene::Node& node ) const {
+	if ( Node_isPrimitive( node ) ) {
+		if ( m_node == &node ) {
 			m_node = 0;
 		}
 		if ( m_node ) {
@@ -2224,7 +2224,7 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 }
 };
 
-class EntityFindIndexWalker : public scene::Graph::Walker
+class EntityFindIndexWalker : public scene::Traversable::Walker
 {
 mutable const scene::Node* m_node;
 std::size_t& m_count;
@@ -2233,9 +2233,9 @@ EntityFindIndexWalker( const scene::Node& node, std::size_t& count )
 	: m_node( &node ), m_count( count ){
 }
 
-bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	if ( Node_isEntity( path.top() ) ) {
-		if ( m_node == path.top().get_pointer() ) {
+bool pre( scene::Node& node ) const {
+	if ( Node_isEntity( node ) ) {
+		if ( m_node == &node ) {
 			m_node = 0;
 		}
 		if ( m_node ) {
@@ -2252,8 +2252,24 @@ static void GetSelectionIndex( int *ent, int *brush ){
 	if ( GlobalSelectionSystem().countSelected() != 0 ) {
 		const scene::Path& path = GlobalSelectionSystem().ultimateSelected().path();
 
-		GlobalSceneGraph().traverse( BrushFindIndexWalker( path.top(), count_brush ) );
-		GlobalSceneGraph().traverse( EntityFindIndexWalker( path.parent(), count_entity ) );
+		{
+			scene::Traversable* traversable = Node_getTraversable( path.parent() );
+			if ( traversable != 0 && path.size() == 3 ) {
+				traversable->traverse( BrushFindIndexWalker( path.top(), count_brush ) );
+			}
+		}
+
+		{
+			scene::Traversable* traversable = Node_getTraversable( GlobalSceneGraph().root() );
+			if ( traversable != 0 ) {
+				if( path.size() == 3 ){
+					traversable->traverse( EntityFindIndexWalker( path.parent(), count_entity ) );
+				}
+				else if ( path.size() == 2 ){
+					traversable->traverse( EntityFindIndexWalker( path.top(), count_entity ) );
+				}
+			}
+		}
 	}
 	*brush = int(count_brush);
 	*ent = int(count_entity);
