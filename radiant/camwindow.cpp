@@ -1248,6 +1248,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			m_bestDown = floorHeight;
 		}
 	}
+	else if( !path.top().get().visible() ){
+		return false;
+	}
 	return true;
 }
 };

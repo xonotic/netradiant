@@ -3017,6 +3017,7 @@ void MainFrame::Create(){
 	auto vbox = ui::VBox( FALSE, 0 );
 	window.add(vbox);
 	vbox.show();
+	gtk_container_set_focus_chain( GTK_CONTAINER( vbox ), NULL );
 
 	global_accel_connect_window( window );
 
