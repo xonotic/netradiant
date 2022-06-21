@@ -111,7 +111,7 @@ void LokiInitPaths( char *argv0 ){
 		/* set home path */
 		homePath = home;
 	}
-	else {
+	else{
 		home = homePath;
 	}
 
@@ -187,6 +187,7 @@ void LokiInitPaths( char *argv0 ){
 				Q_strncpyz( temp, home, sizeof( temp ) );
 				path++;
 			}
+
 
 			/* concatenate */
 			if ( last > ( path + 1 ) ) {
@@ -361,7 +362,7 @@ void AddHomeBasePath( char *path ){
 		if ( access( temp, X_OK ) == 0 ) {
 			if ( customHomePath == qfalse ) {
 				tempHomePath = xdgDataHomePath;
-			}
+	}
 			path = path + 1;
 		}
 		#endif // GDEF_OS_XDG
