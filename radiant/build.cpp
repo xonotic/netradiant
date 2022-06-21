@@ -923,6 +923,9 @@ ui::Window BuildMenuDialog_construct( ModalDialog& modal, ProjectList& projectLi
 
 					auto renderer = ui::CellRendererText(ui::New);
 					object_set_boolean_property( G_OBJECT( renderer ), "editable", TRUE );
+					g_object_set( G_OBJECT( renderer ), "wrap-mode", PANGO_WRAP_WORD, NULL );
+					//g_object_set( G_OBJECT( renderer ), "ellipsize", PANGO_ELLIPSIZE_MIDDLE, NULL );
+					object_set_int_property( G_OBJECT( renderer ), "wrap-width", 640 );
 					renderer.connect( "edited", G_CALLBACK( commands_cell_edited ), store );
 
 					auto column = ui::TreeViewColumn( "", renderer, {{"text", 0}} );

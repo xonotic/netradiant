@@ -86,6 +86,7 @@ MapModules& ReferenceAPI_getMapModules();
 #include "autosave.h"
 #include "brushmodule.h"
 #include "brush.h"
+#include "patch.h"
 
 bool g_writeMapComments = true;
 
@@ -794,13 +795,56 @@ void Scene_EntityBreakdown( EntityBreakdown& entitymap ){
 	GlobalSceneGraph().traverse( EntityBreakdownWalker( entitymap ) );
 }
 
+class CountStuffWalker : public scene::Graph::Walker
+{
+int& m_patches;
+int& m_ents_ingame;
+int& m_groupents;
+int& m_groupents_ingame;
+public:
+CountStuffWalker( int& patches, int& ents_ingame, int& groupents, int& groupents_ingame )
+	: m_patches( patches ), m_ents_ingame( ents_ingame ), m_groupents( groupents ), m_groupents_ingame( groupents_ingame ){
+}
+bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	Patch* patch = Node_getPatch( path.top() );
+	if( patch != 0 ){
+		++m_patches;
+	}
+	Entity* entity = Node_getEntity( path.top() );
+	if ( entity != 0 ){
+		if( entity->isContainer() ){
+			++m_groupents;
+			if( !string_equal_nocase( "func_group", entity->getKeyValue( "classname" ) ) &&
+				!string_equal_nocase( "_decal", entity->getKeyValue( "classname" ) ) ){
+				++m_groupents_ingame;
+				++m_ents_ingame;
+			}
+			return true;
+		}
+		if( !string_equal_nocase_n( "light", entity->getKeyValue( "classname" ), 5 ) &&
+			!string_equal_nocase( "misc_model", entity->getKeyValue( "classname" ) ) ){
+			++m_ents_ingame;
+		}
+	}
+	return true;
+}
+};
+
+void Scene_CountStuff( int& patches, int& ents_ingame, int& groupents, int& groupents_ingame ){
+	GlobalSceneGraph().traverse( CountStuffWalker( patches, ents_ingame, groupents, groupents_ingame ) );
+}
 
 WindowPosition g_posMapInfoWnd( c_default_window_pos );
 
 void DoMapInfo(){
 	ModalDialog dialog;
-	ui::Entry brushes_entry{ui::null};
-	ui::Entry entities_entry{ui::null};
+	ui::Widget w_brushes{ui::null};
+	ui::Widget w_patches{ui::null};
+	ui::Widget w_ents{ui::null};
+	ui::Widget w_ents_ingame{ui::null};
+	ui::Widget w_groupents{ui::null};
+	ui::Widget w_groupents_ingame{ui::null};
+
 	ui::ListStore EntityBreakdownWalker{ui::null};
 
 	ui::Window window = MainFrame_getWindow().create_dialog_window("Map Info", G_CALLBACK(dialog_delete_callback ), &dialog );
@@ -813,40 +857,90 @@ void DoMapInfo(){
 
 		{
 			auto hbox = create_dialog_hbox( 4 );
-			vbox.pack_start( hbox, FALSE, TRUE, 0 );
+			vbox.pack_start( hbox, FALSE, FALSE, 0 );
 
 			{
-				auto table = create_dialog_table( 2, 2, 4, 4 );
+				auto table = create_dialog_table( 3, 4, 4, 4 );
 				hbox.pack_start( table, TRUE, TRUE, 0 );
 
 				{
-					auto entry = ui::Entry(ui::New);
-					entry.show();
-                    table.attach(entry, {1, 2, 0, 1}, {GTK_EXPAND | GTK_FILL, 0});
-					gtk_editable_set_editable( GTK_EDITABLE(entry), FALSE );
-
-					brushes_entry = entry;
-				}
-				{
-					auto entry = ui::Entry(ui::New);
-					entry.show();
-                    table.attach(entry, {1, 2, 1, 2}, {GTK_EXPAND | GTK_FILL, 0});
-					gtk_editable_set_editable( GTK_EDITABLE(entry), FALSE );
-
-					entities_entry = entry;
-				}
-				{
-					ui::Widget label = ui::Label( "Total Brushes" );
+					auto label = ui::Label( "Total Brushes:" );
 					label.show();
                     table.attach(label, {0, 1, 0, 1}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+                    table.attach(label, {1, 2, 0, 1}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					w_brushes = label;
+				}
+				{
+					auto label = ui::Label( "Total Patches" );
+					label.show();
+                    table.attach(label, {2, 3, 0, 1}, {GTK_FILL, 0});
 					gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
 				}
 				{
-					ui::Widget label = ui::Label( "Total Entities" );
+					auto label = ui::Label( "" );
 					label.show();
-                    table.attach(label, {0, 1, 1, 2}, {GTK_FILL, 0});
+                    table.attach(label, {3, 4, 0, 1}, {GTK_FILL, 0}, {3, 0});
 					gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
+					w_patches = label;
 				}
+				{
+					auto label = ui::Label( "Total Entities:" );
+					label.show();
+					table.attach(label, {0, 1, 1, 2}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {1, 2, 1, 2}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_ents = label;
+				}
+				{
+					auto label = ui::Label( "Ingame Entities:" );
+					label.show();
+					table.attach(label, {2, 3, 1, 2}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {3, 4, 1, 2}, {GTK_FILL | GTK_EXPAND, 0 }, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_ents_ingame = label;
+				}
+				{
+					auto label = ui::Label( "Group Entities:" );
+					label.show();
+					table.attach(label, {0, 1, 2, 3}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {1, 2, 2, 3}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_groupents = label;
+				}
+				{
+					auto label = ui::Label( "Ingame Group Entities:" );
+					label.show();
+					table.attach(label, {2, 3, 2, 3}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {3, 4, 2, 3}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_groupents_ingame = label;
+				}
+
 			}
 			{
 				auto vbox2 = create_dialog_vbox( 4 );
@@ -859,7 +953,7 @@ void DoMapInfo(){
 			}
 		}
 		{
-			ui::Widget label = ui::Label( "Entity breakdown" );
+			ui::Widget label = ui::Label( "*** Entity breakdown ***" );
 			label.show();
 			vbox.pack_start( label, FALSE, TRUE, 0 );
 			gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
@@ -869,7 +963,7 @@ void DoMapInfo(){
 			vbox.pack_start( scr, TRUE, TRUE, 0 );
 
 			{
-				auto store = ui::ListStore::from(gtk_list_store_new( 2, G_TYPE_STRING, G_TYPE_STRING ));
+				auto store = ui::ListStore::from(gtk_list_store_new( 2, G_TYPE_STRING, G_TYPE_UINT ));
 
 				auto view = ui::TreeView(ui::TreeModel::from(store._handle));
 				gtk_tree_view_set_headers_clickable(view, TRUE );
@@ -913,11 +1007,39 @@ void DoMapInfo(){
 
 	EntityBreakdownWalker.unref();
 
-	char tmp[16];
-	sprintf( tmp, "%u", Unsigned( g_brushCount.get() ) );
-	brushes_entry.text(tmp);
-	sprintf( tmp, "%u", Unsigned( g_entityCount.get() ) );
-	entities_entry.text(tmp);
+	int n_patches = 0;
+	int n_ents_ingame = 0;
+	int n_groupents = 0;
+	int n_groupents_ingame = 0;
+	Scene_CountStuff( n_patches, n_ents_ingame, n_groupents, n_groupents_ingame );
+	//globalOutputStream() << n_patches << n_ents_ingame << n_groupents << n_groupents_ingame << "\n";
+
+	char *markup;
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%u</b></span>  ", Unsigned( g_brushCount.get() ) );
+	gtk_label_set_markup( GTK_LABEL( w_brushes ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_patches );
+	gtk_label_set_markup( GTK_LABEL( w_patches ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%u</b></span>  ", Unsigned( g_entityCount.get() ) );
+	gtk_label_set_markup( GTK_LABEL( w_ents ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_ents_ingame );
+	gtk_label_set_markup( GTK_LABEL( w_ents_ingame ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_groupents );
+	gtk_label_set_markup( GTK_LABEL( w_groupents ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_groupents_ingame );
+	gtk_label_set_markup( GTK_LABEL( w_groupents_ingame ), markup );
+	g_free( markup );
+
 
 	modal_dialog_show( window, dialog );
 
