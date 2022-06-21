@@ -35,8 +35,6 @@
 #include <set>
 #include <gdk/gdkkeysyms.h>
 #include <uilib/uilib.h>
-#include <gtk/gtkstock.h>
-
 
 #include "os/path.h"
 #include "eclasslib.h"
@@ -1237,7 +1235,7 @@ void EntityInspector_clearKeyValue(){
 }
 
 static gint EntityInspector_clearKeyValueKB( GtkEntry* widget, GdkEventKey* event, gpointer data ){
-	if ( event->keyval == GDK_Delete ) {
+	if ( event->keyval == GDK_KEY_Delete ) {
 		EntityInspector_clearKeyValue();
 		return TRUE;
 	}
@@ -1360,7 +1358,7 @@ static gint EntityEntry_keypress( ui::Entry widget, GdkEventKey* event, gpointer
 		}
 		return TRUE;
 	}
-	if ( event->keyval == GDK_Tab ) {
+	if ( event->keyval == GDK_KEY_Tab ) {
 		if ( widget._handle == g_entityKeyEntry._handle ) {
 			gtk_window_set_focus( widget.window(), g_entityValueEntry );
 		}
@@ -1370,7 +1368,7 @@ static gint EntityEntry_keypress( ui::Entry widget, GdkEventKey* event, gpointer
 		}
 		return TRUE;
 	}
-	if ( event->keyval == GDK_Escape ) {
+	if ( event->keyval == GDK_KEY_Escape ) {
 		// gtk_window_set_focus( widget.window(), NULL );
 		return TRUE;
 	}
@@ -1387,14 +1385,14 @@ void EntityInspector_destroyWindow( ui::Widget widget, gpointer data ){
 }
 
 static gint EntityInspector_hideWindowKB( GtkWidget* widget, GdkEventKey* event, gpointer data ){
-	//if ( event->keyval == GDK_Escape && GTK_WIDGET_VISIBLE( GTK_WIDGET( widget ) ) ) {
-	if ( event->keyval == GDK_Escape  ) {
+	//if ( event->keyval == GDK_KEY_Escape && GTK_WIDGET_VISIBLE( GTK_WIDGET( widget ) ) ) {
+	if ( event->keyval == GDK_KEY_Escape  ) {
 		//GroupDialog_showPage( g_page_entity );
 		gtk_widget_hide( GTK_WIDGET( GroupDialog_getWindow() ) );
 		return TRUE;
 	}
 	/* this doesn't work, if tab is bound (func is not called then) */
-	if ( event->keyval == GDK_Tab ) {
+	if ( event->keyval == GDK_KEY_Tab ) {
 		gtk_window_set_focus( GTK_WINDOW( gtk_widget_get_toplevel( GTK_WIDGET( widget ) ) ), GTK_WIDGET( g_entityKeyEntry ) );
 		return TRUE;
 	}

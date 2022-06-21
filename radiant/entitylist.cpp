@@ -26,7 +26,6 @@
 #include <uilib/uilib.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkcheckbutton.h>
-#include <gtk/gtkvbox.h>
 
 #include "string/string.h"
 #include "scenelib.h"

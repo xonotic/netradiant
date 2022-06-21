@@ -3779,7 +3779,7 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg), Accelerator( 'S', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 
 	GlobalCommands_insert( "BuildMenuCustomize", makeCallbackF(DoBuildMenu) );
-	GlobalCommands_insert( "Build_runRecentExecutedBuild", makeCallbackF(Build_runRecentExecutedBuild), Accelerator( GDK_F5 ) );
+	GlobalCommands_insert( "Build_runRecentExecutedBuild", makeCallbackF(Build_runRecentExecutedBuild), Accelerator( GDK_KEY_F5 ) );
 
 	GlobalCommands_insert( "FindBrush", makeCallbackF(DoFind) );
 
@@ -3816,8 +3816,8 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ChooseClipperColor", makeCallback( g_ColoursMenu.m_clipper ) );
 	GlobalCommands_insert( "ChooseOrthoViewNameColor", makeCallback( g_ColoursMenu.m_viewname ) );
 
-	GlobalCommands_insert( "Fullscreen", makeCallbackF( MainFrame_toggleFullscreen ), Accelerator( GDK_F11 ) );
-	GlobalCommands_insert( "MaximizeView", makeCallbackF( Maximize_View ), Accelerator( GDK_F12 ) );
+	GlobalCommands_insert( "Fullscreen", makeCallbackF( MainFrame_toggleFullscreen ), Accelerator( GDK_KEY_F11 ) );
+	GlobalCommands_insert( "MaximizeView", makeCallbackF( Maximize_View ), Accelerator( GDK_KEY_F12 ) );
 
 
 	GlobalCommands_insert( "CSGSubtract", makeCallbackF(CSG_Subtract), Accelerator( 'U', (GdkModifierType)GDK_SHIFT_MASK ) );

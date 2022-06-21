@@ -3247,8 +3247,8 @@ void XYWindow_Construct(){
 	GlobalCommands_insert( "ViewSide", makeCallbackF(XY_Side), Accelerator( GDK_KEY_KP_Page_Down ) );
 	GlobalCommands_insert( "ViewFront", makeCallbackF(XY_Front), Accelerator( GDK_KEY_KP_End ) );
 	GlobalCommands_insert( "Zoom100", makeCallbackF(XY_Zoom100) );
-	GlobalCommands_insert( "CenterXYView", makeCallbackF(XY_Centralize), Accelerator( GDK_Tab, (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
-	GlobalCommands_insert( "XYFocusOnSelected", makeCallbackF(XY_Focus), Accelerator( GDK_grave ) );
+	GlobalCommands_insert( "CenterXYView", makeCallbackF(XY_Centralize), Accelerator( GDK_KEY_Tab, (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "XYFocusOnSelected", makeCallbackF(XY_Focus), Accelerator( GDK_KEY_grave ) );
 
 	GlobalPreferenceSystem().registerPreference( "ClipCaulk", make_property_string( g_clip_useCaulk ) );
 

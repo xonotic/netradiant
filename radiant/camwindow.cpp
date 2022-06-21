@@ -2067,7 +2067,7 @@ void CameraSpeed_decrease(){
 /// \brief Initialisation for things that have the same lifespan as this module.
 void CamWnd_Construct(){
 	GlobalCommands_insert( "CenterView", makeCallbackF(GlobalCamera_ResetAngles), Accelerator( GDK_KEY_End ) );
-	GlobalCommands_insert( "CameraFocusOnSelected", makeCallbackF( GlobalCamera_FocusOnSelected ), Accelerator( GDK_Tab ) );
+	GlobalCommands_insert( "CameraFocusOnSelected", makeCallbackF( GlobalCamera_FocusOnSelected ), Accelerator( GDK_KEY_Tab ) );
 
 	GlobalToggles_insert( "ToggleCubicClip", makeCallbackF(Camera_ToggleFarClip), ToggleItem::AddCallbackCaller( g_getfarclip_item ), Accelerator( '\\', (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "CubicClipZoomIn", makeCallbackF(Camera_CubeIn), Accelerator( '[', (GdkModifierType)GDK_CONTROL_MASK ) );
@@ -2115,7 +2115,7 @@ void CamWnd_Construct(){
 	GlobalShortcuts_insert( "CameraFreeMoveUp", accelerator_null() );
 	GlobalShortcuts_insert( "CameraFreeMoveDown", accelerator_null() );
 
-	GlobalShortcuts_insert( "CameraFreeFocus", Accelerator( GDK_Tab ) );
+	GlobalShortcuts_insert( "CameraFreeFocus", Accelerator( GDK_KEY_Tab ) );
 
 	GlobalToggles_insert( "ShowStats", makeCallbackF(ShowStatsToggle), ToggleItem::AddCallbackCaller( g_show_stats ) );
 
