@@ -98,7 +98,7 @@ static std::string getUserName()
 		return path;
 	}
 
-	globalErrorStream() << "\%USERNAME\% not found.\n";
+	globalErrorStream() << "%USERNAME% not found.\n";
 
 	return "";
 #endif // !GDEF_OS_WINDOWS
@@ -145,7 +145,7 @@ static std::string getHomePath()
 		return path;
 	}
 
-	globalErrorStream() << "\%HOMEPATH\% not found, guessing…\n";
+	globalErrorStream() << "%HOMEPATH% not found, guessing…\n";
 
 	std::string path1 = getUserProfilePath();
 
@@ -154,7 +154,7 @@ static std::string getHomePath()
 		return path1;
 	}
 
-	globalErrorStream() << "\%HOMEPATH\% not found.\n";
+	globalErrorStream() << "%HOMEPATH% not found.\n";
 
 	return "";
 #endif // !GDEF_OS_WINDOWS
@@ -206,7 +206,7 @@ static std::string getSystemDrive()
 		return path;
 	}
 
-	globalErrorStream() << "\%SYSTEMDRIVE\% not found, guessing…\n";
+	globalErrorStream() << "%SYSTEMDRIVE% not found, guessing…\n";
 
 	return "C:";
 }
@@ -220,7 +220,7 @@ static std::string getUserProfilePath()
 		return path;
 	}
 
-	globalErrorStream() << "\%USERPROFILE\% not found, guessing…\n";
+	globalErrorStream() << "%USERPROFILE% not found, guessing…\n";
 
 	std::string path1 = getSystemDrive();
 	std::string path2 = getUserName();
@@ -230,7 +230,7 @@ static std::string getUserProfilePath()
 		return path1 + "\\Users\\" + path2;
 	}
 
-	globalErrorStream() << "\%USERPROFILE\% not found.\n";
+	globalErrorStream() << "%USERPROFILE% not found.\n";
 
 	return "";
 }
@@ -244,7 +244,7 @@ static std::string getProgramFilesPath()
 		return path;
 	}
 
-	globalErrorStream() << "\%ProgramFiles\% not found, guessing…\n";
+	globalErrorStream() << "%ProgramFiles% not found, guessing…\n";
 
 	std::string path1 = getSystemDrive();
 	return path1 + "\\Program Files";
@@ -259,7 +259,7 @@ static std::string getProgramFilesX86Path()
 		return path;
 	}
 
-	globalErrorStream() << "\%ProgramFiles(x86)\% not found, guessing…\n";
+	globalErrorStream() << "%ProgramFiles(x86)% not found, guessing…\n";
 
 	return getProgramFilesPath();
 }
@@ -273,7 +273,7 @@ static std::string getProgramW6432Path()
 		return path;
 	}
 
-	globalErrorStream() << "\%ProgramW6432\% not found, guessing…\n";
+	globalErrorStream() << "%ProgramW6432% not found, guessing…\n";
 
 	return getProgramFilesPath();
 }
@@ -287,7 +287,7 @@ static std::string getAppDataPath()
 		return path;
 	}
 
-	globalErrorStream() << "\%APPDATA\% not found, guessing…\n";
+	globalErrorStream() << "%APPDATA% not found, guessing…\n";
 
 	std::string path1 = getUserProfilePath();
 
@@ -296,7 +296,7 @@ static std::string getAppDataPath()
 		return path1 + "\\AppData\\Roaming";
 	}
 
-	globalErrorStream() << "\%APPDATA\% not found.\n";
+	globalErrorStream() << "%APPDATA% not found.\n";
 
 	return std::string( "" );
 }
@@ -393,12 +393,12 @@ struct pathTransformer_t
 static const pathTransformer_t pathTransformers[] =
 {
 #if GDEF_OS_WINDOWS
-	{ "\%HOMEPATH\%", getHomePath },
-	{ "\%USERPROFILE\%", getUserProfilePath },
-	{ "\%ProgramFiles\%", getProgramFilesPath },
-	{ "\%ProgramFiles(x86)\%", getProgramFilesX86Path },
-	{ "\%ProgramW6432\%", getProgramW6432Path },
-	{ "\%APPDATA\%", getAppDataPath },
+	{ "%HOMEPATH%", getHomePath },
+	{ "%USERPROFILE%", getUserProfilePath },
+	{ "%ProgramFiles%", getProgramFilesPath },
+	{ "%ProgramFiles(x86)%", getProgramFilesX86Path },
+	{ "%ProgramW6432%", getProgramW6432Path },
+	{ "%APPDATA%", getAppDataPath },
 	{ "[CSIDL_MYDOCUMENTS]", getMyDocumentsPath },
 #endif // GDEF_OS_WINDOWS
 
