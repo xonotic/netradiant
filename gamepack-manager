@@ -294,11 +294,12 @@ downloadExtraUrls ()
 {
 	if [ -f 'extra-urls.txt' ]
 	then
-		while IFS='	' read -r extra_file extra_url
+		local line
+		while read line
 		do
-			(
-				${WGET} -O "${extra_file}" "${extra_url}"
-			) </dev/null
+			local extra_file="$(echo "${line}" | cut -f1 -d$'\t')"
+			local extra_url="$(echo "${line}" | cut -f2 -d$'\t')"
+			${WGET} -O "${extra_file}" "${extra_url}" < /dev/null
 		done < 'extra-urls.txt'
 	fi
 }

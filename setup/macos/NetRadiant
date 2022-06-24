@@ -33,12 +33,14 @@ then
 	export GTK_PATH="${bundle_dir}"
 fi
 
-if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = 'Dark' ]
-then
-	color='dark'
-else
-	color='light'
-fi
+color="$(defaults read -g AppleInterfaceStyle 2>/dev/null)"
+case "${color}" in
+	'Dark')
+		;;
+	*)
+	color='Light'
+		;;
+esac
 
 gtkrc_file="${bundle_dir}/share/themes/Mojave-${color}/gtk-2.0/gtkrc"
 
