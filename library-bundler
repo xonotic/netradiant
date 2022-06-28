@@ -105,7 +105,7 @@ Multi::excludeLdd () {
 					Common::noOp
 				# FreeBSD specific
 				elif echo "${ldd_line}" \
-					| egrep -q '/libc++|/libgxxrt'
+					| egrep -q '/libc\+\+|/libgxxrt'
 				then
 					Common::noOp
 				else
@@ -176,17 +176,17 @@ Multi::getRootPrefix () {
 	local lib_file="${1}"
 
 	case "${system_name}" in
-		'linux'|'freebsd')
-			echo "${lib_file}" \
-			| cut -f2 -d'/'
+		'linux')
+			echo 'usr'
+			;;
+		'freebsd'|'macos')
+			echo 'usr/local'
 			;;
 		'windows')
 			basename "${lib_file}" \
 			| xargs -n1 -P1 which \
 			| cut -f2 -d'/'
 			;;
-		'macos')
-			echo 'usr/local'
 	esac
 }
 
