@@ -245,7 +245,8 @@ void PackDirectory_r( char *dir ){
 #else
 
 #include <sys/types.h>
-#include <sys/dir.h>
+
+#include <dirent.h>
 
 void PackDirectory_r( char *dir ){
 #ifdef NeXT

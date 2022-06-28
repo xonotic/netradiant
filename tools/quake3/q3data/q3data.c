@@ -335,11 +335,8 @@ void PackDirectory_r( char *dir ){
 #else
 
 #include <sys/types.h>
-#if !GDEF_OS_WINDOWS
-#include <sys/dir.h>
-#else
-#include <sys/dirent.h>
-#endif
+
+#include <dirent.h>
 
 void PackDirectory_r( char *dir ){
 #ifdef NeXT
