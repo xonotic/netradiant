@@ -84,6 +84,14 @@ game home directories:
 #include <pwd.h>
 #endif // !GDEF_OS_LINUX && !GDEF_OS_BSD && !GDEF_OS_MACOS
 
+static std::string getEnvVar( const char* name )
+{
+	const char *env = getenv( name );
+	env = env ? env : "";
+	std::string path( env );
+	return path;
+}
+
 #if GDEF_OS_WINDOWS
 static std::string getUserProfilePath();
 #endif // !GDEF_OS_WINDOWS
@@ -91,7 +99,7 @@ static std::string getUserProfilePath();
 static std::string getUserName()
 {
 #if GDEF_OS_WINDOWS
-	std::string path( getenv( "USERNAME" ) );
+	std::string path = getEnvVar( "USERNAME" );
 
 	if ( ! path.empty() )
 	{
@@ -104,7 +112,7 @@ static std::string getUserName()
 #endif // !GDEF_OS_WINDOWS
 
 #if GDEF_OS_LINUX || GDEF_OS_BSD || GDEF_OS_MACOS
-	std::string path( getenv( "USERNAME" ) );
+	std::string path = getEnvVar( "USERNAME" );
 
 	if ( ! path.empty() )
 	{
@@ -113,7 +121,7 @@ static std::string getUserName()
 
 	globalErrorStream() << "${USERNAME} not found, guessing…\n";
 
-	path = std::string( getenv( "LOGNAME" ) );
+	path = getEnvVar( "LOGNAME" );
 
 	if ( ! path.empty() )
 	{
@@ -122,7 +130,7 @@ static std::string getUserName()
 
 	globalErrorStream() << "${LOGNAME} not found, guessing…\n";
 
-	path = std::string( getenv( "USER" ) );
+	path = getEnvVar( "USER" );
 
 	if ( ! path.empty() )
 	{
@@ -138,7 +146,7 @@ static std::string getUserName()
 static std::string getHomePath()
 {
 #if GDEF_OS_WINDOWS
-	std::string path( getenv( "HOMEPATH" ) );
+	std::string path = getEnvVar( "HOMEPATH" );
 
 	if ( ! path.empty() )
 	{
@@ -161,7 +169,7 @@ static std::string getHomePath()
 
 #if GDEF_OS_LINUX || GDEF_OS_BSD || GDEF_OS_MACOS
 	// Get the path environment variable.
-	std::string path( getenv( "HOME" ) );
+	std::string path = getEnvVar( "HOME" );
 
 	// Look up path directory in password database.
 	if( ! path.empty() )
@@ -199,7 +207,7 @@ static std::string getHomePath()
 #if GDEF_OS_WINDOWS
 static std::string getSystemDrive()
 {
-	std::string path( getenv( "SYSTEMDRIVE" ) );
+	std::string path = getEnvVar( "SYSTEMDRIVE" );
 
 	if ( ! path.empty() )
 	{
@@ -213,7 +221,7 @@ static std::string getSystemDrive()
 
 static std::string getUserProfilePath()
 {
-	std::string path( getenv( "USERPROFILE" ) );
+	std::string path = getEnvVar( "USERPROFILE" );
 
 	if ( ! path.empty() )
 	{
@@ -237,7 +245,7 @@ static std::string getUserProfilePath()
 
 static std::string getProgramFilesPath()
 {
-	std::string path( getenv( "ProgramFiles" ) );
+	std::string path = getEnvVar( "ProgramFiles" );
 
 	if ( ! path.empty() )
 	{
@@ -252,7 +260,7 @@ static std::string getProgramFilesPath()
 
 static std::string getProgramFilesX86Path()
 {
-	std::string path( getenv( "ProgramFiles(x86)" ) );
+	std::string path = getEnvVar( "ProgramFiles(x86)" );
 
 	if ( ! path.empty() )
 	{
@@ -266,7 +274,7 @@ static std::string getProgramFilesX86Path()
 
 static std::string getProgramW6432Path()
 {
-	std::string path( getenv( "ProgramW6432" ) );
+	std::string path = getEnvVar( "ProgramFilesW6432" );
 
 	if ( ! path.empty() )
 	{
@@ -280,7 +288,7 @@ static std::string getProgramW6432Path()
 
 static std::string getAppDataPath()
 {
-	std::string path( getenv( "APPDATA" ) );
+	std::string path = getEnvVar( "APPDATA" );
 
 	if ( ! path.empty() )
 	{
@@ -337,7 +345,8 @@ static std::string getXdgConfigHomePath()
 {
 	/* FIXME: we may want to rely on g_get_user_config_dir()
 	provided by GLib. */
-	std::string path ( getenv( "XDG_CONFIG_HOME" ) );
+
+	std::string path = getEnvVar( "XDG_CONFIG_HOME" );
 
 	if ( ! path.empty() )
 	{
@@ -361,7 +370,7 @@ static std::string getXdgConfigHomePath()
 
 static std::string getXdgDataHomePath()
 {
-	std::string path ( getenv( "XDG_DATA_HOME" ) );
+	std::string path = getEnvVar( "XDG_DATA_HOME" );
 
 	if ( ! path.empty() )
 	{
