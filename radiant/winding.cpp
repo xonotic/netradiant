@@ -194,6 +194,10 @@ const double DEBUG_EPSILON_SQUARED = DEBUG_EPSILON * DEBUG_EPSILON;
 /// If \p winding is completely in back of the plane, \p clipped will be empty.
 /// If \p winding intersects the plane, the edge of \p clipped which lies on \p clipPlane will store the value of \p adjacent.
 void Winding_Clip( const FixedWinding& winding, const Plane3& plane, const Plane3& clipPlane, std::size_t adjacent, FixedWinding& clipped ){
+	// if there are no points, we're done
+	if ( winding.size() == 0 ) {
+		return;
+	}
 	PlaneClassification classification = Winding_ClassifyDistance( plane3_distance_to_point( clipPlane, winding.back().vertex ), ON_EPSILON );
 	PlaneClassification nextClassification;
 	// for each edge
