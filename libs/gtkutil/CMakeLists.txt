@@ -27,6 +27,7 @@ add_library(gtkutil STATIC
 target_include_directories(gtkutil PRIVATE uilib)
 target_link_libraries(gtkutil PRIVATE uilib)
 
+find_package(GTK${GTK_TARGET} REQUIRED)
 target_include_directories(gtkutil PRIVATE ${GTK${GTK_TARGET}_INCLUDE_DIRS})
 target_link_libraries(gtkutil PRIVATE ${GTK${GTK_TARGET}_LIBRARIES})
 

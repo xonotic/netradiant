@@ -100,7 +100,7 @@ If you plan to build a bundle, you also need to install `patchelf`
 Note: some dependencies of gtk+ seems to only be pulled with gtk+3, gtkglext seems to require libffi.
 
 ```sh
-brew install cmake glib libffi gtk+ gtk+3 pkgconfig minizip webp coreutils gnu-sed wget sassc
+brew install cmake glib gobject-introspection libffi gtk+ gtk+3 gtk-doc pkgconfig minizip webp coreutils gnu-sed wget sassc
 brew link --force gettext
 ```
 
