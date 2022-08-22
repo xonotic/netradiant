@@ -2546,6 +2546,12 @@ int LightMain( int argc, char **argv ){
 			Sys_Printf( "Storing all lightmaps externally\n" );
 		}
 
+		else if ( !strcmp( argv[ i ], "-externalnames" ) ) {
+			externalLightmaps = qtrue;
+			externalLightmapNames = qtrue;
+			Sys_Printf( "Writing lightstyle shader using external lightmap names\n" );
+		}
+
 		else if ( !strcmp( argv[ i ], "-lightmapsize" ) ) {
 			lmCustomSize = atoi( argv[ i + 1 ] );
 

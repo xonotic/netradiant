@@ -215,6 +215,7 @@ void HelpLight()
 		{"-export", "Export lightmaps when compile finished (like `-export` mode)"},
 		{"-exposure <F>", "Lightmap exposure to better support overbright spots"},
 		{"-external", "Force external lightmaps even if at size of internal lightmaps"},
+		{"-externalnames", "Write lightstyle shader using external lightmap names"},
 		{"-extradist <F>", "Extra distance for lights in map units"},
 		{"-extravisnudge", "Broken feature to nudge the luxel origin to a better vis cluster"},
 		{"-extrawide", "Deprecated alias for `-super 2 -filter`"},

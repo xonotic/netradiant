@@ -3355,7 +3355,8 @@ void StoreSurfaceLightmaps( qboolean fastAllocate, qboolean storeForReal ){
 					olm = &outLightmaps[ lm->outLightmapNums[ lightmapNum ] ];
 
 					/* lightmap name */
-					if ( lm->outLightmapNums[ lightmapNum ] == lm->outLightmapNums[ 0 ] ) {
+					if ( !externalLightmapNames
+						&& lm->outLightmapNums[ lightmapNum ] == lm->outLightmapNums[ 0 ] ) {
 						strcpy( lightmapName, "$lightmap" );
 					}
 					else{
