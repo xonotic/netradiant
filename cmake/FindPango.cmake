@@ -5,6 +5,12 @@ if (PKG_CONFIG_FOUND)
     endif ()
     pkg_search_module(Pango ${_pkgconfig_REQUIRED} pango pangocairo)
     pkg_search_module(PangoFT2 ${_pkgconfig_REQUIRED} pangoft2)
+    if (Pango_LINK_LIBRARIES)
+        set(Pango_LIBRARIES ${Pango_LINK_LIBRARIES}) # HACK
+    endif()
+    if (PangoFT2_LINK_LIBRARIES)
+        set(PangoFT2_LIBRARIES ${PangoFT2_LINK_LIBRARIES}) # HACK
+    endif()
 else ()
     # find_path(Pango_INCLUDE_DIRS)
     # find_library(Pango_LIBRARIES)
