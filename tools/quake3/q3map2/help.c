@@ -221,7 +221,6 @@ void HelpLight()
 		{"-extrawide", "Deprecated alias for `-super 2 -filter`"},
 		{"-extra", "Deprecated alias for `-super 2`"},
 		{"-fastallocate",  "Trade lightmap size against packing time (useful with hi res lightmaps on large maps: reduce allocation time from days to minutes for only some extra bytes)"},
-		{"-slowallocate", "Use old (a bit more careful, but much slower) lightmaps packing algorithm (default)"},
 		{"-fastbounce", "Use `-fast` style lighting for radiosity"},
 		{"-faster", "Use a faster falloff curve for lighting; also implies `-fast`"},
 		{"-fastgrid", "Use `-fast` style lighting for the light grid"},
