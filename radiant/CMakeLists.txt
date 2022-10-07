@@ -1,6 +1,7 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
 find_package(OpenGL REQUIRED)
+find_package(GTK${GTK_TARGET} REQUIRED)
 
 string(SUBSTRING ${CMAKE_SHARED_MODULE_SUFFIX} 1 -1 _clibext)
 add_definitions(-DCMAKE_SHARED_MODULE_SUFFIX="${_clibext}")
