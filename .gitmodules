@@ -1,6 +1,3 @@
 [submodule "libs/crunch"]
 	path = libs/crunch
 	url = https://github.com/DaemonEngine/crunch.git
-[submodule "tools/unvanquished/daemonmap"]
-	path = tools/unvanquished/daemonmap
-	url = https://github.com/DaemonEngine/daemonmap.git
