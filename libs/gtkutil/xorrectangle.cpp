@@ -2,10 +2,14 @@
 
 #include <gtk/gtk.h>
 
+#define GARUX_DISABLE_BAD_XORRECTANGLE
+
+#if !defined(GARUX_DISABLE_BAD_XORRECTANGLE) && GTK_TARGET == 2
 #include "gtkutil/glwidget.h"
 #include "igl.h"
 
 #include <gtk/gtkglwidget.h>
+#endif // !GARUX_DISABLE_BAD_XORRECTANGLE && GTK_TARGET == 2
 
 //#include "stream/stringstream.h"
 
@@ -53,6 +57,7 @@ XORRectangle::~XORRectangle()
 void XORRectangle::set(rectangle_t rectangle)
 {
     if (gtk_widget_get_realized(m_widget)) {
+#if !defined(GARUX_DISABLE_BAD_XORRECTANGLE) && GTK_TARGET == 2
 		if( m_rectangle.w != rectangle.w || m_rectangle.h != rectangle.h ){
 		//if( !(m_rectangle.w == 0 && m_rectangle.h == 0 && rectangle.w == 0 && rectangle.h == 0) ){
 		//globalOutputStream() << "m_x" << m_rectangle.x << " m_y" << m_rectangle.y << " m_w" << m_rectangle.w << " m_h" << m_rectangle.h << "\n";
@@ -104,5 +109,11 @@ void XORRectangle::set(rectangle_t rectangle)
 			}
 		}
 		m_rectangle = rectangle;
+#else // GARUX_DISABLE_BAD_XORRECTANGLE || GTK_TARGET != 2
+		lazy_init();
+		draw();
+		m_rectangle = rectangle;
+		draw();
+#endif // !GARUX_DISABLE_BAD_XORRECTANGLE && GTK_TARGET == 2
     }
 }
