@@ -3015,12 +3015,14 @@ ui::Window create_splash(){
 	image.show();
 	window.add(image);
 
+#if GTK_TARGET == 2
 	if( gtk_image_get_storage_type( image ) == GTK_IMAGE_PIXBUF ){
 		GdkBitmap* mask;
 		GdkPixbuf* pix = gtk_image_get_pixbuf( image );
 		gdk_pixbuf_render_pixmap_and_mask( pix, NULL, &mask, 255 );
 		gtk_widget_shape_combine_mask ( GTK_WIDGET( window ), mask, 0, 0 );
 	}
+#endif
 
 	window.dimensions(-1, -1);
 	window.show();
@@ -3461,7 +3463,7 @@ void MainFrame::SaveWindowInfo(){
 		g_layout_globals.nCamHeight = gtk_paned_get_position( GTK_PANED( m_vSplit2 ) );
 	}
 
-	if( gdk_window_get_state( GTK_WIDGET( m_window )->window ) == 0 ){
+	if( gdk_window_get_state( gtk_widget_get_window( GTK_WIDGET( m_window ) ) ) == 0 ){
 		g_layout_globals.m_position = m_position_tracker.getPosition();
 	}
 
@@ -3633,9 +3635,9 @@ void Layout_registerPreferencesPage(){
 
 void MainFrame_toggleFullscreen(){
 	GtkWindow* wnd = MainFrame_getWindow();
-	if( gdk_window_get_state( GTK_WIDGET( wnd )->window ) & GDK_WINDOW_STATE_FULLSCREEN ){
+	if( gdk_window_get_state( gtk_widget_get_window( GTK_WIDGET( wnd ) ) ) & GDK_WINDOW_STATE_FULLSCREEN ){
 		//some portion of buttsex, because gtk_window_unfullscreen doesn't work correctly after calling some modal window
-		bool maximize = ( gdk_window_get_state( GTK_WIDGET( wnd )->window ) & GDK_WINDOW_STATE_MAXIMIZED );
+		bool maximize = ( gdk_window_get_state( gtk_widget_get_window( GTK_WIDGET( wnd ) ) ) & GDK_WINDOW_STATE_MAXIMIZED );
 		gtk_window_unfullscreen( wnd );
 		if( maximize ){
 			gtk_window_unmaximize( wnd );
@@ -3679,9 +3681,9 @@ private:
 		m_hSplitPos = gtk_paned_get_position( GTK_PANED( g_pParentWnd->m_hSplit ) );
 
 		int vSplitX, vSplitY, vSplit2X, vSplit2Y, hSplitX, hSplitY;
-		gdk_window_get_origin( GTK_WIDGET( g_pParentWnd->m_vSplit )->window, &vSplitX, &vSplitY );
-		gdk_window_get_origin( GTK_WIDGET( g_pParentWnd->m_vSplit2 )->window, &vSplit2X, &vSplit2Y );
-		gdk_window_get_origin( GTK_WIDGET( g_pParentWnd->m_hSplit )->window, &hSplitX, &hSplitY );
+		gdk_window_get_origin( gtk_widget_get_window( GTK_WIDGET( g_pParentWnd->m_vSplit ) ), &vSplitX, &vSplitY );
+		gdk_window_get_origin( gtk_widget_get_window( GTK_WIDGET( g_pParentWnd->m_vSplit2 ) ), &vSplit2X, &vSplit2Y );
+		gdk_window_get_origin( gtk_widget_get_window( GTK_WIDGET( g_pParentWnd->m_hSplit ) ), &hSplitX, &hSplitY );
 
 		vSplitY += m_vSplitPos;
 		vSplit2Y += m_vSplit2Pos;
