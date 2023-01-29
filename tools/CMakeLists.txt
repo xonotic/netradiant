@@ -6,5 +6,3 @@ add_subdirectory(quake3)
 
 add_custom_target(tools)
 add_dependencies(tools quake2 heretic2 quake3)
-
-add_subdirectory(unvanquished)

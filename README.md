@@ -205,8 +205,6 @@ Options:
   Do not build NetRadiant (default: `ON`, build netradiant graphical editor);
 * `BUILD_TOOLS=OFF`  
   Do not build q3map2 and other tools (default: `ON`, build command line tools);
-* `BUILD_DAEMONMAP=OFF`  
-  Do not build daemonmap tool (default: `ON` if submodule is there, buils daemonmap navigation mesh generator);
 * `BUILD_CRUNCH=OFF`  
   Disable crunch support (default: `ON` if submodule is there, enable crunch support);
 * `RADIANT_ABOUTMSG="Custom build by $(whoami)"`  
@@ -224,8 +222,6 @@ Targets:
      * `quake3`         Compile all the Quake 3 tools:
          - `q3map2`     Compile the Quake 3 map compiler;
          - `q3data`     Compile the q3data tool;
-     * `unvanquished`   Compile all the Unvanquished tools: `daemonmap`, `q3map3`, `q4data`;
-         - `daemonmap`  Compile the daemonmap navigation mesh generator.
 
 Type `make help` to get an exhaustive list of targets.
 
