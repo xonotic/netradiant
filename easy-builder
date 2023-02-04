@@ -94,8 +94,7 @@ do
 done
 
 declare -a fetch_submodules_cmd
-for submodule_file in 'libs/crunch/inc/crn_decomp.h' \
-	'tools/unvanquished/daemonmap/tools/quake3/q3map2/main.c'
+for submodule_file in 'libs/crunch/inc/crn_decomp.h'
 do
 	if ! [ -f "${project_source_dir}/${submodule_file}" ]
 	then

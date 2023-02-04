@@ -53,12 +53,6 @@ else ()
     set(DEFAULT_BUILD_CRUNCH OFF CACHE INTERNAL "...")
 endif ()
 
-if (EXISTS "${PROJECT_SOURCE_DIR}/tools/unvanquished/daemonmap/tools/quake3/q3map2/main.c")
-    set(DEFAULT_BUILD_DAEMONMAP ON CACHE INTERNAL "...")
-else ()
-    set(DEFAULT_BUILD_DAEMONMAP OFF CACHE INTERNAL "...")
-endif ()
-
 #-----------------------------------------------------------------------
 # Build options
 #-----------------------------------------------------------------------
@@ -66,7 +60,6 @@ endif ()
 option(BUILD_RADIANT "Build the GUI" ON)
 option(BUILD_TOOLS "Build the tools" ON)
 option(BUILD_CRUNCH "Build Crunch image support" ${DEFAULT_BUILD_CRUNCH})
-option(BUILD_DAEMONMAP "Build daemonmap navigation mesh generator" ${DEFAULT_BUILD_DAEMONMAP})
 option(DOWNLOAD_GAMEPACKS "Download game packs" ON)
 option(USE_WERROR "Build with -Werror -pedantic-errors" OFF)
 option(FHS_INSTALL "Install according to Filesystem Hierarchy Standard" OFF)
