@@ -441,19 +441,19 @@ void DoSides( int type, int axis ){
 
 void about_button_changelog( ui::Widget widget, gpointer data ){
 	StringOutputStream log( 256 );
-	log << "https://gitlab.com/xonotic/netradiant/commits/master";
+	log << "https://gitlab.com/xonotic/netradiant/-/commits/master";
 	OpenURL( log.c_str() );
 }
 
 void about_button_credits( ui::Widget widget, gpointer data ){
 	StringOutputStream cred( 256 );
-	cred << "https://gitlab.com/xonotic/netradiant/graphs/master";
+	cred << "https://gitlab.com/xonotic/netradiant/-/graphs/master";
 	OpenURL( cred.c_str() );
 }
 
 void about_button_issues( ui::Widget widget, gpointer data ){
 	StringOutputStream cred( 256 );
-	cred << "https://gitlab.com/xonotic/netradiant/issues";
+	cred << "https://gitlab.com/xonotic/netradiant/-/issues";
 	OpenURL( cred.c_str() );
 }
 
