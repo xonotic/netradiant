@@ -88,11 +88,32 @@ void EntityClassFGD_forEach( EntityClassVisitor& visitor ){
 	}
 }
 
+#define PARSE_ERROR "error parsing fgd entity class definition at line " << tokeniser.getLine() << ':' << tokeniser.getColumn()
+
+static bool s_fgd_warned = false;
+
 inline bool EntityClassFGD_parseToken( Tokeniser& tokeniser, const char* token ){
-	return string_equal( tokeniser.getToken(), token );
+	const bool w = s_fgd_warned;
+	const bool ok = string_equal( tokeniser.getToken(), token );
+	if( !ok ){
+		globalErrorStream() << PARSE_ERROR << "\nExpected " << makeQuoted( token ) << '\n';
+		s_fgd_warned = true;
+}
+	return w || ok;
 }
 
-const char *PARSE_ERROR = "error parsing entity class definition";
+/* FIXME
+#define ERROR_FGD( message )\
+do{\
+	if( s_fgd_warned )\
+		globalErrorStream() << message << '\n';\
+	else{\
+		ERROR_MESSAGE( message );\
+		s_fgd_warned = true;\
+	}\
+}while( 0 )
+*/
+#define ERROR_FGD( message ) {}
 
 void EntityClassFGD_parseSplitString( Tokeniser& tokeniser, CopiedString& string ){
 	StringOutputStream buffer( 256 );
@@ -186,7 +207,6 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 		// hl2 below
 		else if ( string_equal( property, "sphere" )
 				  || string_equal( property, "sweptplayerhull" )
-				  || string_equal( property, "studio" )
 				  || string_equal( property, "studioprop" )
 				  || string_equal( property, "lightprop" )
 				  || string_equal( property, "lightcone" )
@@ -194,6 +214,17 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, "(" ), PARSE_ERROR );
 			if ( string_equal( tokeniser.getToken(), ")" ) ) {
 				tokeniser.ungetToken();
+			}
+			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, ")" ), PARSE_ERROR );
+		}
+		else if ( string_equal( property, "studio" ) ) {
+			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, "(" ), PARSE_ERROR );
+			const char *token = tokeniser.getToken();
+			if ( string_equal( token, ")" ) ) {
+				tokeniser.ungetToken();
+			}
+			else{
+				entityClass->m_modelpath = token;
 			}
 			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, ")" ), PARSE_ERROR );
 		}
@@ -228,9 +259,25 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 		}
 		else if ( string_equal( property, "halfgridsnap" ) ) {
 		}
+		else if ( string_equal( property, "flags" ) ) {
+			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, "(" ), PARSE_ERROR );
+			for (;; )
+			{
+				const char* base = tokeniser.getToken();
+				if ( string_equal( base, ")" ) ) {
+					break;
+				}
+				else if ( !string_equal( base, "," ) ) {
+					if( string_equal_nocase( base, "Angle" ) ){
+						// FIXME
+						// entityClass->has_angles = true;
+					}
+				}
+			}
+		}
 		else
 		{
-			ERROR_MESSAGE( PARSE_ERROR );
+			ERROR_FGD( PARSE_ERROR );
 		}
 	}
 
@@ -240,6 +287,16 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 		ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, ":" ), PARSE_ERROR );
 
 		EntityClassFGD_parseSplitString( tokeniser, entityClass->m_comments );
+
+		const char* urlSeparator = tokeniser.getToken();
+		if ( string_equal( urlSeparator, ":" ) ) {
+			CopiedString tmp;
+			EntityClassFGD_parseSplitString( tokeniser, tmp );
+		}
+		else
+		{
+			tokeniser.ungetToken();
+		}
 	}
 
 	tokeniser.nextLine();
@@ -283,12 +340,8 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 		ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, ")" ), PARSE_ERROR );
 
 		if ( string_equal_nocase( type.c_str(), "flags" ) ) {
-			EntityClassAttribute attribute;
-
 			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, "=" ), PARSE_ERROR );
-			tokeniser.nextLine();
 			ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, "[" ), PARSE_ERROR );
-			tokeniser.nextLine();
 			for (;; )
 			{
 				const char* flag = tokeniser.getToken();
@@ -298,9 +351,17 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 				}
 				else
 				{
+					const size_t bit = std::log2( atoi( flag ) );
+					ASSERT_MESSAGE( bit < MAX_FLAGS, "invalid flag bit" << PARSE_ERROR );
+					ASSERT_MESSAGE( string_empty( entityClass->flagnames[bit] ), "non-unique flag bit" << PARSE_ERROR );
+
 					ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, ":" ), PARSE_ERROR );
-					//const char* name =
-					tokeniser.getToken();
+
+					const char* name = tokeniser.getToken();
+					strcpy( entityClass->flagnames[bit], name );
+					EntityClassAttribute *attribute = &EntityClass_insertAttribute( *entityClass, name, EntityClassAttribute( "flag", name ) ).second;
+					// FIXME spawn flags are not implemented yet
+					// entityClass->flagAttributes[bit] = attribute;
 					{
 						const char* defaultSeparator = tokeniser.getToken();
 						if ( string_equal( defaultSeparator, ":" ) ) {
@@ -308,7 +369,7 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 							{
 								const char* descriptionSeparator = tokeniser.getToken();
 								if ( string_equal( descriptionSeparator, ":" ) ) {
-									EntityClassFGD_parseSplitString( tokeniser, attribute.m_description );
+									EntityClassFGD_parseSplitString( tokeniser, attribute->m_description );
 								}
 								else
 								{
@@ -324,7 +385,6 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 				}
 				tokeniser.nextLine();
 			}
-			EntityClass_insertAttribute( *entityClass, key.c_str(), attribute );
 		}
 		else if ( string_equal_nocase( type.c_str(), "choices" ) ) {
 			EntityClassAttribute attribute;
@@ -380,6 +440,15 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 					ASSERT_MESSAGE( EntityClassFGD_parseToken( tokeniser, ":" ), PARSE_ERROR );
 					const char* name = tokeniser.getToken();
 					listType.push_back( name, tmp.c_str() );
+
+					const char* descriptionSeparator = tokeniser.getToken();
+					if ( string_equal( descriptionSeparator, ":" ) ) {
+						EntityClassFGD_parseSplitString( tokeniser, tmp );
+					}
+					else
+					{
+						tokeniser.ungetToken();
+					}
 				}
 				tokeniser.nextLine();
 			}
@@ -462,7 +531,7 @@ void EntityClassFGD_parseClass( Tokeniser& tokeniser, bool fixedsize, bool isBas
 		}
 		else
 		{
-			ERROR_MESSAGE( "unknown key type: " << makeQuoted( type.c_str() ) );
+			ERROR_FGD( "unknown key type: " << makeQuoted( type ) );
 		}
 		tokeniser.nextLine();
 	}
@@ -489,18 +558,18 @@ void EntityClassFGD_parse( TextInputStream& inputStream, const char* path ){
 		if ( blockType == 0 ) {
 			break;
 		}
-		if ( string_equal( blockType, "@SolidClass" ) ) {
+		if ( string_equal_nocase( blockType, "@SolidClass" ) ) {
 			EntityClassFGD_parseClass( tokeniser, false, false );
 		}
-		else if ( string_equal( blockType, "@BaseClass" ) ) {
+		else if ( string_equal_nocase( blockType, "@BaseClass" ) ) {
 			EntityClassFGD_parseClass( tokeniser, false, true );
 		}
-		else if ( string_equal( blockType, "@PointClass" )
+		else if ( string_equal_nocase( blockType, "@PointClass" )
 		          // hl2 below
-				  || string_equal( blockType, "@KeyFrameClass" )
-				  || string_equal( blockType, "@MoveClass" )
-				  || string_equal( blockType, "@FilterClass" )
-				  || string_equal( blockType, "@NPCClass" ) ) {
+		       || string_equal_nocase( blockType, "@KeyFrameClass" )
+		       || string_equal_nocase( blockType, "@MoveClass" )
+		       || string_equal_nocase( blockType, "@FilterClass" )
+		       || string_equal_nocase( blockType, "@NPCClass" ) ) {
 			EntityClassFGD_parseClass( tokeniser, true, false );
 		}
 		// hl2 below
@@ -521,7 +590,7 @@ void EntityClassFGD_parse( TextInputStream& inputStream, const char* path ){
 		}
 		else
 		{
-			ERROR_MESSAGE( "unknown block type: " << makeQuoted( blockType ) );
+			ERROR_FGD( "unknown block type: " << makeQuoted( blockType ) );
 		}
 	}
 
@@ -593,6 +662,14 @@ void EntityClassFGD_resolveInheritance( EntityClass* derivedClass ){
 				{
 					EntityClass_insertAttribute( *derivedClass, ( *k ).first.c_str(), ( *k ).second );
 				}
+
+				for( size_t flag = 0; flag < MAX_FLAGS; ++flag ){
+					if( !string_empty( parentClass->flagnames[flag] ) && string_empty( derivedClass->flagnames[flag] ) ){
+						strcpy( derivedClass->flagnames[flag], parentClass->flagnames[flag] );
+						// FIXME spawn flags are not implemented yet
+						// derivedClass->flagAttributes[flag] = parentClass->flagAttributes[flag];
+					}
+				}
 			}
 		}
 	}
@@ -607,20 +684,47 @@ EntityClassFGD() : m_unrealised( 3 ){
 }
 void realise(){
 	if ( --m_unrealised == 0 ) {
-		StringOutputStream filename( 256 );
-		filename << GlobalRadiant().getGameToolsPath() << GlobalRadiant().getGameName() << "/halflife.fgd";
-		EntityClassFGD_loadFile( filename.c_str() );
+
+			{
+				StringOutputStream baseDirectory( 256 );
+				baseDirectory << GlobalRadiant().getGameToolsPath() << GlobalRadiant().getRequiredGameDescriptionKeyValue( "basegame" ) << '/';
+				StringOutputStream gameDirectory( 256 );
+				gameDirectory << GlobalRadiant().getGameToolsPath() << GlobalRadiant().getGameName() << '/';
+
+				const auto pathLess = []( const CopiedString& one, const CopiedString& other ){
+					return path_less( one.c_str(), other.c_str() );
+				};
+				std::map<CopiedString, const char*, decltype( pathLess )> name_path( pathLess );
+
+				const auto constructDirectory = [&name_path]( const char* directory, const char* extension ){
+					globalOutputStream() << "EntityClass: searching " << makeQuoted( directory ) << " for *." << extension << '\n';
+					Directory_forEach( directory, matchFileExtension( extension, [directory, &name_path]( const char *name ){
+						name_path.emplace( name, directory );
+					} ) );
+				};
+
+				constructDirectory( baseDirectory.c_str(), "fgd" );
+				if ( !string_equal( baseDirectory.c_str(), gameDirectory.c_str() ) ) {
+					constructDirectory( gameDirectory.c_str(), "fgd" );
+				}
+
+				for( const auto& [ name, path ] : name_path ){
+					StringOutputStream filename( 256 );
+					filename << path << name.c_str();
+					EntityClassFGD_loadFile( filename.c_str() );
+				}
+			}
 
 		{
 			for ( EntityClasses::iterator i = g_EntityClassFGD_classes.begin(); i != g_EntityClassFGD_classes.end(); ++i )
 			{
 				EntityClassFGD_resolveInheritance( ( *i ).second );
-				if ( ( *i ).second->fixedsize && string_empty( ( *i ).second->m_modelpath.c_str() ) ) {
+					if ( ( *i ).second->fixedsize && ( *i ).second->m_modelpath.empty() ) {
 					if ( !( *i ).second->sizeSpecified ) {
-						globalErrorStream() << "size not specified for entity class: " << makeQuoted( ( *i ).second->m_name.c_str() ) << '\n';
+							globalErrorStream() << "size not specified for entity class: " << makeQuoted( ( *i ).second->name() ) << '\n';
 					}
 					if ( !( *i ).second->colorSpecified ) {
-						globalErrorStream() << "color not specified for entity class: " << makeQuoted( ( *i ).second->m_name.c_str() ) << '\n';
+							globalErrorStream() << "color not specified for entity class: " << makeQuoted( ( *i ).second->name() ) << '\n';
 					}
 				}
 			}
