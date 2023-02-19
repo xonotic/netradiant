@@ -155,4 +155,23 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux"
     target_link_libraries(${RADIANT_BASENAME} -no-pie)
 endif()
 
+if(NOT WIN32 AND NOT APPLE)
+    if(GTK_TARGET EQUAL 3)
+        if(OpenGL_GL_PREFERENCE STREQUAL "GLVND")
+            # This should not be needed, as FindOpenGL should take care of
+            # this, but maybe GTK rewrites this badly?
+
+            # If not -lOpenGL:
+            #   /usr/bin/ld: CMakeFiles/netradiant.dir/qgl.cpp.o: in function `QGL_sharedContextCreated(OpenGLBinding&)':
+            #   qgl.cpp:(.text+0x1c52): undefined reference to `glAccum'
+
+            # If not -lGL:
+            #   /usr/bin/ld: CMakeFiles/netradiant.dir/qgl.cpp.o: in function `QGL_Shutdown(OpenGLBinding&)':
+            #   qgl.cpp:(.text+0x2d): undefined reference to `glXQueryExtension'
+
+            target_link_libraries(${RADIANT_BASENAME} -lOpenGL -lGL)
+        endif()
+    endif()
+endif()
+
 copy_dlls(${RADIANT_BASENAME})
