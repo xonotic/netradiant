@@ -14,6 +14,10 @@ set(BUILTINS_PKGCONFIG_DIR "${BUILTINS_INSTALL_DIR}/lib/pkgconfig")
 option(BUILTIN_GTKGLEXT "Builtin GtkGLExt" OFF)
 option(BUILTIN_GTKTHEME_MOJAVE "Builtin Mojave GTK theme" OFF)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 if (APPLE)
     set(BUILTIN_GTKGLEXT ON)
     set(BUILTIN_GTKTHEME_MOJAVE ON)
