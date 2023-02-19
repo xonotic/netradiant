@@ -151,9 +151,6 @@ void TextureGroups_addShader( TextureGroups& groups, const char* shaderName ){
 		if ( isNotex( shaderName ) ) {
 			return;
 		}
-		if ( isNotex( texture ) ) {
-			return;
-		}
 	}
 
 	if ( texture != shaderName ) {
@@ -536,9 +533,6 @@ bool Texture_IsShown( IShader* shader, bool show_shaders, bool hideUnused ){
 	// filter the fallback (notex/shadernotex) for missing shaders or editor image
 	if ( g_TextureBrowser_filterFallback ) {
 		if ( isNotex( shader->getName() ) ) {
-			return false;
-		}
-		if ( isNotex( shader->getTexture()->name ) ) {
 			return false;
 		}
 	}
