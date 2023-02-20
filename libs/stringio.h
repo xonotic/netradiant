@@ -220,7 +220,7 @@ inline bool string_parse_size( const char* string, std::size_t& i ){
 }
 
 
-#define RETURN_FALSE_IF_FAIL(expression) do { if (!(expression)) return false; } while (0)
+#define RETURN_FALSE_IF_FAIL( expression ) do{ if ( !expression ) {return false; } }while( 0 )
 
 inline void Tokeniser_unexpectedError( Tokeniser& tokeniser, const char* token, const char* expected ){
 	globalErrorStream() << Unsigned( tokeniser.getLine() ) << ":" << Unsigned( tokeniser.getColumn() ) << ": parse error at '" << ( token != 0 ? token : "#EOF" ) << "': expected '" << expected << "'\n";
@@ -230,6 +230,15 @@ inline void Tokeniser_unexpectedError( Tokeniser& tokeniser, const char* token, 
 inline bool Tokeniser_getFloat( Tokeniser& tokeniser, float& f ){
 	const char* token = tokeniser.getToken();
 	if ( token != 0 && string_parse_float( token, f ) ) {
+		return true;
+	}
+	//fallback for 1.#IND 1.#INF 1.#QNAN cases, happening sometimes after rotating & often scaling with tex lock in BP mode
+	else if ( token != 0 && strstr( token, ".#" ) ) {
+		globalErrorStream() << "Warning: " << Unsigned( tokeniser.getLine() ) << ":" << Unsigned( tokeniser.getColumn() ) << ": expected parse problem at '" << token << "': wanted '#number'\nProcessing anyway\n";
+	#define GARUX_DISABLE_QNAN_FALLBACK
+	#ifndef GARUX_DISABLE_QNAN_FALLBACK
+//		*strstr( token, ".#" ) = '\0';
+	#endif
 		return true;
 	}
 	Tokeniser_unexpectedError( tokeniser, token, "#number" );

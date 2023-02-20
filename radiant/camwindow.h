@@ -39,7 +39,6 @@ void CamWnd_setParent( CamWnd& camwnd, ui::Window parent );
 
 void GlobalCamera_setCamWnd( CamWnd& camwnd );
 
-void fill_view_camera_menu( ui::Menu menu );
 void CamWnd_constructToolbar( ui::Toolbar toolbar );
 void CamWnd_registerShortcuts();
 
@@ -47,6 +46,8 @@ void GlobalCamera_Benchmark();
 
 const Vector3& Camera_getOrigin( CamWnd& camwnd );
 void Camera_setOrigin( CamWnd& camwnd, const Vector3& origin );
+
+void GlobalCamera_FocusOnSelected();
 
 enum
 {
@@ -66,10 +67,13 @@ struct camwindow_globals_t
 
 	int m_nCubicScale;
 
+	bool m_bZoomInToPointer;
+
 	camwindow_globals_t() :
 		color_cameraback( 0.25f, 0.25f, 0.25f ),
 		color_selbrushes3d( 1.0f, 0.f, 0.f ),
-		m_nCubicScale( 26 ){
+		m_nCubicScale( 26 ),
+		m_bZoomInToPointer( true ){
 	}
 
 };

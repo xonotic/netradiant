@@ -72,6 +72,10 @@ bool pre( scene::Node &node ) const {
 
 	Entity* entity = Node_getEntity( node );
 	if ( entity != 0 ) {
+		if( entity->isContainer() && Node_getTraversable( node )->empty() && !string_equal( entity->getKeyValue( "classname" ), "worldspawn" ) ){
+			globalErrorStream() << "discarding empty group entity: # = " << g_count_entities << "; classname = " << entity->getKeyValue( "classname" ) << "\n";
+			return false;
+		}
 		if ( m_writeComments ) {
 			m_writer.writeToken( "//" );
 			m_writer.writeToken( "entity" );

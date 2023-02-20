@@ -41,6 +41,8 @@
 #define Q3MAP_MOTD      "Your map saw the pretty lights from q3map2's BFG"
 
 
+
+
 /* -------------------------------------------------------------------------------
 
    dependencies
@@ -87,13 +89,13 @@
 
    ------------------------------------------------------------------------------- */
 
-#if GDEF_OS_WINDOWS
-	#define Q_stricmp           stricmp
-	#define Q_strncasecmp       strnicmp
-#else
-	#define Q_stricmp           strcasecmp
-	#define Q_strncasecmp       strncasecmp
-#endif
+	#if GDEF_OS_WINDOWS
+		#define Q_stricmp           stricmp
+		#define Q_strncasecmp       strnicmp
+	#else
+		#define Q_stricmp           strcasecmp
+		#define Q_strncasecmp       strncasecmp
+	#endif
 
 // hack to declare and define in the same file
 #ifdef MAIN_C
@@ -171,6 +173,7 @@
 #define C_ANTIPORTAL            0x00004000  /* like hint, but doesn't generate portals */
 #define C_SKIP                  0x00008000  /* like hint, but skips this face (doesn't split bsp) */
 #define C_NOMARKS               0x00010000  /* no decals */
+#define C_OB                    0x00020000  /* skip -noob for this */
 #define C_DETAIL                0x08000000  /* THIS MUST BE THE SAME AS IN RADIANT! */
 
 
@@ -210,7 +213,7 @@
 #define HINT_PRIORITY           1000        /* ydnar: force hint splits first and antiportal/areaportal splits last */
 #define ANTIPORTAL_PRIORITY     -1000
 #define AREAPORTAL_PRIORITY     -1000
-#define DETAIL_PRIORITY         -3000
+#define DETAIL_PRIORITY     -3000
 
 #define PSIDE_FRONT             1
 #define PSIDE_BACK              2
@@ -283,7 +286,7 @@
 #define RAD_LUXEL_SIZE          3
 #define SUPER_LUXEL_SIZE        4
 #define SUPER_FLAG_SIZE         4
-#define FLAG_FORCE_SUBSAMPLING  1
+#define FLAG_FORCE_SUBSAMPLING 1
 #define FLAG_ALREADY_SUBSAMPLED 2
 #define SUPER_ORIGIN_SIZE       3
 #define SUPER_NORMAL_SIZE       4
@@ -392,7 +395,7 @@ typedef struct
 bspShader_t;
 
 
-/* planes x^1 is allways the opposite of plane x */
+/* planes x^1 is always the opposite of plane x */
 
 typedef struct
 {
@@ -406,7 +409,7 @@ typedef struct
 {
 	int planeNum;
 	int children[ 2 ];              /* negative numbers are -(leafs+1), not nodes */
-	int mins[ 3 ];                  /* for frustom culling */
+	int mins[ 3 ];                  /* for frustum culling */
 	int maxs[ 3 ];
 }
 bspNode_t;
@@ -807,7 +810,7 @@ typedef struct shaderInfo_s
 	sun_t               *sun;                           /* ydnar */
 
 	vec3_t color;                                       /* normalized color */
-	vec3_t averageColor;
+	vec4_t averageColor;
 	byte lightStyle;
 
 	/* vortex: per-surface floodlight */
@@ -845,7 +848,7 @@ typedef struct face_s
 	struct face_s       *next;
 	int planenum;
 	int priority;
-	//qboolean checked;
+	//qboolean			checked;
 	int compileFlags;
 	winding_t           *w;
 }
@@ -1487,7 +1490,7 @@ typedef struct rawLightmap_s
 	float                   *bspLuxels[ MAX_LIGHTMAPS ];
 	float                   *radLuxels[ MAX_LIGHTMAPS ];
 	float                   *superLuxels[ MAX_LIGHTMAPS ];
-	unsigned char           *superFlags;
+	unsigned char               *superFlags;
 	float                   *superOrigins;
 	float                   *superNormals;
 	int                     *superClusters;
@@ -1535,6 +1538,7 @@ vec_t                       Random( void );
 char                        *Q_strncpyz( char *dst, const char *src, size_t len );
 char                        *Q_strcat( char *dst, size_t dlen, const char *src );
 char                        *Q_strncat( char *dst, size_t dlen, const char *src, size_t slen );
+int                         ShiftBSPMain( int argc, char **argv );
 
 /* help.c */
 void                        HelpMain(const char* arg);
@@ -1626,6 +1630,7 @@ void                        MakeNormalVectors( vec3_t forward, vec3_t right, vec
 /* map.c */
 void                        LoadMapFile( char *filename, qboolean onlyLights, qboolean noCollapseGroups );
 int                         FindFloatPlane( vec3_t normal, vec_t dist, int numPoints, vec3_t *points );
+qboolean					PlaneEqual( plane_t *p, vec3_t normal, vec_t dist );
 int                         PlaneTypeForNormal( vec3_t normal );
 void                        AddBrushBevels( void );
 brush_t                     *FinishBrush( qboolean noCollapseGroups );
@@ -1711,7 +1716,7 @@ void                        PicoPrintFunc( int level, const char *str );
 void                        PicoLoadFileFunc( const char *name, byte **buffer, int *bufSize );
 picoModel_t                 *FindModel( const char *name, int frame );
 picoModel_t                 *LoadModel( const char *name, int frame );
-void                        InsertModel( const char *name, int skin, int frame, m4x4_t transform, remap_t *remap, shaderInfo_t *celShader, int eNum, int castShadows, int recvShadows, int spawnFlags, float lightmapScale, int lightmapSampleSize, float shadeAngle );
+void                        InsertModel( const char *name, int skin, int frame, m4x4_t transform, remap_t *remap, shaderInfo_t *celShader, int eNum, int castShadows, int recvShadows, int spawnFlags, float lightmapScale, int lightmapSampleSize, float shadeAngle, float clipDepth );
 void                        AddTriangleModels( entity_t *e );
 
 
@@ -1927,6 +1932,7 @@ int                         CopyLump_Allocate( bspHeader_t *header, int lump, vo
 void                        AddLump( FILE *file, bspHeader_t *header, int lumpNum, const void *data, int length );
 
 void                        LoadBSPFile( const char *filename );
+void                        PartialLoadBSPFile( const char *filename );
 void                        WriteBSPFile( const char *filename );
 void                        PrintBSPFileSizes( void );
 
@@ -1954,6 +1960,8 @@ void InjectCommandLine( char **argv, int beginArgs, int endArgs );
 /* bspfile_ibsp.c */
 void                        LoadIBSPFile( const char *filename );
 void                        WriteIBSPFile( const char *filename );
+void						PartialLoadIBSPFile( const char *filename );
+
 
 
 /* bspfile_rbsp.c */
@@ -1989,7 +1997,7 @@ Q_EXTERN game_t games[]
 	,
 								#include "game_smokinguns.h" /* must be after game_quake3.h */
 	,
-								#include "game_tremulous.h" /* LinuxManMikeC: must be after game_quake3.h, depends on #define's set in it */
+								#include "game_tremulous.h" /*LinuxManMikeC: must be after game_quake3.h, depends on #define's set in it */
 	,
 								#include "game_unvanquished.h" /* must be after game_tremulous.h as they share defines! */
 	,
@@ -2009,11 +2017,11 @@ Q_EXTERN game_t games[]
 	,
 								#include "game_sof2.h"
 	,
-								#include "game_jk2.h" /* must be after game_sof2.h as they share defines! */
+								#include "game_jk2.h"   /* must be after game_sof2.h as they share defines! */
 	,
-								#include "game_ja.h" /* must be after game_jk2.h as they share defines! */
+								#include "game_ja.h"    /* must be after game_jk2.h as they share defines! */
 	,
-								#include "game_qfusion.h" /* qfusion game */
+								#include "game_qfusion.h"   /* qfusion game */
 	,
 								#include "game_warsow.h" /* must be after game_qfusion.h as they share defines! */
 	,
@@ -2052,6 +2060,8 @@ Q_EXTERN qboolean warnImage Q_ASSIGN( qtrue );
 /* ydnar: sinusoid samples */
 Q_EXTERN float jitters[ MAX_JITTERS ];
 
+/*can't code*/
+Q_EXTERN qboolean doingBSP Q_ASSIGN( qfalse );
 
 /* commandline arguments */
 Q_EXTERN qboolean verboseEntities Q_ASSIGN( qfalse );
@@ -2072,9 +2082,10 @@ Q_EXTERN qboolean nofog Q_ASSIGN( qfalse );
 Q_EXTERN qboolean noHint Q_ASSIGN( qfalse );                        /* ydnar */
 Q_EXTERN qboolean renameModelShaders Q_ASSIGN( qfalse );            /* ydnar */
 Q_EXTERN qboolean skyFixHack Q_ASSIGN( qfalse );                    /* ydnar */
-Q_EXTERN qboolean bspAlternateSplitWeights Q_ASSIGN( qfalse );      /* 27 */
-Q_EXTERN qboolean deepBSP Q_ASSIGN( qfalse );                       /* div0 */
+Q_EXTERN qboolean bspAlternateSplitWeights Q_ASSIGN( qfalse );                      /* 27 */
+Q_EXTERN qboolean deepBSP Q_ASSIGN( qfalse );                   /* div0 */
 Q_EXTERN qboolean maxAreaFaceSurface Q_ASSIGN( qfalse );                    /* divVerent */
+Q_EXTERN qboolean nocmdline Q_ASSIGN( qfalse );
 
 Q_EXTERN int patchSubdivisions Q_ASSIGN( 8 );                       /* ydnar: -patchmeta subdivisions */
 
@@ -2091,12 +2102,15 @@ Q_EXTERN qboolean emitFlares Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugSurfaces Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugInset Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugPortals Q_ASSIGN( qfalse );
+Q_EXTERN qboolean debugClip Q_ASSIGN( qfalse );			/* debug model autoclipping */
+Q_EXTERN float clipDepthGlobal Q_ASSIGN( 2.0f );
 Q_EXTERN qboolean lightmapTriangleCheck Q_ASSIGN( qfalse );
 Q_EXTERN qboolean lightmapExtraVisClusterNudge Q_ASSIGN( qfalse );
 Q_EXTERN qboolean lightmapFill Q_ASSIGN( qfalse );
 Q_EXTERN int metaAdequateScore Q_ASSIGN( -1 );
 Q_EXTERN int metaGoodScore Q_ASSIGN( -1 );
 Q_EXTERN float metaMaxBBoxDistance Q_ASSIGN( -1 );
+Q_EXTERN qboolean noob Q_ASSIGN( qfalse );
 
 #if Q3MAP2_EXPERIMENTAL_SNAP_NORMAL_FIX
 // Increasing the normalEpsilon to compensate for new logic in SnapNormal(), where
@@ -2133,6 +2147,8 @@ Q_EXTERN int blockSize[ 3 ]                                 /* should be the sam
 #else
 	= { 1024, 1024, 1024 };
 #endif
+
+Q_EXTERN char EnginePath[ 1024 ];
 
 Q_EXTERN char name[ 1024 ];
 Q_EXTERN char source[ 1024 ];
@@ -2226,6 +2242,7 @@ Q_EXTERN char inbase[ MAX_QPATH ];
 Q_EXTERN char globalCelShader[ MAX_QPATH ];
 
 Q_EXTERN float farPlaneDist;                /* rr2do2, rf, mre, ydnar all contributed to this one... */
+Q_EXTERN int farPlaneDistMode;
 
 Q_EXTERN int numportals;
 Q_EXTERN int portalclusters;
@@ -2272,6 +2289,7 @@ Q_EXTERN qboolean keepLights Q_ASSIGN( qfalse );
 Q_EXTERN int sampleSize Q_ASSIGN( DEFAULT_LIGHTMAP_SAMPLE_SIZE );
 Q_EXTERN int minSampleSize Q_ASSIGN( DEFAULT_LIGHTMAP_MIN_SAMPLE_SIZE );
 Q_EXTERN qboolean noVertexLighting Q_ASSIGN( qfalse );
+Q_EXTERN qboolean nolm Q_ASSIGN( qfalse );
 Q_EXTERN qboolean noGridLighting Q_ASSIGN( qfalse );
 
 Q_EXTERN qboolean noTrace Q_ASSIGN( qfalse );
@@ -2338,6 +2356,8 @@ Q_EXTERN qboolean debugAxis Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugCluster Q_ASSIGN( qfalse );
 Q_EXTERN qboolean debugOrigin Q_ASSIGN( qfalse );
 Q_EXTERN qboolean lightmapBorder Q_ASSIGN( qfalse );
+//1=warn; 0=warn if lmsize>128
+Q_EXTERN int debugSampleSize Q_ASSIGN( 0 );
 
 /* longest distance across the map */
 Q_EXTERN float maxMapDistance Q_ASSIGN( 0 );
@@ -2348,6 +2368,10 @@ Q_EXTERN float spotScale Q_ASSIGN( 7500.0f );
 Q_EXTERN float areaScale Q_ASSIGN( 0.25f );
 Q_EXTERN float skyScale Q_ASSIGN( 1.0f );
 Q_EXTERN float bounceScale Q_ASSIGN( 0.25f );
+Q_EXTERN float bounceColorRatio Q_ASSIGN( 1.0f );
+Q_EXTERN float vertexglobalscale Q_ASSIGN( 1.0f );
+Q_EXTERN float g_backsplashFractionScale Q_ASSIGN( 1.0f );
+Q_EXTERN float g_backsplashDistance Q_ASSIGN( -999.0f );
 
 /* jal: alternative angle attenuation curve */
 Q_EXTERN qboolean lightAngleHL Q_ASSIGN( qfalse );
@@ -2366,6 +2390,8 @@ Q_EXTERN float texturesRGB Q_ASSIGN( qfalse );
 Q_EXTERN float colorsRGB Q_ASSIGN( qfalse );
 Q_EXTERN float lightmapExposure Q_ASSIGN( 0.0f );
 Q_EXTERN float lightmapCompensate Q_ASSIGN( 1.0f );
+Q_EXTERN float lightmapBrightness Q_ASSIGN( 1.0f );
+Q_EXTERN float lightmapContrast Q_ASSIGN( 1.0f );
 
 /* ydnar: for runtime tweaking of falloff tolerance */
 Q_EXTERN float falloffTolerance Q_ASSIGN( 1.0f );
@@ -2558,7 +2584,7 @@ Q_EXTERN int allocatedBSPBrushSides Q_ASSIGN( 0 );
 Q_EXTERN bspBrushSide_t*    bspBrushSides Q_ASSIGN( NULL );
 
 Q_EXTERN int numBSPLightBytes Q_ASSIGN( 0 );
-Q_EXTERN byte *bspLightBytes Q_ASSIGN( NULL );
+Q_EXTERN byte               *bspLightBytes Q_ASSIGN( NULL );
 
 //%	Q_EXTERN int				numBSPGridPoints Q_ASSIGN( 0 );
 //%	Q_EXTERN byte				*bspGridPoints Q_ASSIGN( NULL );
@@ -2570,11 +2596,11 @@ Q_EXTERN int numBSPVisBytes Q_ASSIGN( 0 );
 Q_EXTERN byte bspVisBytes[ MAX_MAP_VISIBILITY ];
 
 Q_EXTERN int numBSPDrawVerts Q_ASSIGN( 0 );
-Q_EXTERN bspDrawVert_t *bspDrawVerts Q_ASSIGN( NULL );
+Q_EXTERN bspDrawVert_t          *bspDrawVerts Q_ASSIGN( NULL );
 
 Q_EXTERN int numBSPDrawIndexes Q_ASSIGN( 0 );
 Q_EXTERN int allocatedBSPDrawIndexes Q_ASSIGN( 0 );
-Q_EXTERN int *bspDrawIndexes Q_ASSIGN( NULL );
+Q_EXTERN int                *bspDrawIndexes Q_ASSIGN( NULL );
 
 Q_EXTERN int numBSPDrawSurfaces Q_ASSIGN( 0 );
 Q_EXTERN bspDrawSurface_t   *bspDrawSurfaces Q_ASSIGN( NULL );
@@ -2603,7 +2629,7 @@ Q_EXTERN qboolean compile_map;
 			} \
 			if ( !allocated || allocated > 2147483647 / (int)sizeof( *ptr ) ) \
 			{ \
-				Error( #ptr " over 2 GB" ); \
+				Error( # ptr " over 2 GB" ); \
 			} \
 			ptr = realloc( ptr, sizeof( *ptr ) * allocated ); \
 			if ( !ptr ) { \
@@ -2621,7 +2647,7 @@ Q_EXTERN qboolean compile_map;
 
 #define AUTOEXPAND_BY_REALLOC0( ptr, reqitem, allocated, def ) _AUTOEXPAND_BY_REALLOC( ptr, reqitem, allocated, def, qtrue )
 
-#define AUTOEXPAND_BY_REALLOC_BSP( suffix, def ) AUTOEXPAND_BY_REALLOC( bsp##suffix, numBSP##suffix, allocatedBSP##suffix, def )
+#define AUTOEXPAND_BY_REALLOC_BSP( suffix, def ) AUTOEXPAND_BY_REALLOC( bsp ## suffix, numBSP ## suffix, allocatedBSP ## suffix, def )
 
 #define AUTOEXPAND_BY_REALLOC0_BSP( suffix, def ) AUTOEXPAND_BY_REALLOC0( bsp##suffix, numBSP##suffix, allocatedBSP##suffix, def )
 

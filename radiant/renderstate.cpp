@@ -52,6 +52,7 @@
 #include "preferences.h"
 
 #include "xywindow.h"
+#include "camwindow.h"
 
 
 #define DEBUG_RENDER 0
@@ -2199,9 +2200,9 @@ void OpenGLShader::construct( const char* name ){
 			state.m_sort = OpenGLState::eSortFullbright;
 		}
 		else if ( string_equal( name + 1, "CAM_HIGHLIGHT" ) ) {
-			state.m_colour[0] = 1;
-			state.m_colour[1] = 0;
-			state.m_colour[2] = 0;
+			state.m_colour[0] = g_camwindow_globals.color_selbrushes3d[0];
+			state.m_colour[1] = g_camwindow_globals.color_selbrushes3d[1];
+			state.m_colour[2] = g_camwindow_globals.color_selbrushes3d[2];
 			state.m_colour[3] = 0.3f;
 			state.m_state = RENDER_FILL | RENDER_DEPTHTEST | RENDER_CULLFACE | RENDER_BLEND | RENDER_COLOURWRITE | RENDER_DEPTHWRITE;
 			state.m_sort = OpenGLState::eSortHighlight;
@@ -2417,6 +2418,7 @@ void OpenGLShader::construct( const char* name ){
 				BlendFunc blendFunc = m_shader->getBlendFunc();
 				state.m_blend_src = convertBlendFactor( blendFunc.m_src );
 				state.m_blend_dst = convertBlendFactor( blendFunc.m_dst );
+				state.m_depthfunc = GL_LEQUAL;
 				if ( state.m_blend_src == GL_SRC_ALPHA || state.m_blend_dst == GL_SRC_ALPHA ) {
 					state.m_state |= RENDER_DEPTHWRITE;
 				}

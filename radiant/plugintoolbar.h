@@ -25,6 +25,7 @@
 #define INCLUDED_PLUGINTOOLBAR_H
 
 ui::Toolbar create_plugin_toolbar();
+
 void PluginToolbar_populate();
 void PluginToolbar_clear();
 

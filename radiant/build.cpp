@@ -677,6 +677,7 @@ class ProjectList
 public:
 Project& m_project;
 ui::ListStore m_store{ui::null};
+GtkWidget* m_buildView;
 bool m_changed;
 ProjectList( Project& project ) : m_project( project ), m_changed( false ){
 }
@@ -711,6 +712,8 @@ gboolean project_cell_edited(ui::CellRendererText cell, gchar* path_string, gcha
 
 		gtk_list_store_set( projectList->m_store, &iter, 0, new_text, -1 );
 		projectList->m_store.append();
+		//make command field activatable
+		g_signal_emit_by_name( G_OBJECT( gtk_tree_view_get_selection( GTK_TREE_VIEW( projectList->m_buildView ) ) ), "changed" );
 	}
 
 	gtk_tree_path_free( path );
@@ -895,6 +898,7 @@ ui::Window BuildMenuDialog_construct( ModalDialog& modal, ProjectList& projectLi
 
 					view.show();
 
+					projectList.m_buildView = buildView;
 					projectList.m_store = store;
 					scr.add(view);
 
@@ -919,6 +923,9 @@ ui::Window BuildMenuDialog_construct( ModalDialog& modal, ProjectList& projectLi
 
 					auto renderer = ui::CellRendererText(ui::New);
 					object_set_boolean_property( G_OBJECT( renderer ), "editable", TRUE );
+					g_object_set( G_OBJECT( renderer ), "wrap-mode", PANGO_WRAP_WORD, NULL );
+					//g_object_set( G_OBJECT( renderer ), "ellipsize", PANGO_ELLIPSIZE_MIDDLE, NULL );
+					object_set_int_property( G_OBJECT( renderer ), "wrap-width", 640 );
 					renderer.connect( "edited", G_CALLBACK( commands_cell_edited ), store );
 
 					auto column = ui::TreeViewColumn( "", renderer, {{"text", 0}} );
@@ -950,6 +957,7 @@ ui::Window BuildMenuDialog_construct( ModalDialog& modal, ProjectList& projectLi
 namespace
 {
 CopiedString g_buildMenu;
+CopiedString g_lastExecutedBuild;
 }
 
 void LoadBuildMenu();
@@ -990,6 +998,7 @@ BuildMenuItem( const char* name, ui::MenuItem item )
 	: m_name( name ), m_item( item ){
 }
 void run(){
+	g_lastExecutedBuild = m_name;
 	RunBSP( m_name );
 }
 typedef MemberCaller<BuildMenuItem, void(), &BuildMenuItem::run> RunCaller;
@@ -1062,4 +1071,14 @@ void BuildMenu_Construct(){
 }
 void BuildMenu_Destroy(){
 	SaveBuildMenu();
+}
+
+
+void Build_runRecentExecutedBuild(){
+	if( g_lastExecutedBuild.empty() ){
+		g_BuildMenuItems.begin()->run();
+	}
+	else{
+		RunBSP( g_lastExecutedBuild.c_str() );
+	}
 }

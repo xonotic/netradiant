@@ -1,4 +1,4 @@
-/*
+﻿/*
    Copyright (C) 1999-2006 Id Software, Inc. and contributors.
    For a list of contributors, see the accompanying CONTRIBUTORS file.
 
@@ -58,23 +58,16 @@ void Global_constructPreferences( PreferencesPage& page ){
 }
 
 void Interface_constructPreferences( PreferencesPage& page ){
-#if GDEF_OS_WINDOWS
-	page.appendCheckBox( "", "Default Text Editor", g_TextEditor_useWin32Editor );
-#else
-	{
-		ui::CheckButton use_custom = page.appendCheckBox( "Text Editor", "Custom", g_TextEditor_useCustomEditor );
-		ui::Widget custom_editor = page.appendPathEntry( "Text Editor Command", g_TextEditor_editorCommand, true );
-		Widget_connectToggleDependency( custom_editor, use_custom );
-	}
-#endif
+	page.appendPathEntry( "Shader Editor Command", g_TextEditor_editorCommand, false );
 }
 
 void Mouse_constructPreferences( PreferencesPage& page ){
-	{
-		const char* buttons[] = { "2 button", "3 button", };
-		page.appendRadio( "Mouse Type",  g_glwindow_globals.m_nMouseType, STRING_ARRAY_RANGE( buttons ) );
-	}
-	page.appendCheckBox( "Right Button", "Activates Context Menu", g_xywindow_globals.m_bRightClick );
+//	{
+//		const char* buttons[] = { "2 button", "3 button", };
+//		page.appendRadio( "Mouse Type",  g_glwindow_globals.m_nMouseType, STRING_ARRAY_RANGE( buttons ) );
+//	}
+//	page.appendCheckBox( "Right Button", "Activates Context Menu", g_xywindow_globals.m_bRightClick );
+	page.appendCheckBox( "", "Zoom to mouse pointer", g_xywindow_globals.m_bZoomInToPointer );
 }
 void Mouse_constructPage( PreferenceGroup& group ){
 	PreferencesPage page( group.createPage( "Mouse", "Mouse Preferences" ) );
@@ -106,7 +99,7 @@ CGameDescription::CGameDescription( xmlDocPtr pDoc, const CopiedString& gameFile
 	// read the user-friendly game name
 	xmlNodePtr pNode = pDoc->children;
 
-	while ( strcmp( (const char*)pNode->name, "game" ) && pNode != 0 )
+	while ( pNode != 0 && strcmp( (const char*)pNode->name, "game" ) )
 	{
 		pNode = pNode->next;
 	}
@@ -281,7 +274,7 @@ void CGameDialog::GameFileImport( int value ){
 	}
 
 	if ( ( *iGame )->mGameFile != m_sGameFile ) {
-		m_sGameFile = ( *iGame )->mGameFile;
+	m_sGameFile = ( *iGame )->mGameFile;
 
 		// do not trigger radiant restart when switching game on startup using Global Preferences dialog
 		if ( !onStartup ) {
@@ -726,7 +719,7 @@ PreferencesPage createPage( const char* treeName, const char* frameName ){
 
 ui::Window PrefsDlg::BuildDialog(){
 	PreferencesDialog_addInterfacePreferences( makeCallbackF(Interface_constructPreferences) );
-	Mouse_registerPreferencesPage();
+	//Mouse_registerPreferencesPage();
 
 	ui::Window dialog = ui::Window(create_floating_window( RADIANT_NAME " Preferences", m_parent ));
 
@@ -965,20 +958,20 @@ bool PreferencesDialog_isRestartRequired(){
 }
 
 void PreferencesDialog_restartIfRequired(){
-	if ( !g_restart_required.empty() ) {
-		StringOutputStream message( 256 );
+		if ( !g_restart_required.empty() ) {
+			StringOutputStream message( 256 );
 		message << "Preference changes require a restart:\n\n";
 
-		for ( std::vector<const char*>::iterator i = g_restart_required.begin(); i != g_restart_required.end(); ++i )
-		{
-			message << ( *i ) << '\n';
-		}
+			for ( std::vector<const char*>::iterator i = g_restart_required.begin(); i != g_restart_required.end(); ++i )
+			{
+				message << ( *i ) << '\n';
+			}
 
 		message << "\nRestart now?";
 
 		auto ret = ui::alert( MainFrame_getWindow(), message.c_str(), "Restart " RADIANT_NAME "?", ui::alert_type::YESNO, ui::alert_icon::Question );
 
-		g_restart_required.clear();
+			g_restart_required.clear();
 
 		if ( ret == ui::alert_response::YES ) {
 			g_GamesDialog.m_bSkipGamePromptOnce = true;
@@ -1014,12 +1007,7 @@ struct GameMode {
 };
 
 void RegisterPreferences( PreferenceSystem& preferences ){
-#if GDEF_OS_WINDOWS
-	preferences.registerPreference( "UseCustomShaderEditor", make_property_string( g_TextEditor_useWin32Editor ) );
-#else
-	preferences.registerPreference( "UseCustomShaderEditor", make_property_string( g_TextEditor_useCustomEditor ) );
 	preferences.registerPreference( "CustomShaderEditorCommand", make_property_string( g_TextEditor_editorCommand ) );
-#endif
 
 	preferences.registerPreference( "GameName", make_property<GameName>() );
 	preferences.registerPreference( "GameMode", make_property<GameMode>() );

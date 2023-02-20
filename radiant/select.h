@@ -33,12 +33,12 @@ void Select_Inside();
 void Select_Touching();
 void Scene_ExpandSelectionToEntities();
 
-void Selection_Flipx();
-void Selection_Flipy();
-void Selection_Flipz();
-void Selection_Rotatex();
-void Selection_Rotatey();
-void Selection_Rotatez();
+//void Selection_Flipx();
+//void Selection_Flipy();
+//void Selection_Flipz();
+//void Selection_Rotatex();
+//void Selection_Rotatey();
+//void Selection_Rotatez();
 
 
 void Selection_MoveDown();
@@ -46,11 +46,15 @@ void Selection_MoveUp();
 
 void Select_AllOfType();
 
+void Select_ConnectedEntities( bool targeting, bool targets, bool focus );
+void SelectConnectedEntities();
+
 void DoRotateDlg();
 void DoScaleDlg();
 
 
 void Select_SetShader( const char* shader );
+void Select_SetShader_Undo( const char* shader );
 
 class TextureProjection;
 void Select_SetTexdef( const TextureProjection& projection );
@@ -66,6 +70,7 @@ void FindReplaceTextures( const char* pFind, const char* pReplace, bool bSelecte
 
 void HideSelected();
 void Select_ShowAllHidden();
+void Select_registerCommands();
 
 // updating workzone to a given brush (depends on current view)
 

@@ -34,6 +34,7 @@
 #include "plugin.h"
 
 ui::Image new_plugin_image( const char* filename ){
+	// NetRadiantCustom look for AppPath (DataPath) plugins dir before GameToolsPath plugins dir.
 	{
 		StringOutputStream fullpath( 256 );
 		fullpath << GameToolsPath_get() << g_pluginsDir << "bitmaps/" << filename;
@@ -62,6 +63,14 @@ void toolbar_insert( ui::Toolbar toolbar, const char* icon, const char* text, co
 		toolbar.add(it);
 		return;
 	}
+	#define GARUX_DISABLE_SPACER_NOFOCUS
+	#ifndef GARUX_DISABLE_SPACER_NOFOCUS
+	else {
+		GTK_WIDGET_UNSET_FLAGS( widget, GTK_CAN_FOCUS );
+		GTK_WIDGET_UNSET_FLAGS( widget, GTK_CAN_DEFAULT );
+	}
+	#endif // GARUX_DISABLE_SPACER_NOFOCUS
+
 	if (type == IToolbarButton::eButton) {
 		auto button = ui::ToolButton::from(gtk_tool_button_new(new_plugin_image(icon), text));
 		gtk_widget_set_tooltip_text(button, tooltip);
@@ -70,6 +79,7 @@ void toolbar_insert( ui::Toolbar toolbar, const char* icon, const char* text, co
 		toolbar.add(button);
 		return;
 	}
+
 	if (type == IToolbarButton::eToggleButton) {
 		auto button = ui::ToolButton::from(gtk_toggle_tool_button_new());
 		gtk_tool_button_set_icon_widget(button, new_plugin_image(icon));
@@ -80,6 +90,7 @@ void toolbar_insert( ui::Toolbar toolbar, const char* icon, const char* text, co
 		toolbar.add(button);
 		return;
 	}
+
 	ERROR_MESSAGE( "invalid toolbar button type" );
 }
 
@@ -123,6 +134,7 @@ ui::Toolbar create_plugin_toolbar(){
 	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
 	gtk_orientable_set_orientation( GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL );
 	gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
+//	gtk_toolbar_set_show_arrow( toolbar, TRUE );
 	toolbar.show();
 
 	g_plugin_toolbar = toolbar;

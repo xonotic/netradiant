@@ -100,6 +100,7 @@
 #include "feedback.h"
 #include "referencecache.h"
 #include "texwindow.h"
+#include "filterbar.h"
 
 #if GDEF_OS_WINDOWS
 #include <process.h>
@@ -112,6 +113,11 @@
 #define WORKAROUND_GOBJECT_SET_GLWIDGET(window, widget) g_object_set_data( G_OBJECT( window ), "glwidget", G_OBJECT( widget ) )
 #else
 #define WORKAROUND_GOBJECT_SET_GLWIDGET(window, widget)
+#endif
+
+#define GARUX_DISABLE_GTKTHEME
+#ifndef GARUX_DISABLE_GTKTHEME
+#include "gtktheme.h"
 #endif
 
 struct layout_globals_t
@@ -128,16 +134,16 @@ struct layout_globals_t
 	layout_globals_t() :
 		m_position( -1, -1, 640, 480 ),
 
-		nXYHeight( 300 ),
-		nXYWidth( 300 ),
-		nCamWidth( 200 ),
-		nCamHeight( 200 ),
-		nState( GDK_WINDOW_STATE_MAXIMIZED ){
+		nXYHeight( 350 ),
+		nXYWidth( 600 ),
+		nCamWidth( 300 ),
+		nCamHeight( 210 ),
+		nState( 0 ){
 	}
 };
 
 layout_globals_t g_layout_globals;
-glwindow_globals_t g_glwindow_globals;
+//glwindow_globals_t g_glwindow_globals;
 
 
 // VFS
@@ -181,7 +187,7 @@ class VFSModuleObserver : public ModuleObserver
 public:
 void realise(){
 	VFS_Init();
-}
+	}
 
 void unrealise(){
 	VFS_Shutdown();
@@ -255,7 +261,7 @@ void HomePaths_Realise(){
 			if ( shfolder ) {
 				FreeLibrary( shfolder );
 			}
-			if ( SHGetFolderPath( NULL, CSIDL_PERSONAL, NULL, 0, mydocsdir ) ) {
+			if ( SUCCEEDED( SHGetFolderPath( NULL, CSIDL_PERSONAL, NULL, 0, mydocsdir ) ) ) {
 				path.clear();
 				path << DirectoryCleaned( mydocsdir ) << "My Games/" << ( prefix + 1 ) << "/";
 				// win32: only add it if it already exists
@@ -272,10 +278,10 @@ void HomePaths_Realise(){
 				break;
 			}
 			else {
-				path.clear();
-				path << DirectoryCleaned( g_get_home_dir() ) << prefix << "/";
-				g_qeglobals.m_userEnginePath = path.c_str();
-				break;
+			path.clear();
+			path << DirectoryCleaned( g_get_home_dir() ) << prefix << "/";
+			g_qeglobals.m_userEnginePath = path.c_str();
+			break;
 			}
 #endif
 		}
@@ -619,19 +625,37 @@ ui::Window BuildDialog(){
 	auto vbox2 = create_dialog_vbox( 0, 4 );
 	frame.add(vbox2);
 
+	const char* engine;
+#if defined( WIN32 )
+	engine = g_pGameDescription->getRequiredKeyValue( "engine_win32" );
+#elif defined( __linux__ ) || defined ( __FreeBSD__ )
+	engine = g_pGameDescription->getRequiredKeyValue( "engine_linux" );
+#elif defined( __APPLE__ )
+	engine = g_pGameDescription->getRequiredKeyValue( "engine_macos" );
+#else
+#error "unsupported platform"
+#endif
+	StringOutputStream text( 256 );
+	text << "Select directory, where game executable sits (typically \"" << engine << "\")\n";
+	GtkLabel* label = GTK_LABEL( gtk_label_new( text.c_str() ) );
+	gtk_widget_show( GTK_WIDGET( label ) );
+	gtk_container_add( GTK_CONTAINER( vbox2 ), GTK_WIDGET( label ) );
+
 	{
 		PreferencesPage page( *this, vbox2 );
 		Paths_constructBasicPreferences( page );
 	}
 
-	return ui::Window(create_simple_modal_dialog_window( "Engine Path Not Found", m_modal, frame ));
+	return ui::Window(create_simple_modal_dialog_window( "Engine Path Configuration", m_modal, frame ));
 }
 };
 
 PathsDialog g_PathsDialog;
 
+bool g_strEnginePath_was_empty_1st_start = false;
+
 void EnginePath_verify(){
-	if ( !file_exists( g_strEnginePath.c_str() ) ) {
+	if ( !file_exists( g_strEnginePath.c_str() ) || g_strEnginePath_was_empty_1st_start ) {
 		g_PathsDialog.Create();
 		g_PathsDialog.DoModal();
 		g_PathsDialog.Destroy();
@@ -895,8 +919,6 @@ void ColorScheme_Original(){
 	g_xywindow_globals.color_gridback = Vector3( 1.0f, 1.0f, 1.0f );
 	g_xywindow_globals.color_gridminor = Vector3( 0.75f, 0.75f, 0.75f );
 	g_xywindow_globals.color_gridmajor = Vector3( 0.5f, 0.5f, 0.5f );
-	g_xywindow_globals.color_gridminor_alt = Vector3( 0.5f, 0.0f, 0.0f );
-	g_xywindow_globals.color_gridmajor_alt = Vector3( 1.0f, 0.0f, 0.0f );
 	g_xywindow_globals.color_gridblock = Vector3( 0.0f, 0.0f, 1.0f );
 	g_xywindow_globals.color_gridtext = Vector3( 0.0f, 0.0f, 0.0f );
 	g_xywindow_globals.color_selbrushes = Vector3( 1.0f, 0.0f, 0.0f );
@@ -1085,8 +1107,6 @@ ChooseColour m_textureback;
 ChooseColour m_xyback;
 ChooseColour m_gridmajor;
 ChooseColour m_gridminor;
-ChooseColour m_gridmajor_alt;
-ChooseColour m_gridminor_alt;
 ChooseColour m_gridtext;
 ChooseColour m_gridblock;
 ChooseColour m_cameraback;
@@ -1101,8 +1121,6 @@ ColoursMenu() :
 	m_xyback( ColourGetCaller( g_xywindow_globals.color_gridback ), ColourSetCaller( g_xywindow_globals.color_gridback ) ),
 	m_gridmajor( ColourGetCaller( g_xywindow_globals.color_gridmajor ), ColourSetCaller( g_xywindow_globals.color_gridmajor ) ),
 	m_gridminor( ColourGetCaller( g_xywindow_globals.color_gridminor ), ColourSetCaller( g_xywindow_globals.color_gridminor ) ),
-	m_gridmajor_alt( ColourGetCaller( g_xywindow_globals.color_gridmajor_alt ), ColourSetCaller( g_xywindow_globals.color_gridmajor_alt ) ),
-	m_gridminor_alt( ColourGetCaller( g_xywindow_globals.color_gridminor_alt ), ColourSetCaller( g_xywindow_globals.color_gridminor_alt ) ),
 	m_gridtext( ColourGetCaller( g_xywindow_globals.color_gridtext ), ColourSetCaller( g_xywindow_globals.color_gridtext ) ),
 	m_gridblock( ColourGetCaller( g_xywindow_globals.color_gridblock ), ColourSetCaller( g_xywindow_globals.color_gridblock ) ),
 	m_cameraback( ColourGetCaller( g_camwindow_globals.color_cameraback ), ColourSetCaller( g_camwindow_globals.color_cameraback ) ),
@@ -1134,22 +1152,24 @@ ui::MenuItem create_colours_menu(){
 	create_menu_item_with_mnemonic( menu_3, "Maya/Max/Lightwave Emulation", "ColorSchemeYdnar" );
 	create_menu_item_with_mnemonic(menu_3, "Adwaita Dark", "ColorSchemeAdwaitaDark");
 
+#ifndef GARUX_DISABLE_GTKTHEME
+	create_menu_item_with_mnemonic( menu_in_menu, "GTK Theme...", "gtkThemeDlg" );
+#endif
+
 	menu_separator( menu_in_menu );
 
 	create_menu_item_with_mnemonic( menu_in_menu, "_Texture Background...", "ChooseTextureBackgroundColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Camera Background...", "ChooseCameraBackgroundColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Background...", "ChooseGridBackgroundColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Major...", "ChooseGridMajorColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Minor...", "ChooseGridMinorColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Grid Major Small...", "ChooseSmallGridMajorColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Grid Minor Small...", "ChooseSmallGridMinorColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Text...", "ChooseGridTextColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Grid Block...", "ChooseGridBlockColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Default Brush...", "ChooseBrushColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Camera Background...", "ChooseCameraBackgroundColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Selected Brush...", "ChooseSelectedBrushColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Default Brush (2D)...", "ChooseBrushColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Selected Brush and Sizing (2D)...", "ChooseSelectedBrushColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Selected Brush (Camera)...", "ChooseCameraSelectedBrushColor" );
 	create_menu_item_with_mnemonic( menu_in_menu, "Clipper...", "ChooseClipperColor" );
-	create_menu_item_with_mnemonic( menu_in_menu, "Active View name...", "ChooseOrthoViewNameColor" );
+	create_menu_item_with_mnemonic( menu_in_menu, "Active View Name and Outline...", "ChooseOrthoViewNameColor" );
 
 	return colours_menu_item;
 }
@@ -1363,6 +1383,12 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			 && selectable->isSelected() ) {
 			return false;
 		}
+		if( doMakeUnique && instance.childSelected() ){
+			NodeSmartReference clone( Node_Clone_Selected( path.top() ) );
+			Map_gatherNamespaced( clone );
+			Node_getTraversable( path.parent().get() )->insert( clone );
+			return false;
+		}
 	}
 
 	return true;
@@ -1450,6 +1476,12 @@ Vector3 AxisBase_axisForDirection( const AxisBase& axes, ENudgeDirection directi
 	return Vector3( 0, 0, 0 );
 }
 
+bool g_bNudgeAfterClone = false;
+
+void Nudge_constructPreferences( PreferencesPage& page ){
+	page.appendCheckBox( "", "Nudge selected after duplication", g_bNudgeAfterClone );
+}
+
 void NudgeSelection( ENudgeDirection direction, float fAmount, VIEWTYPE viewtype ){
 	AxisBase axes( AxisBase_forViewType( viewtype ) );
 	Vector3 view_direction( vector3_negated( axes.z ) );
@@ -1463,8 +1495,10 @@ void Selection_Clone(){
 
 		Scene_Clone_Selected( GlobalSceneGraph(), false );
 
-		//NudgeSelection(eNudgeRight, GetGridSize(), GlobalXYWnd_getCurrentViewType());
-		//NudgeSelection(eNudgeDown, GetGridSize(), GlobalXYWnd_getCurrentViewType());
+		if( g_bNudgeAfterClone ){
+			NudgeSelection(eNudgeRight, GetGridSize(), GlobalXYWnd_getCurrentViewType());
+			NudgeSelection(eNudgeDown, GetGridSize(), GlobalXYWnd_getCurrentViewType());
+		}
 	}
 }
 
@@ -1474,8 +1508,10 @@ void Selection_Clone_MakeUnique(){
 
 		Scene_Clone_Selected( GlobalSceneGraph(), true );
 
-		//NudgeSelection(eNudgeRight, GetGridSize(), GlobalXYWnd_getCurrentViewType());
-		//NudgeSelection(eNudgeDown, GetGridSize(), GlobalXYWnd_getCurrentViewType());
+		if( g_bNudgeAfterClone ){
+			NudgeSelection(eNudgeRight, GetGridSize(), GlobalXYWnd_getCurrentViewType());
+			NudgeSelection(eNudgeDown, GetGridSize(), GlobalXYWnd_getCurrentViewType());
+		}
 	}
 }
 
@@ -1675,6 +1711,27 @@ void ClipperMode(){
 		GlobalSelectionSystem().SetManipulatorMode( SelectionSystem::eClip );
 		ToolChanged();
 		ModeChangeNotify();
+	}
+}
+
+
+void ToggleRotateScaleModes(){
+	if ( g_currentToolMode == RotateMode ) {
+		ScaleMode();
+	}
+	else
+	{
+		RotateMode();
+	}
+}
+
+void ToggleDragScaleModes(){
+	if ( g_currentToolMode == DragMode ) {
+		ScaleMode();
+	}
+	else
+	{
+		DragMode();
 	}
 }
 
@@ -2013,8 +2070,10 @@ void ClipperChangeNotify(){
 
 LatchedValue<int> g_Layout_viewStyle( 0, "Window Layout" );
 LatchedValue<bool> g_Layout_enableDetachableMenus( true, "Detachable Menus" );
+LatchedValue<bool> g_Layout_enableMainToolbar( true, "Main Toolbar" );
 LatchedValue<bool> g_Layout_enablePatchToolbar( true, "Patch Toolbar" );
 LatchedValue<bool> g_Layout_enablePluginToolbar( true, "Plugin Toolbar" );
+LatchedValue<bool> g_Layout_enableFilterToolbar( true, "Filter Toolbar" );
 
 
 ui::MenuItem create_file_menu(){
@@ -2036,22 +2095,23 @@ ui::MenuItem create_file_menu(){
 #endif
 
 	create_menu_item_with_mnemonic( menu, "_Open...", "OpenMap" );
-
 	create_menu_item_with_mnemonic( menu, "_Import...", "ImportMap" );
+	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "_Save", "SaveMap" );
 	create_menu_item_with_mnemonic( menu, "Save _as...", "SaveMapAs" );
 	create_menu_item_with_mnemonic( menu, "_Export selected...", "ExportSelected" );
-	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Save re_gion...", "SaveRegion" );
 	menu_separator( menu );
-	create_menu_item_with_mnemonic( menu, "_Refresh models", "RefreshReferences" );
-	menu_separator( menu );
+//	menu_separator( menu );
+//	create_menu_item_with_mnemonic( menu, "_Refresh models", "RefreshReferences" );
+//	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Pro_ject settings...", "ProjectSettings" );
-	menu_separator( menu );
-	create_menu_item_with_mnemonic( menu, "_Pointfile...", "TogglePointfile" );
+	//menu_separator( menu );
+	create_menu_item_with_mnemonic( menu, "_Pointfile", "TogglePointfile" );
 	menu_separator( menu );
 	MRU_constructMenu( menu );
 	menu_separator( menu );
+//	create_menu_item_with_mnemonic( menu, "Check for NetRadiant update (web)", "CheckForUpdate" ); // FIXME
 	create_menu_item_with_mnemonic( menu, "E_xit", "Exit" );
 
 	return file_menu_item;
@@ -2074,38 +2134,27 @@ ui::MenuItem create_edit_menu(){
 	create_menu_item_with_mnemonic( menu, "_Duplicate", "CloneSelection" );
 	create_menu_item_with_mnemonic( menu, "Duplicate, make uni_que", "CloneSelectionAndMakeUnique" );
 	create_menu_item_with_mnemonic( menu, "D_elete", "DeleteSelection" );
-	menu_separator( menu );
-	create_menu_item_with_mnemonic( menu, "Pa_rent", "ParentSelection" );
+	//create_menu_item_with_mnemonic( menu, "Pa_rent", "ParentSelection" );
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "C_lear Selection", "UnSelectSelection" );
 	create_menu_item_with_mnemonic( menu, "_Invert Selection", "InvertSelection" );
 	create_menu_item_with_mnemonic( menu, "Select i_nside", "SelectInside" );
 	create_menu_item_with_mnemonic( menu, "Select _touching", "SelectTouching" );
 
-	auto convert_menu = create_sub_menu_with_mnemonic( menu, "E_xpand Selection" );
-	if ( g_Layout_enableDetachableMenus.m_value ) {
-		menu_tearoff( convert_menu );
-	}
-	create_menu_item_with_mnemonic( convert_menu, "To Whole _Entities", "ExpandSelectionToEntities" );
+	menu_separator( menu );
+
+//	auto convert_menu = create_sub_menu_with_mnemonic( menu, "E_xpand Selection" );
+//	if ( g_Layout_enableDetachableMenus.m_value ) {
+//		menu_tearoff( convert_menu );
+//	}
+	create_menu_item_with_mnemonic( menu, "Select All Of Type", "SelectAllOfType" );
+	create_menu_item_with_mnemonic( menu, "_Expand Selection To Entities", "ExpandSelectionToEntities" );
+	create_menu_item_with_mnemonic( menu, "Select Connected Entities", "SelectConnectedEntities" );
 
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Pre_ferences...", "Preferences" );
 
 	return edit_menu_item;
-}
-
-void fill_view_xy_top_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "XY (Top) View", "ToggleView" );
-}
-
-
-void fill_view_yz_side_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "YZ (Side) View", "ToggleSideView" );
-}
-
-
-void fill_view_xz_front_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "XZ (Front) View", "ToggleFrontView" );
 }
 
 
@@ -2123,13 +2172,13 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 	}
 
 	if ( style == MainFrame::eFloating ) {
-		fill_view_camera_menu( menu );
-		fill_view_xy_top_menu( menu );
-		fill_view_yz_side_menu( menu );
-		fill_view_xz_front_menu( menu );
+		create_check_menu_item_with_mnemonic( menu, "Camera View", "ToggleCamera" );
+		create_check_menu_item_with_mnemonic( menu, "XY (Top) View", "ToggleView" );
+		create_check_menu_item_with_mnemonic( menu, "XZ (Front) View", "ToggleFrontView" );
+		create_check_menu_item_with_mnemonic( menu, "YZ (Side) View", "ToggleSideView" );
 	}
 	if ( style == MainFrame::eFloating || style == MainFrame::eSplit ) {
-		create_menu_item_with_mnemonic( menu, "Console View", "ToggleConsole" );
+		create_menu_item_with_mnemonic( menu, "Console", "ToggleConsole" );
 		create_menu_item_with_mnemonic( menu, "Texture Browser", "ToggleTextures" );
 		create_menu_item_with_mnemonic( menu, "Entity Inspector", "ToggleEntityInspector" );
 	}
@@ -2138,6 +2187,7 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		create_menu_item_with_mnemonic( menu, "Entity Inspector", "ViewEntityInfo" );
 	}
 	create_menu_item_with_mnemonic( menu, "_Surface Inspector", "SurfaceInspector" );
+	create_menu_item_with_mnemonic( menu, "_Patch Inspector", "PatchInspector" );
 	create_menu_item_with_mnemonic( menu, "Entity List", "EntityList" );
 
 	menu_separator( menu );
@@ -2146,6 +2196,7 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( camera_menu );
 		}
+		create_menu_item_with_mnemonic( camera_menu, "Focus on Selected", "CameraFocusOnSelected" );
 		create_menu_item_with_mnemonic( camera_menu, "_Center", "CenterView" );
 		create_menu_item_with_mnemonic( camera_menu, "_Up Floor", "UpFloor" );
 		create_menu_item_with_mnemonic( camera_menu, "_Down Floor", "DownFloor" );
@@ -2158,9 +2209,10 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		menu_separator( camera_menu );
 		create_menu_item_with_mnemonic( camera_menu, "Next leak spot", "NextLeakSpot" );
 		create_menu_item_with_mnemonic( camera_menu, "Previous leak spot", "PrevLeakSpot" );
-		menu_separator( camera_menu );
-		create_menu_item_with_mnemonic( camera_menu, "Look Through Selected", "LookThroughSelected" );
-		create_menu_item_with_mnemonic( camera_menu, "Look Through Camera", "LookThroughCamera" );
+		//cameramodel is not implemented in instances, thus useless
+//		menu_separator( camera_menu );
+//		create_menu_item_with_mnemonic( camera_menu, "Look Through Selected", "LookThroughSelected" );
+//		create_menu_item_with_mnemonic( camera_menu, "Look Through Camera", "LookThroughCamera" );
 	}
 	menu_separator( menu );
 	{
@@ -2171,11 +2223,17 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft || style == MainFrame::eFloating ) {
 			create_menu_item_with_mnemonic( orthographic_menu, "_Next (XY, YZ, XY)", "NextView" );
 			create_menu_item_with_mnemonic( orthographic_menu, "XY (Top)", "ViewTop" );
-			create_menu_item_with_mnemonic( orthographic_menu, "YZ", "ViewSide" );
-			create_menu_item_with_mnemonic( orthographic_menu, "XZ", "ViewFront" );
+			create_menu_item_with_mnemonic( orthographic_menu, "XZ (Front)", "ViewFront" );
+			create_menu_item_with_mnemonic( orthographic_menu, "YZ (Side)", "ViewSide" );
 			menu_separator( orthographic_menu );
 		}
+		else{
+			create_menu_item_with_mnemonic( orthographic_menu, "Center on Selected", "NextView" );
+		}
 
+		create_menu_item_with_mnemonic( orthographic_menu, "Focus on Selected", "XYFocusOnSelected" );
+		create_menu_item_with_mnemonic( orthographic_menu, "Center on Selected", "CenterXYView" );
+		menu_separator( orthographic_menu );
 		create_menu_item_with_mnemonic( orthographic_menu, "_XY 100%", "Zoom100" );
 		create_menu_item_with_mnemonic( orthographic_menu, "XY Zoom _In", "ZoomIn" );
 		create_menu_item_with_mnemonic( orthographic_menu, "XY Zoom _Out", "ZoomOut" );
@@ -2188,14 +2246,22 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( menu_in_menu );
 		}
-		create_check_menu_item_with_mnemonic( menu_in_menu, "Show _Angles", "ShowAngles" );
-		create_check_menu_item_with_mnemonic( menu_in_menu, "Show _Names", "ShowNames" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Entity _Angles", "ShowAngles" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Entity _Names", "ShowNames" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Entity Names = Targetnames", "ShowTargetNames" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Light Radiuses", "ShowLightRadiuses" );
+
+		menu_separator( menu_in_menu );
+
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Size Info", "ToggleSizePaint" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Crosshair", "ToggleCrosshairs" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Grid", "ToggleGrid" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Blocks", "ShowBlocks" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show C_oordinates", "ShowCoordinates" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Window Outline", "ShowWindowOutline" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Axes", "ShowAxes" );
 		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Workzone", "ShowWorkzone" );
-		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Stats", "ShowStats" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Show Camera Stats", "ShowStats" );
 	}
 
 	{
@@ -2207,12 +2273,8 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 	}
 	menu_separator( menu );
 	{
-		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Hide/Show" );
-		if ( g_Layout_enableDetachableMenus.m_value ) {
-			menu_tearoff( menu_in_menu );
-		}
-		create_menu_item_with_mnemonic( menu_in_menu, "Hide Selected", "HideSelected" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Show Hidden", "ShowHidden" );
+		create_check_menu_item_with_mnemonic( menu, "Hide Selected", "HideSelected" );
+		create_menu_item_with_mnemonic( menu, "Show Hidden", "ShowHidden" );
 	}
 	menu_separator( menu );
 	{
@@ -2223,10 +2285,10 @@ ui::MenuItem create_view_menu( MainFrame::EViewStyle style ){
 		create_menu_item_with_mnemonic( menu_in_menu, "_Off", "RegionOff" );
 		create_menu_item_with_mnemonic( menu_in_menu, "_Set XY", "RegionSetXY" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Set _Brush", "RegionSetBrush" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Set Se_lected Brushes", "RegionSetSelection" );
+		create_check_menu_item_with_mnemonic( menu_in_menu, "Set Se_lected Brushes", "RegionSetSelection" );
 	}
 
-	command_connect_accelerator( "CenterXYView" );
+	//command_connect_accelerator( "CenterXYView" );
 
 	return view_menu_item;
 }
@@ -2250,6 +2312,9 @@ ui::MenuItem create_selection_menu(){
 	}
 
 	menu_separator( menu );
+	create_menu_item_with_mnemonic( menu, "Snap To Grid", "SnapToGrid" );
+
+	menu_separator( menu );
 
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Nudge" );
@@ -2260,6 +2325,9 @@ ui::MenuItem create_selection_menu(){
 		create_menu_item_with_mnemonic( menu_in_menu, "Nudge Right", "SelectNudgeRight" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Nudge Up", "SelectNudgeUp" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Nudge Down", "SelectNudgeDown" );
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu_in_menu, "Nudge +Z", "MoveSelectionUP" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Nudge -Z", "MoveSelectionDOWN" );
 	}
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Rotate" );
@@ -2269,6 +2337,9 @@ ui::MenuItem create_selection_menu(){
 		create_menu_item_with_mnemonic( menu_in_menu, "Rotate X", "RotateSelectionX" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Y", "RotateSelectionY" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Z", "RotateSelectionZ" );
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Clockwise", "RotateSelectionClockwise" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Rotate Anticlockwise", "RotateSelectionAnticlockwise" );
 	}
 	{
 		auto menu_in_menu = create_sub_menu_with_mnemonic( menu, "Flip" );
@@ -2278,6 +2349,9 @@ ui::MenuItem create_selection_menu(){
 		create_menu_item_with_mnemonic( menu_in_menu, "Flip _X", "MirrorSelectionX" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Flip _Y", "MirrorSelectionY" );
 		create_menu_item_with_mnemonic( menu_in_menu, "Flip _Z", "MirrorSelectionZ" );
+		menu_separator( menu_in_menu );
+		create_menu_item_with_mnemonic( menu_in_menu, "Flip Horizontally", "MirrorSelectionHorizontally" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Flip Vertically", "MirrorSelectionVertically" );
 	}
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Arbitrary rotation...", "ArbitraryRotation" );
@@ -2296,6 +2370,7 @@ ui::MenuItem create_bsp_menu(){
 	}
 
 	create_menu_item_with_mnemonic( menu, "Customize...", "BuildMenuCustomize" );
+	create_menu_item_with_mnemonic( menu, "Run recent build", "Build_runRecentExecutedBuild" );
 
 	menu_separator( menu );
 
@@ -2335,8 +2410,10 @@ ui::MenuItem create_misc_menu(){
 	create_menu_item_with_mnemonic( menu, "Find brush...", "FindBrush" );
 	create_menu_item_with_mnemonic( menu, "Map Info...", "MapInfo" );
 	// http://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=394
-//  create_menu_item_with_mnemonic(menu, "_Print XY View", FreeCaller<void(), WXY_Print>());
-	create_menu_item_with_mnemonic( menu, "_Background select", makeCallbackF(WXY_BackgroundSelect) );
+//  create_menu_item_with_mnemonic(menu, "_Print XY View", makeCallbackF( WXY_Print ));
+	create_menu_item_with_mnemonic( menu, "_Background image...", makeCallbackF(WXY_BackgroundSelect) );
+	create_menu_item_with_mnemonic( menu, "Fullscreen", "Fullscreen" );
+	create_menu_item_with_mnemonic( menu, "Maximize view", "MaximizeView" );
 	return misc_menu_item;
 }
 
@@ -2387,14 +2464,14 @@ ui::MenuItem create_help_menu(){
 		menu_tearoff( menu );
 	}
 
-	create_menu_item_with_mnemonic( menu, "Manual", "OpenManual" );
+//	create_menu_item_with_mnemonic( menu, "Manual", "OpenManual" );
 
 	// this creates all the per-game drop downs for the game pack helps
 	// it will take care of hooking the Sys_OpenURL calls etc.
 	create_game_help_menu( menu );
 
 	create_menu_item_with_mnemonic( menu, "Bug report", makeCallbackF(OpenBugReportURL) );
-	create_menu_item_with_mnemonic( menu, "Shortcuts list", makeCallbackF(DoCommandListDlg) );
+	create_menu_item_with_mnemonic( menu, "Shortcuts", makeCallbackF(DoCommandListDlg) );
 	create_menu_item_with_mnemonic( menu, "_About...", makeCallbackF(DoAbout) );
 
 	return help_menu_item;
@@ -2433,7 +2510,7 @@ void Patch_registerShortcuts(){
 	command_connect_accelerator( "PatchDeleteLastColumn" );
 	command_connect_accelerator( "PatchDeleteLastRow" );
 	command_connect_accelerator( "NaturalizePatch" );
-	//command_connect_accelerator("CapCurrentCurve");
+	command_connect_accelerator( "CapCurrentCurve");
 }
 
 void Manipulators_registerShortcuts(){
@@ -2458,12 +2535,14 @@ void TexdefNudge_registerShortcuts(){
 }
 
 void SelectNudge_registerShortcuts(){
-	command_connect_accelerator( "MoveSelectionDOWN" );
-	command_connect_accelerator( "MoveSelectionUP" );
+	//command_connect_accelerator( "MoveSelectionDOWN" );
+	//command_connect_accelerator( "MoveSelectionUP" );
 	//command_connect_accelerator("SelectNudgeLeft");
 	//command_connect_accelerator("SelectNudgeRight");
 	//command_connect_accelerator("SelectNudgeUp");
 	//command_connect_accelerator("SelectNudgeDown");
+	command_connect_accelerator( "UnSelectSelection2" );
+	command_connect_accelerator( "DeleteSelection2" );
 }
 
 void SnapToGrid_registerShortcuts(){
@@ -2478,19 +2557,33 @@ void SurfaceInspector_registerShortcuts(){
 	command_connect_accelerator( "FitTexture" );
 }
 
+void TexBro_registerShortcuts(){
+	command_connect_accelerator( "FindReplaceTextures" );
+	command_connect_accelerator( "RefreshShaders" );
+}
+
+void Misc_registerShortcuts(){
+	//refresh models
+	command_connect_accelerator( "RefreshReferences" );
+	command_connect_accelerator( "MouseRotateOrScale" );
+	command_connect_accelerator( "MouseDragOrScale" );
+}
+
 
 void register_shortcuts(){
-	PatchInspector_registerShortcuts();
-	Patch_registerShortcuts();
+//	PatchInspector_registerShortcuts();
+	//Patch_registerShortcuts();
 	Grid_registerShortcuts();
-	XYWnd_registerShortcuts();
+//	XYWnd_registerShortcuts();
 	CamWnd_registerShortcuts();
 	Manipulators_registerShortcuts();
 	SurfaceInspector_registerShortcuts();
 	TexdefNudge_registerShortcuts();
 	SelectNudge_registerShortcuts();
-	SnapToGrid_registerShortcuts();
-	SelectByType_registerShortcuts();
+//	SnapToGrid_registerShortcuts();
+//	SelectByType_registerShortcuts();
+	TexBro_registerShortcuts();
+	Misc_registerShortcuts();
 }
 
 void File_constructToolbar( ui::Toolbar toolbar ){
@@ -2504,12 +2597,17 @@ void UndoRedo_constructToolbar( ui::Toolbar toolbar ){
 }
 
 void RotateFlip_constructToolbar( ui::Toolbar toolbar ){
-	toolbar_append_button( toolbar, "x-axis Flip", "brush_flipx.png", "MirrorSelectionX" );
-	toolbar_append_button( toolbar, "x-axis Rotate", "brush_rotatex.png", "RotateSelectionX" );
-	toolbar_append_button( toolbar, "y-axis Flip", "brush_flipy.png", "MirrorSelectionY" );
-	toolbar_append_button( toolbar, "y-axis Rotate", "brush_rotatey.png", "RotateSelectionY" );
-	toolbar_append_button( toolbar, "z-axis Flip", "brush_flipz.png", "MirrorSelectionZ" );
-	toolbar_append_button( toolbar, "z-axis Rotate", "brush_rotatez.png", "RotateSelectionZ" );
+//	toolbar_append_button( toolbar, "x-axis Flip", "brush_flipx.png", "MirrorSelectionX" );
+//	toolbar_append_button( toolbar, "x-axis Rotate", "brush_rotatex.png", "RotateSelectionX" );
+//	toolbar_append_button( toolbar, "y-axis Flip", "brush_flipy.png", "MirrorSelectionY" );
+//	toolbar_append_button( toolbar, "y-axis Rotate", "brush_rotatey.png", "RotateSelectionY" );
+//	toolbar_append_button( toolbar, "z-axis Flip", "brush_flipz.png", "MirrorSelectionZ" );
+//	toolbar_append_button( toolbar, "z-axis Rotate", "brush_rotatez.png", "RotateSelectionZ" );
+	toolbar_append_button( toolbar, "Flip Horizontally", "brush_flip_hor.png", "MirrorSelectionHorizontally" );
+	toolbar_append_button( toolbar, "Flip Vertically", "brush_flip_vert.png", "MirrorSelectionVertically" );
+
+	toolbar_append_button( toolbar, "Rotate Clockwise", "brush_rotate_clock.png", "RotateSelectionClockwise" );
+	toolbar_append_button( toolbar, "Rotate Anticlockwise", "brush_rotate_anti.png", "RotateSelectionAnticlockwise" );
 }
 
 void Select_constructToolbar( ui::Toolbar toolbar ){
@@ -2520,8 +2618,8 @@ void Select_constructToolbar( ui::Toolbar toolbar ){
 void CSG_constructToolbar( ui::Toolbar toolbar ){
 	toolbar_append_button( toolbar, "CSG Subtract (SHIFT + U)", "selection_csgsubtract.png", "CSGSubtract" );
 	toolbar_append_button( toolbar, "CSG Merge (CTRL + U)", "selection_csgmerge.png", "CSGMerge" );
-	toolbar_append_button( toolbar, "Make Hollow", "selection_makehollow.png", "CSGMakeHollow" );
-	toolbar_append_button( toolbar, "Make Room", "selection_makeroom.png", "CSGMakeRoom" );
+	toolbar_append_button( toolbar, "Make Room", "selection_makeroom.png", "CSGRoom" );
+	toolbar_append_button( toolbar, "CSG Tool", "ellipsis.png", "CSGTool" );
 }
 
 void ComponentModes_constructToolbar( ui::Toolbar toolbar ){
@@ -2536,13 +2634,13 @@ void Clipper_constructToolbar( ui::Toolbar toolbar ){
 }
 
 void XYWnd_constructToolbar( ui::Toolbar toolbar ){
-	toolbar_append_button( toolbar, "Change views", "view_change.png", "NextView" );
+	toolbar_append_button( toolbar, "Change views (CTRL + TAB)", "view_change.png", "NextView" );
 }
 
 void Manipulators_constructToolbar( ui::Toolbar toolbar ){
 	toolbar_append_toggle_button( toolbar, "Translate (W)", "select_mousetranslate.png", "MouseTranslate" );
 	toolbar_append_toggle_button( toolbar, "Rotate (R)", "select_mouserotate.png", "MouseRotate" );
-	toolbar_append_toggle_button( toolbar, "Scale", "select_mousescale.png", "MouseScale" );
+	toolbar_append_toggle_button( toolbar, "Scale (Q)", "select_mousescale.png", "MouseScale" );
 	toolbar_append_toggle_button( toolbar, "Resize (Q)", "select_mouseresize.png", "MouseDrag" );
 
 	Clipper_constructToolbar( toolbar );
@@ -2552,7 +2650,9 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
 	gtk_orientable_set_orientation( GTK_ORIENTABLE(toolbar), GTK_ORIENTATION_HORIZONTAL );
 	gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
-
+//	gtk_toolbar_set_show_arrow( toolbar, TRUE );
+	//gtk_orientable_set_orientation( GTK_ORIENTABLE( toolbar ), GTK_ORIENTATION_HORIZONTAL );
+	//toolbar_append_space( toolbar );
 	toolbar.show();
 
 	auto space = [&]() {
@@ -2583,7 +2683,7 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 
 	ComponentModes_constructToolbar( toolbar );
 
-	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft || style == MainFrame::eFloating ) {
+	if ( style != MainFrame::eSplit ) {
 		space();
 
 		XYWnd_constructToolbar( toolbar );
@@ -2605,25 +2705,22 @@ ui::Toolbar create_main_toolbar( MainFrame::EViewStyle style ){
 
 	space();
 
-	toolbar_append_toggle_button( toolbar, "Texture Lock (SHIFT +T)", "texture_lock.png", "TogTexLock" );
+	toolbar_append_toggle_button( toolbar, "Texture Lock (SHIFT + T)", "texture_lock.png", "TogTexLock" );
 
 	space();
 
-	/*auto g_view_entities_button =*/ toolbar_append_button( toolbar, "Entities (N)", "entities.png", "ToggleEntityInspector" );
-	auto g_view_console_button = toolbar_append_button( toolbar, "Console (O)", "console.png", "ToggleConsole" );
-	auto g_view_textures_button = toolbar_append_button( toolbar, "Texture Browser (T)", "texture_browser.png", "ToggleTextures" );
+	toolbar_append_button( toolbar, "Entities (N)", "entities.png", "ToggleEntityInspector" );
+	// disable the console and texture button in the regular layouts
+	if ( style != MainFrame::eRegular && style != MainFrame::eRegularLeft ) {
+		toolbar_append_button( toolbar, "Console (O)", "console.png", "ToggleConsole" );
+		toolbar_append_button( toolbar, "Texture Browser (T)", "texture_browser.png", "ToggleTextures" );
+	}
 	// TODO: call light inspector
 	//GtkButton* g_view_lightinspector_button = toolbar_append_button(toolbar, "Light Inspector", "lightinspector.png", "ToggleLightInspector");
 
 	space();
-	/*auto g_refresh_models_button =*/ toolbar_append_button( toolbar, "Refresh Models", "refresh_models.png", "RefreshReferences" );
 
-
-	// disable the console and texture button in the regular layouts
-	if ( style == MainFrame::eRegular || style == MainFrame::eRegularLeft ) {
-		gtk_widget_set_sensitive( g_view_console_button , FALSE );
-		gtk_widget_set_sensitive( g_view_textures_button , FALSE );
-	}
+	toolbar_append_button( toolbar, "Refresh Models", "refresh_models.png", "RefreshReferences" );
 
 	return toolbar;
 }
@@ -2649,7 +2746,11 @@ ui::Widget create_main_statusbar( ui::Widget pStatusLabel[c_count_status] ){
 		gtk_frame_set_shadow_type( frame, GTK_SHADOW_IN );
 
 		auto label = ui::Label( "Label" );
-		gtk_label_set_ellipsize( label, PANGO_ELLIPSIZE_END );
+		if( i == c_texture_status )
+			gtk_label_set_ellipsize( label, PANGO_ELLIPSIZE_START );
+		else
+			gtk_label_set_ellipsize( label, PANGO_ELLIPSIZE_END );
+
 		gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
 		gtk_misc_set_padding( GTK_MISC( label ), 4, 2 );
 		label.show();
@@ -2914,6 +3015,15 @@ ui::Window create_splash(){
 	image.show();
 	window.add(image);
 
+#if GTK_TARGET == 2
+	if( gtk_image_get_storage_type( image ) == GTK_IMAGE_PIXBUF ){
+		GdkBitmap* mask;
+		GdkPixbuf* pix = gtk_image_get_pixbuf( image );
+		gdk_pixbuf_render_pixmap_and_mask( pix, NULL, &mask, 255 );
+		gtk_widget_shape_combine_mask ( GTK_WIDGET( window ), mask, 0, 0 );
+	}
+#endif
+
 	window.dimensions(-1, -1);
 	window.show();
 
@@ -2982,6 +3092,7 @@ void MainFrame::Create(){
 	auto vbox = ui::VBox( FALSE, 0 );
 	window.add(vbox);
 	vbox.show();
+	gtk_container_set_focus_chain( GTK_CONTAINER( vbox ), NULL );
 
 	global_accel_connect_window( window );
 
@@ -2992,19 +3103,46 @@ void MainFrame::Create(){
     auto main_menu = create_main_menu( CurrentStyle() );
 	vbox.pack_start( main_menu, FALSE, FALSE, 0 );
 
-    auto main_toolbar = create_main_toolbar( CurrentStyle() );
-	vbox.pack_start( main_toolbar, FALSE, FALSE, 0 );
-
-	auto plugin_toolbar = create_plugin_toolbar();
-	if ( !g_Layout_enablePluginToolbar.m_value ) {
-		plugin_toolbar.hide();
+	if( g_Layout_enableMainToolbar.m_value ){
+		GtkToolbar* main_toolbar = create_main_toolbar( CurrentStyle() );
+		gtk_box_pack_start( GTK_BOX( vbox ), GTK_WIDGET( main_toolbar ), FALSE, FALSE, 0 );
 	}
-	vbox.pack_start( plugin_toolbar, FALSE, FALSE, 0 );
+
+	if ( g_Layout_enablePluginToolbar.m_value || g_Layout_enableFilterToolbar.m_value ){
+		auto PFbox = ui::HBox( FALSE, 3 );
+		vbox.pack_start( PFbox, FALSE, FALSE, 0 );
+		PFbox.show();
+		if ( g_Layout_enablePluginToolbar.m_value ){
+			auto plugin_toolbar = create_plugin_toolbar();
+			if ( g_Layout_enableFilterToolbar.m_value ){
+				PFbox.pack_start( plugin_toolbar, FALSE, FALSE, 0 );
+				// Force the toolbar to display all childrens
+				// without collapsing them to a menu.
+				gtk_toolbar_set_show_arrow( plugin_toolbar, FALSE );
+			}
+			else{
+				PFbox.pack_start( plugin_toolbar, TRUE, TRUE, 0 );
+			}
+		}
+		if ( g_Layout_enableFilterToolbar.m_value ){
+			ui::Toolbar filter_toolbar = create_filter_toolbar();
+			PFbox.pack_start( filter_toolbar, TRUE, TRUE, 0 );
+		}
+	}
+
+	/*GtkToolbar* plugin_toolbar = create_plugin_toolbar();
+	if ( !g_Layout_enablePluginToolbar.m_value ) {
+		gtk_widget_hide( GTK_WIDGET( plugin_toolbar ) );
+	}*/
 
 	ui::Widget main_statusbar = create_main_statusbar(reinterpret_cast<ui::Widget *>(m_pStatusLabel));
 	vbox.pack_end(main_statusbar, FALSE, TRUE, 2);
 
 	GroupDialog_constructWindow( window );
+
+	/* want to realize it immediately; otherwise gtk paned splits positions wont be set correctly for floating group dlg */
+	gtk_widget_realize ( GTK_WIDGET( GroupDialog_getWindow() ) );
+
 	g_page_entity = GroupDialog_addPage( "Entities", EntityInspector_constructWindow( GroupDialog_getWindow() ), RawStringExportCaller( "Entities" ) );
 
 	if ( FloatingGroupDialog() ) {
@@ -3014,19 +3152,9 @@ void MainFrame::Create(){
 #if GDEF_OS_WINDOWS
 	if ( g_multimon_globals.m_bStartOnPrimMon ) {
 		PositionWindowOnPrimaryScreen( g_layout_globals.m_position );
-		window_set_position( window, g_layout_globals.m_position );
 	}
-	else
 #endif
-	if ( g_layout_globals.nState & GDK_WINDOW_STATE_MAXIMIZED ) {
-		gtk_window_maximize( window );
-		WindowPosition default_position( -1, -1, 640, 480 );
-		window_set_position( window, default_position );
-	}
-	else
-	{
-		window_set_position( window, g_layout_globals.m_position );
-	}
+	window_set_position( window, g_layout_globals.m_position );
 
 	m_window = window;
 
@@ -3035,68 +3163,56 @@ void MainFrame::Create(){
 	if ( CurrentStyle() == eRegular || CurrentStyle() == eRegularLeft )
 	{
 		{
-			ui::Widget vsplit = ui::VPaned(ui::New);
-			m_vSplit = vsplit;
-			vbox.pack_start( vsplit, TRUE, TRUE, 0 );
-			vsplit.show();
+			ui::Widget hsplit = ui::HPaned(ui::New);
+			m_hSplit = hsplit;
 
-			// console
-			ui::Widget console_window = Console_constructWindow( window );
-			gtk_paned_pack2( GTK_PANED( vsplit ), console_window, FALSE, TRUE );
+			vbox.pack_start( hsplit, TRUE, TRUE, 0 );
+			hsplit.show();
 
 			{
-				ui::Widget hsplit = ui::HPaned(ui::New);
-				hsplit.show();
-				m_hSplit = hsplit;
-				gtk_paned_add1( GTK_PANED( vsplit ), hsplit );
+				ui::Widget vsplit = ui::VPaned(ui::New);
+				vsplit.show();
+				m_vSplit = vsplit;
 
+				ui::Widget vsplit2 = ui::VPaned(ui::New);
+				vsplit2.show();
+				m_vSplit2 = vsplit2;
+
+				if ( CurrentStyle() == eRegular ){
+					gtk_paned_pack1( GTK_PANED( hsplit ), vsplit, TRUE, TRUE );
+					gtk_paned_pack2( GTK_PANED( hsplit ), vsplit2, TRUE, TRUE );
+				}
+				else{
+					gtk_paned_pack2( GTK_PANED( hsplit ), vsplit, TRUE, TRUE );
+					gtk_paned_pack1( GTK_PANED( hsplit ), vsplit2, TRUE, TRUE );
+				}
+
+				// console
+				ui::Widget console_window = Console_constructWindow( window );
+				gtk_paned_pack2( GTK_PANED( vsplit ), console_window, TRUE, TRUE );
+				
 				// xy
 				m_pXYWnd = new XYWnd();
 				m_pXYWnd->SetViewType( XY );
 				ui::Widget xy_window = ui::Widget(create_framed_widget( m_pXYWnd->GetWidget( ) ));
+				gtk_paned_pack1( GTK_PANED( vsplit ), xy_window, TRUE, TRUE );
 
 				{
-					ui::Widget vsplit2 = ui::VPaned(ui::New);
-					vsplit2.show();
-					m_vSplit2 = vsplit2;
-
-					if ( CurrentStyle() == eRegular ) {
-						gtk_paned_add1( GTK_PANED( hsplit ), xy_window );
-						gtk_paned_add2( GTK_PANED( hsplit ), vsplit2 );
-					}
-					else
-					{
-						gtk_paned_add1( GTK_PANED( hsplit ), vsplit2 );
-						gtk_paned_add2( GTK_PANED( hsplit ), xy_window );
-					}
-
 					// camera
 					m_pCamWnd = NewCamWnd();
 					GlobalCamera_setCamWnd( *m_pCamWnd );
 					CamWnd_setParent( *m_pCamWnd, window );
 					auto camera_window = create_framed_widget( CamWnd_getWidget( *m_pCamWnd ) );
 
-					gtk_paned_add1( GTK_PANED( vsplit2 ), camera_window  );
+					gtk_paned_pack1( GTK_PANED( vsplit2 ), GTK_WIDGET( camera_window ) , TRUE, TRUE);
 
 					// textures
 					auto texture_window = create_framed_widget( TextureBrowser_constructWindow( window ) );
 
-					gtk_paned_add2( GTK_PANED( vsplit2 ), texture_window  );
+					gtk_paned_pack2( GTK_PANED( vsplit2 ), GTK_WIDGET( texture_window ), TRUE, TRUE );
 				}
 			}
 		}
-
-		gtk_paned_set_position( GTK_PANED( m_vSplit ), g_layout_globals.nXYHeight );
-
-		if ( CurrentStyle() == eRegular ) {
-			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nXYWidth );
-		}
-		else
-		{
-			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nCamWidth );
-		}
-
-		gtk_paned_set_position( GTK_PANED( m_vSplit2 ), g_layout_globals.nCamHeight );
 	}
 	else if ( CurrentStyle() == eFloating )
 	{
@@ -3187,9 +3303,13 @@ void MainFrame::Create(){
 		{
 			auto frame = create_framed_widget( TextureBrowser_constructWindow( GroupDialog_getWindow() ) );
 			g_page_textures = GroupDialog_addPage( "Textures", frame, TextureBrowserExportTitleCaller() );
-
 			WORKAROUND_GOBJECT_SET_GLWIDGET( GroupDialog_getWindow(), TextureBrowser_getGLWidget() );
 		}
+
+		// FIXME: find a way to do it with newer syntax
+		// m_vSplit = 0;
+		// m_hSplit = 0;
+		// m_vSplit2 = 0;
 
 		GroupDialog_show();
 	}
@@ -3216,11 +3336,11 @@ void MainFrame::Create(){
 
 		ui::Widget xz = m_pXZWnd->GetWidget();
 
-		auto split = create_split_views( camera, yz, xy, xz );
-		vbox.pack_start( split, TRUE, TRUE, 0 );
+		m_hSplit = create_split_views( camera, xy, yz, xz, m_vSplit, m_vSplit2 );
+		vbox.pack_start( m_hSplit, TRUE, TRUE, 0 );
 
 		{
-		auto frame = create_framed_widget( TextureBrowser_constructWindow( window ) );
+            auto frame = create_framed_widget( TextureBrowser_constructWindow( GroupDialog_getWindow() ) );
 			g_page_textures = GroupDialog_addPage( "Textures", frame, TextureBrowserExportTitleCaller() );
 
 			WORKAROUND_GOBJECT_SET_GLWIDGET( window, TextureBrowser_getGLWidget() );
@@ -3253,7 +3373,9 @@ void MainFrame::Create(){
 		vbox.pack_start( hsplit, TRUE, TRUE, 0 );
 		hsplit.show();
 
-		ui::Widget split = create_split_views( camera, yz, xy, xz );
+		/* Before merging NetRadiantCustom:
+		ui::Widget split = create_split_views( camera, xy, yz, xz ); */
+		m_hSplit = create_split_views( camera, xy, yz, xz, m_vSplit, m_vSplit2 );
 
 		ui::Widget vsplit = ui::VPaned(ui::New);
 		vsplit.show();
@@ -3264,11 +3386,19 @@ void MainFrame::Create(){
 		// console
 		ui::Widget console_window = create_framed_widget( Console_constructWindow( window ) );
 
-		gtk_paned_add1( GTK_PANED( hsplit ), split );
+		/* Before merging NetRadiantCustom:
+		gtk_paned_add1( GTK_PANED( hsplit ), m_hSplit );
 		gtk_paned_add2( GTK_PANED( hsplit ), vsplit );
 
 		gtk_paned_add1( GTK_PANED( vsplit ), texture_window  );
 		gtk_paned_add2( GTK_PANED( vsplit ), console_window  );
+		*/
+
+		gtk_paned_pack1( GTK_PANED( hsplit ), m_hSplit, TRUE, TRUE );
+		gtk_paned_pack2( GTK_PANED( hsplit ), vsplit, TRUE, TRUE);
+
+		gtk_paned_pack1( GTK_PANED( vsplit ), texture_window, TRUE, TRUE );
+		gtk_paned_pack2( GTK_PANED( vsplit ), console_window, TRUE, TRUE );
 
 		hsplit.connect( "size_allocate", G_CALLBACK( hpaned_allocate ), &g_single_hpaned );
 		hsplit.connect( "notify::position", G_CALLBACK( paned_position ), &g_single_hpaned );
@@ -3294,6 +3424,27 @@ void MainFrame::Create(){
 
 	EverySecondTimer_enable();
 
+	if ( g_layout_globals.nState & GDK_WINDOW_STATE_MAXIMIZED ||
+		g_layout_globals.nState & GDK_WINDOW_STATE_ICONIFIED ) {
+		gtk_window_maximize( window );
+	}
+	if ( g_layout_globals.nState & GDK_WINDOW_STATE_FULLSCREEN ) {
+		gtk_window_fullscreen( window );
+	}
+
+	if ( !FloatingGroupDialog() ) {
+		gtk_paned_set_position( GTK_PANED( m_vSplit ), g_layout_globals.nXYHeight );
+
+		if ( CurrentStyle() == eRegular ) {
+			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nXYWidth );
+		}
+		else
+		{
+			gtk_paned_set_position( GTK_PANED( m_hSplit ), g_layout_globals.nCamWidth );
+		}
+
+		gtk_paned_set_position( GTK_PANED( m_vSplit2 ), g_layout_globals.nCamHeight );
+	}
 	//GlobalShortcuts_reportUnregistered();
 }
 
@@ -3312,7 +3463,9 @@ void MainFrame::SaveWindowInfo(){
 		g_layout_globals.nCamHeight = gtk_paned_get_position( GTK_PANED( m_vSplit2 ) );
 	}
 
-	g_layout_globals.m_position = m_position_tracker.getPosition();
+	if( gdk_window_get_state( gtk_widget_get_window( GTK_WIDGET( m_window ) ) ) == 0 ){
+		g_layout_globals.m_position = m_position_tracker.getPosition();
+	}
 
 	g_layout_globals.nState = gdk_window_get_state( gtk_widget_get_window(m_window ) );
 }
@@ -3451,6 +3604,10 @@ void Layout_constructPreferences( PreferencesPage& page ){
 		"", "Detachable Menus",
 		make_property( g_Layout_enableDetachableMenus )
 		);
+	page.appendCheckBox(
+		"", "Main Toolbar",
+		make_property( g_Layout_enableMainToolbar )
+		);
 	if ( !string_empty( g_pGameDescription->getKeyValue( "no_patch" ) ) ) {
 		page.appendCheckBox(
 			"", "Patch Toolbar",
@@ -3460,6 +3617,10 @@ void Layout_constructPreferences( PreferencesPage& page ){
 	page.appendCheckBox(
 		"", "Plugin Toolbar",
 		make_property( g_Layout_enablePluginToolbar )
+		);
+	page.appendCheckBox(
+		"", "Filter Toolbar",
+		make_property( g_Layout_enableFilterToolbar )
 		);
 }
 
@@ -3472,6 +3633,97 @@ void Layout_registerPreferencesPage(){
 	PreferencesDialog_addInterfacePage( makeCallbackF(Layout_constructPage) );
 }
 
+void MainFrame_toggleFullscreen(){
+	GtkWindow* wnd = MainFrame_getWindow();
+	if( gdk_window_get_state( gtk_widget_get_window( GTK_WIDGET( wnd ) ) ) & GDK_WINDOW_STATE_FULLSCREEN ){
+		//some portion of buttsex, because gtk_window_unfullscreen doesn't work correctly after calling some modal window
+		bool maximize = ( gdk_window_get_state( gtk_widget_get_window( GTK_WIDGET( wnd ) ) ) & GDK_WINDOW_STATE_MAXIMIZED );
+		gtk_window_unfullscreen( wnd );
+		if( maximize ){
+			gtk_window_unmaximize( wnd );
+			gtk_window_maximize( wnd );
+		}
+		else{
+			gtk_window_move( wnd, g_layout_globals.m_position.x, g_layout_globals.m_position.y );
+			gtk_window_resize( wnd, g_layout_globals.m_position.w, g_layout_globals.m_position.h );
+		}
+	}
+	else{
+		gtk_window_fullscreen( wnd );
+	}
+}
+
+class MaximizeView
+{
+public:
+	MaximizeView(): m_maximized( false ){
+	}
+	void toggle(){
+		return m_maximized ? restore() : maximize();
+	}
+private:
+	bool m_maximized;
+	int m_vSplitPos;
+	int m_vSplit2Pos;
+	int m_hSplitPos;
+
+	void restore(){
+		m_maximized = false;
+		gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_vSplit ), m_vSplitPos );
+		gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_vSplit2 ), m_vSplit2Pos );
+		gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_hSplit ), m_hSplitPos );
+	}
+
+	void maximize(){
+		m_maximized = true;
+		m_vSplitPos = gtk_paned_get_position( GTK_PANED( g_pParentWnd->m_vSplit ) );
+		m_vSplit2Pos = gtk_paned_get_position( GTK_PANED( g_pParentWnd->m_vSplit2 ) );
+		m_hSplitPos = gtk_paned_get_position( GTK_PANED( g_pParentWnd->m_hSplit ) );
+
+		int vSplitX, vSplitY, vSplit2X, vSplit2Y, hSplitX, hSplitY;
+		gdk_window_get_origin( gtk_widget_get_window( GTK_WIDGET( g_pParentWnd->m_vSplit ) ), &vSplitX, &vSplitY );
+		gdk_window_get_origin( gtk_widget_get_window( GTK_WIDGET( g_pParentWnd->m_vSplit2 ) ), &vSplit2X, &vSplit2Y );
+		gdk_window_get_origin( gtk_widget_get_window( GTK_WIDGET( g_pParentWnd->m_hSplit ) ), &hSplitX, &hSplitY );
+
+		vSplitY += m_vSplitPos;
+		vSplit2Y += m_vSplit2Pos;
+		hSplitX += m_hSplitPos;
+
+		int cur_x, cur_y;
+		Sys_GetCursorPos( MainFrame_getWindow(), &cur_x, &cur_y );
+
+		if( cur_x > hSplitX ){
+			gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_hSplit ), 0 );
+		}
+		else{
+			gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_hSplit ), 9999 );
+		}
+		if( cur_y > vSplitY ){
+			gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_vSplit ), 0 );
+		}
+		else{
+			gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_vSplit ), 9999 );
+		}
+		if( cur_y > vSplit2Y ){
+			gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_vSplit2 ), 0 );
+		}
+		else{
+			gtk_paned_set_position( GTK_PANED( g_pParentWnd->m_vSplit2 ), 9999 );
+		}
+	}
+};
+
+MaximizeView g_maximizeview;
+
+void Maximize_View(){
+	if( g_pParentWnd != 0 && g_pParentWnd->m_vSplit != 0 && g_pParentWnd->m_vSplit2 != 0 && g_pParentWnd->m_hSplit != 0 )
+		g_maximizeview.toggle();
+}
+
+void FocusAllViews(){
+	XY_Centralize(); //using centralizing here, not focusing function
+	GlobalCamera_FocusOnSelected();
+}
 #include "preferencesystem.h"
 #include "stringio.h"
 #include "transformpath/transformpath.h"
@@ -3498,37 +3750,38 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "PasteToCamera", makeCallbackF(PasteToCamera), Accelerator( 'V', (GdkModifierType)GDK_MOD1_MASK ) );
 	GlobalCommands_insert( "CloneSelection", makeCallbackF(Selection_Clone), Accelerator( GDK_KEY_space ) );
 	GlobalCommands_insert( "CloneSelectionAndMakeUnique", makeCallbackF(Selection_Clone_MakeUnique), Accelerator( GDK_KEY_space, (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalCommands_insert( "DeleteSelection", makeCallbackF(deleteSelection), Accelerator( GDK_KEY_BackSpace ) );
+//	GlobalCommands_insert( "DeleteSelection", makeCallbackF(deleteSelection), Accelerator( GDK_KEY_BackSpace ) );
+	GlobalCommands_insert( "DeleteSelection2", makeCallbackF(deleteSelection), Accelerator( GDK_KEY_BackSpace ) );
+	GlobalCommands_insert( "DeleteSelection", makeCallbackF(deleteSelection), Accelerator( 'Z' ) );
 	GlobalCommands_insert( "ParentSelection", makeCallbackF(Scene_parentSelected) );
-	GlobalCommands_insert( "UnSelectSelection", makeCallbackF(Selection_Deselect), Accelerator( GDK_KEY_Escape ) );
+//	GlobalCommands_insert( "UnSelectSelection", makeCallbackF(Selection_Deselect), Accelerator( GDK_KEY_Escape ) );
+	GlobalCommands_insert( "UnSelectSelection2", makeCallbackF(Selection_Deselect), Accelerator( GDK_KEY_Escape ) );
+	GlobalCommands_insert( "UnSelectSelection", makeCallbackF(Selection_Deselect), Accelerator( 'C' ) );
 	GlobalCommands_insert( "InvertSelection", makeCallbackF(Select_Invert), Accelerator( 'I' ) );
 	GlobalCommands_insert( "SelectInside", makeCallbackF(Select_Inside) );
 	GlobalCommands_insert( "SelectTouching", makeCallbackF(Select_Touching) );
 	GlobalCommands_insert( "ExpandSelectionToEntities", makeCallbackF(Scene_ExpandSelectionToEntities), Accelerator( 'E', (GdkModifierType)( GDK_MOD1_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalCommands_insert( "SelectConnectedEntities", makeCallbackF(SelectConnectedEntities), Accelerator( 'E', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 	GlobalCommands_insert( "Preferences", makeCallbackF(PreferencesDialog_showDialog), Accelerator( 'P' ) );
 
 	GlobalCommands_insert( "ToggleConsole", makeCallbackF(Console_ToggleShow), Accelerator( 'O' ) );
 	GlobalCommands_insert( "ToggleEntityInspector", makeCallbackF(EntityInspector_ToggleShow), Accelerator( 'N' ) );
 	GlobalCommands_insert( "EntityList", makeCallbackF(EntityList_toggleShown), Accelerator( 'L' ) );
 
-	GlobalCommands_insert( "ShowHidden", makeCallbackF(Select_ShowAllHidden), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
-	GlobalCommands_insert( "HideSelected", makeCallbackF(HideSelected), Accelerator( 'H' ) );
+//	GlobalCommands_insert( "ShowHidden", makeCallbackF( Select_ShowAllHidden ), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
+//	GlobalCommands_insert( "HideSelected", makeCallbackF( HideSelected ), Accelerator( 'H' ) );
+
+	Select_registerCommands();
 
 	GlobalToggles_insert( "DragVertices", makeCallbackF(SelectVertexMode), ToggleItem::AddCallbackCaller( g_vertexMode_button ), Accelerator( 'V' ) );
 	GlobalToggles_insert( "DragEdges", makeCallbackF(SelectEdgeMode), ToggleItem::AddCallbackCaller( g_edgeMode_button ), Accelerator( 'E' ) );
 	GlobalToggles_insert( "DragFaces", makeCallbackF(SelectFaceMode), ToggleItem::AddCallbackCaller( g_faceMode_button ), Accelerator( 'F' ) );
 
-	GlobalCommands_insert( "MirrorSelectionX", makeCallbackF(Selection_Flipx) );
-	GlobalCommands_insert( "RotateSelectionX", makeCallbackF(Selection_Rotatex) );
-	GlobalCommands_insert( "MirrorSelectionY", makeCallbackF(Selection_Flipy) );
-	GlobalCommands_insert( "RotateSelectionY", makeCallbackF(Selection_Rotatey) );
-	GlobalCommands_insert( "MirrorSelectionZ", makeCallbackF(Selection_Flipz) );
-	GlobalCommands_insert( "RotateSelectionZ", makeCallbackF(Selection_Rotatez) );
-
-	GlobalCommands_insert( "ArbitraryRotation", makeCallbackF(DoRotateDlg) );
-	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg) );
+	GlobalCommands_insert( "ArbitraryRotation", makeCallbackF(DoRotateDlg), Accelerator( 'R', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalCommands_insert( "ArbitraryScale", makeCallbackF(DoScaleDlg), Accelerator( 'S', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 
 	GlobalCommands_insert( "BuildMenuCustomize", makeCallbackF(DoBuildMenu) );
+	GlobalCommands_insert( "Build_runRecentExecutedBuild", makeCallbackF(Build_runRecentExecutedBuild), Accelerator( GDK_KEY_F5 ) );
 
 	GlobalCommands_insert( "FindBrush", makeCallbackF(DoFind) );
 
@@ -3540,19 +3793,22 @@ void MainFrame_Construct(){
 	GlobalToggles_insert( "MouseTranslate", makeCallbackF(TranslateMode), ToggleItem::AddCallbackCaller( g_translatemode_button ), Accelerator( 'W' ) );
 	GlobalToggles_insert( "MouseRotate", makeCallbackF(RotateMode), ToggleItem::AddCallbackCaller( g_rotatemode_button ), Accelerator( 'R' ) );
 	GlobalToggles_insert( "MouseScale", makeCallbackF(ScaleMode), ToggleItem::AddCallbackCaller( g_scalemode_button ) );
-	GlobalToggles_insert( "MouseDrag", makeCallbackF(DragMode), ToggleItem::AddCallbackCaller( g_dragmode_button ), Accelerator( 'Q' ) );
+	GlobalToggles_insert( "MouseDrag", makeCallbackF(DragMode), ToggleItem::AddCallbackCaller( g_dragmode_button ) );
+	GlobalCommands_insert( "MouseRotateOrScale", makeCallbackF(ToggleRotateScaleModes) );
+	GlobalCommands_insert( "MouseDragOrScale", makeCallbackF(ToggleDragScaleModes), Accelerator( 'Q' ) );
 
+#ifndef GARUX_DISABLE_GTKTHEME
+	GlobalCommands_insert( "gtkThemeDlg", makeCallbackF(gtkThemeDlg) );
+#endif
 	GlobalCommands_insert( "ColorSchemeOriginal", makeCallbackF(ColorScheme_Original) );
 	GlobalCommands_insert( "ColorSchemeQER", makeCallbackF(ColorScheme_QER) );
 	GlobalCommands_insert( "ColorSchemeBlackAndGreen", makeCallbackF(ColorScheme_Black) );
 	GlobalCommands_insert( "ColorSchemeYdnar", makeCallbackF(ColorScheme_Ydnar) );
-	GlobalCommands_insert("ColorSchemeAdwaitaDark", makeCallbackF(ColorScheme_AdwaitaDark));
+	GlobalCommands_insert( "ColorSchemeAdwaitaDark", makeCallbackF(ColorScheme_AdwaitaDark));
 	GlobalCommands_insert( "ChooseTextureBackgroundColor", makeCallback( g_ColoursMenu.m_textureback ) );
 	GlobalCommands_insert( "ChooseGridBackgroundColor", makeCallback( g_ColoursMenu.m_xyback ) );
 	GlobalCommands_insert( "ChooseGridMajorColor", makeCallback( g_ColoursMenu.m_gridmajor ) );
 	GlobalCommands_insert( "ChooseGridMinorColor", makeCallback( g_ColoursMenu.m_gridminor ) );
-	GlobalCommands_insert( "ChooseSmallGridMajorColor", makeCallback( g_ColoursMenu.m_gridmajor_alt ) );
-	GlobalCommands_insert( "ChooseSmallGridMinorColor", makeCallback( g_ColoursMenu.m_gridminor_alt ) );
 	GlobalCommands_insert( "ChooseGridTextColor", makeCallback( g_ColoursMenu.m_gridtext ) );
 	GlobalCommands_insert( "ChooseGridBlockColor", makeCallback( g_ColoursMenu.m_gridblock ) );
 	GlobalCommands_insert( "ChooseBrushColor", makeCallback( g_ColoursMenu.m_brush ) );
@@ -3562,11 +3818,14 @@ void MainFrame_Construct(){
 	GlobalCommands_insert( "ChooseClipperColor", makeCallback( g_ColoursMenu.m_clipper ) );
 	GlobalCommands_insert( "ChooseOrthoViewNameColor", makeCallback( g_ColoursMenu.m_viewname ) );
 
+	GlobalCommands_insert( "Fullscreen", makeCallbackF( MainFrame_toggleFullscreen ), Accelerator( GDK_KEY_F11 ) );
+	GlobalCommands_insert( "MaximizeView", makeCallbackF( Maximize_View ), Accelerator( GDK_KEY_F12 ) );
+
 
 	GlobalCommands_insert( "CSGSubtract", makeCallbackF(CSG_Subtract), Accelerator( 'U', (GdkModifierType)GDK_SHIFT_MASK ) );
 	GlobalCommands_insert( "CSGMerge", makeCallbackF(CSG_Merge), Accelerator( 'U', (GdkModifierType) GDK_CONTROL_MASK ) );
-	GlobalCommands_insert( "CSGMakeHollow", makeCallbackF(CSG_MakeHollow) );
-	GlobalCommands_insert( "CSGMakeRoom", makeCallbackF(CSG_MakeRoom) );
+	GlobalCommands_insert( "CSGRoom", makeCallbackF(CSG_MakeRoom) );
+	GlobalCommands_insert( "CSGTool", makeCallbackF(CSG_Tool) );
 
 	Grid_registerCommands();
 
@@ -3600,8 +3859,10 @@ void MainFrame_Construct(){
 	GlobalSelectionSystem().addSelectionChangeCallback( ComponentModeSelectionChangedCaller() );
 
 	GlobalPreferenceSystem().registerPreference( "DetachableMenus", make_property_string( g_Layout_enableDetachableMenus.m_latched ) );
+	GlobalPreferenceSystem().registerPreference( "MainToolBar", make_property_string( g_Layout_enableMainToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "PatchToolBar", make_property_string( g_Layout_enablePatchToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "PluginToolBar", make_property_string( g_Layout_enablePluginToolbar.m_latched ) );
+	GlobalPreferenceSystem().registerPreference( "FilterToolBar", make_property_string( g_Layout_enableFilterToolbar.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "QE4StyleWindows", make_property_string( g_Layout_viewStyle.m_latched ) );
 	GlobalPreferenceSystem().registerPreference( "XYHeight", make_property_string( g_layout_globals.nXYHeight ) );
 	GlobalPreferenceSystem().registerPreference( "XYWidth", make_property_string( g_layout_globals.nXYWidth ) );
@@ -3619,7 +3880,12 @@ void MainFrame_Construct(){
 	GlobalPreferenceSystem().registerPreference( "YZWnd", make_property<WindowPositionTracker_String>(g_posYZWnd) );
 	GlobalPreferenceSystem().registerPreference( "XZWnd", make_property<WindowPositionTracker_String>(g_posXZWnd) );
 
+	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
+
+	GlobalPreferenceSystem().registerPreference( "NudgeAfterClone", make_property_string( g_bNudgeAfterClone ) );
+	if ( g_strEnginePath.empty() )
 	{
+		g_strEnginePath_was_empty_1st_start = true;
 		const char* ENGINEPATH_ATTRIBUTE =
 #if GDEF_OS_WINDOWS
 			"enginepath_win32"
@@ -3636,9 +3902,8 @@ void MainFrame_Construct(){
 		path << DirectoryCleaned( g_pGameDescription->getRequiredKeyValue( ENGINEPATH_ATTRIBUTE ) );
 
 		g_strEnginePath = transformPath( path.c_str() ).c_str();
+		GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
 	}
-
-	GlobalPreferenceSystem().registerPreference( "EnginePath", make_property_string( g_strEnginePath ) );
 
 	GlobalPreferenceSystem().registerPreference( "DisableEnginePath", make_property_string( g_disableEnginePath ) );
 	GlobalPreferenceSystem().registerPreference( "DisableHomePath", make_property_string( g_disableHomePath ) );
@@ -3650,11 +3915,14 @@ void MainFrame_Construct(){
 
 	g_Layout_viewStyle.useLatched();
 	g_Layout_enableDetachableMenus.useLatched();
+	g_Layout_enableMainToolbar.useLatched();
 	g_Layout_enablePatchToolbar.useLatched();
 	g_Layout_enablePluginToolbar.useLatched();
+	g_Layout_enableFilterToolbar.useLatched();
 
 	Layout_registerPreferencesPage();
 	Paths_registerPreferencesPage();
+	PreferencesDialog_addSettingsPreferences( FreeCaller<void(PreferencesPage&), Nudge_constructPreferences>() );
 
 	g_brushCount.setCountChangedCallback( makeCallbackF(QE_brushCountChanged) );
 	g_entityCount.setCountChangedCallback( makeCallbackF(QE_entityCountChanged) );
@@ -3675,7 +3943,7 @@ void MainFrame_Destroy(){
 
 
 void GLWindow_Construct(){
-	GlobalPreferenceSystem().registerPreference( "MouseButtons", make_property_string( g_glwindow_globals.m_nMouseType ) );
+//	GlobalPreferenceSystem().registerPreference( "MouseButtons", make_property_string( g_glwindow_globals.m_nMouseType ) );
 }
 
 void GLWindow_Destroy(){

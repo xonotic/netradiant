@@ -68,14 +68,19 @@ void IncDrawVerts(){
 
 	}
 	else if ( numBSPDrawVerts > numBSPDrawVertsBuffer ) {
+		bspDrawVert_t *newBspDrawVerts;
+
 		numBSPDrawVertsBuffer *= 3; // multiply by 1.5
 		numBSPDrawVertsBuffer /= 2;
 
-		bspDrawVerts = realloc( bspDrawVerts, sizeof( bspDrawVert_t ) * numBSPDrawVertsBuffer );
+		newBspDrawVerts = realloc( bspDrawVerts, sizeof( bspDrawVert_t ) * numBSPDrawVertsBuffer );
 
-		if ( !bspDrawVerts ) {
+		if ( !newBspDrawVerts ) {
+			free (bspDrawVerts);
 			Error( "realloc() failed (IncDrawVerts)" );
 		}
+
+		bspDrawVerts = newBspDrawVerts;
 	}
 
 	memset( bspDrawVerts + ( numBSPDrawVerts - 1 ), 0, sizeof( bspDrawVert_t ) );
@@ -163,7 +168,7 @@ void SwapBlock( int *block, int size ){
 
 void SwapBSPFile( void ){
 	int i, j;
-
+	shaderInfo_t    *si;
 
 	/* models */
 	SwapBlock( (int*) bspModels, numBSPModels * sizeof( bspModels[ 0 ] ) );
@@ -171,6 +176,12 @@ void SwapBSPFile( void ){
 	/* shaders (don't swap the name) */
 	for ( i = 0; i < numBSPShaders ; i++ )
 	{
+	if ( doingBSP ){
+		si = ShaderInfoForShader( bspShaders[ i ].shader );
+		if ( si->remapShader && si->remapShader[ 0 ] ) {
+			strcpy( bspShaders[ i ].shader, si->remapShader );
+		}
+	}
 		bspShaders[ i ].contentFlags = LittleLong( bspShaders[ i ].contentFlags );
 		bspShaders[ i ].surfaceFlags = LittleLong( bspShaders[ i ].surfaceFlags );
 	}
@@ -250,8 +261,6 @@ void SwapBSPFile( void ){
 		//bspAds[ i ].model[ MAX_QPATH ];
 	}
 }
-
-
 
 /*
    GetLumpElements()
@@ -365,7 +374,36 @@ void LoadBSPFile( const char *filename ){
 	SwapBSPFile();
 }
 
+/*
+   PartialLoadBSPFile()
+   partially loads a bsp file into memory
+   for autopacker
+ */
 
+void PartialLoadBSPFile( const char *filename ){
+	/* dummy check */
+	if ( game == NULL || game->load == NULL ) {
+		Error( "LoadBSPFile: unsupported BSP file format" );
+	}
+
+	/* load it, then byte swap the in-memory version */
+	//game->load( filename );
+	PartialLoadIBSPFile( filename );
+
+	/* PartialSwapBSPFile() */
+	int i;
+
+	/* shaders (don't swap the name) */
+	for ( i = 0; i < numBSPShaders ; i++ )
+	{
+		bspShaders[ i ].contentFlags = LittleLong( bspShaders[ i ].contentFlags );
+		bspShaders[ i ].surfaceFlags = LittleLong( bspShaders[ i ].surfaceFlags );
+	}
+
+	/* drawsurfs */
+	/* note: rbsp files (and hence q3map2 abstract bsp) have byte lightstyles index arrays, this follows sof2map convention */
+	SwapBlock( (int*) bspDrawSurfaces, numBSPDrawSurfaces * sizeof( bspDrawSurfaces[ 0 ] ) );
+}
 
 /*
    WriteBSPFile()
@@ -408,7 +446,12 @@ void PrintBSPFileSizes( void ){
 	if ( numEntities <= 0 ) {
 		ParseEntities();
 	}
-
+	int patchCount = 0;
+	bspDrawSurface_t *s;
+	for ( s = bspDrawSurfaces; s != bspDrawSurfaces + numBSPDrawSurfaces; ++s ){
+		if ( s->surfaceType == MST_PATCH )
+			++patchCount;
+	}
 	/* note that this is abstracted */
 	Sys_Printf( "Abstracted BSP file components (*actual sizes may differ)\n" );
 
@@ -441,6 +484,8 @@ void PrintBSPFileSizes( void ){
 
 	Sys_Printf( "%9d drawsurfaces  %9d *\n",
 				numBSPDrawSurfaces, (int) ( numBSPDrawSurfaces * sizeof( *bspDrawSurfaces ) ) );
+	Sys_Printf( "%9d patchsurfaces       \n",
+				patchCount );
 	Sys_Printf( "%9d drawverts     %9d *\n",
 				numBSPDrawVerts, (int) ( numBSPDrawVerts * sizeof( *bspDrawVerts ) ) );
 	Sys_Printf( "%9d drawindexes   %9d\n",
@@ -589,6 +634,9 @@ void InjectCommandLine( char **argv, int beginArgs, int endArgs ){
 	char *sentinel = newCommandLine + sizeof( newCommandLine ) - 1;
 	int i;
 
+	if ( nocmdline ){
+		return;
+	}
 	previousCommandLine = ValueForKey( &entities[0], "_q3map2_cmdline" );
 	if ( previousCommandLine && *previousCommandLine ) {
 		inpos = previousCommandLine;
@@ -926,7 +974,7 @@ void GetEntityShadowFlags( const entity_t *ent, const entity_t *ent2, int *castS
 		}
 	}
 
-	/* vortex: game-specific default eneity keys */
+	/* vortex: game-specific default entity keys */
 	value = ValueForKey( ent, "classname" );
 	if ( !Q_stricmp( game->magic, "dq" ) || !Q_stricmp( game->magic, "prophecy" ) ) {
 		/* vortex: deluxe quake default shadow flags */

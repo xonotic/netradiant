@@ -43,7 +43,6 @@
 #include "gtkutil/dialog.h"
 #include "gtkutil/filechooser.h"
 #include "gtkutil/menu.h"
-#include "gtkutil/toolbar.h"
 #include "commands.h"
 
 

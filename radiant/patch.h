@@ -880,6 +880,12 @@ const_iterator end() const {
 PatchControlArray& getControlPoints(){
 	return m_ctrl;
 }
+
+// Same as above, just for const arguments
+const PatchControlArray& getControlPoints() const {
+	return m_ctrl;
+}
+
 PatchControlArray& getControlPointsTransformed(){
 	return m_ctrlTransformed;
 }
@@ -916,6 +922,8 @@ void SetTextureRepeat( float s, float t ); // call with s=1 t=1 for FIT
 void CapTexture();
 void NaturalTexture();
 void ProjectTexture( int nAxis );
+void createThickenedOpposite(const Patch& sourcePatch, const float thickness, const int axis, bool& no12, bool& no34 );
+void createThickenedWall(const Patch& sourcePatch, const Patch& targetPatch, const int wallIndex);
 
 void undoSave(){
 	if ( m_map != 0 ) {
@@ -1414,6 +1422,11 @@ void allocate( std::size_t size ){
 
 void setSelected( bool select ){
 	m_selectable.setSelected( select );
+	if ( !select && parent() ){
+		Selectable* sel_parent = Instance_getSelectable( *parent() );
+		if ( sel_parent && sel_parent->isSelected() )
+			sel_parent->setSelected( false );
+	}
 }
 bool isSelected() const {
 	return m_selectable.isSelected();
@@ -1569,6 +1582,13 @@ void transformComponents( const Matrix4& matrix ){
 
 	if ( m_dragPlanes.isSelected() ) { // this should only be true when the transform is a pure translation.
 		m_patch.transform( m_dragPlanes.evaluateTransform( vector4_to_vector3( matrix.t() ) ) );
+	}
+}
+
+void invertComponentSelection(){
+	for ( PatchControlInstances::iterator i = m_ctrl_instances.begin(); i != m_ctrl_instances.end(); ++i )
+	{
+		( *i ).m_selectable.setSelected( !( *i ).m_selectable.isSelected() );
 	}
 }
 
@@ -1802,6 +1822,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			m_functor( *patch );
 		}
 	}
+	else{
+		return false;
+	}
 	return true;
 }
 };
@@ -1826,6 +1849,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			m_functor( *patch );
 		}
 	}
+	else{
+		return false;
+	}
 	return true;
 }
 };
@@ -1848,6 +1874,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 		if ( patch != 0 ) {
 			m_functor( *patch );
 		}
+	}
+	else{
+		return false;
 	}
 	return true;
 }

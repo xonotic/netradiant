@@ -1109,7 +1109,27 @@ void Texdef_FitTexture( TextureProjection& projection, std::size_t width, std::s
 	bounds.extents.z() = 1;
 
 	// the bounds of a perfectly fitted texture transform
-	AABB perfect( Vector3( s_repeat * 0.5, t_repeat * 0.5, 0 ), Vector3( s_repeat * 0.5, t_repeat * 0.5, 1 ) );
+	AABB perfect;
+	if( t_repeat == 0 && s_repeat == 0 ){
+		//bad user's input
+		t_repeat = s_repeat = 1;
+		perfect.origin = Vector3( s_repeat * 0.5, t_repeat * 0.5, 0 );
+		perfect.extents = Vector3( s_repeat * 0.5, t_repeat * 0.5, 1 );
+	}
+	if( t_repeat == 0 ){
+		//fit width
+		perfect.origin = Vector3( s_repeat * 0.5, s_repeat * 0.5 * bounds.extents.y() / bounds.extents.x(), 0 );
+		perfect.extents = Vector3( s_repeat * 0.5, s_repeat * 0.5 * bounds.extents.y() / bounds.extents.x(), 1 );
+	}
+	else if( s_repeat == 0 ){
+		//fit height
+		perfect.origin = Vector3( t_repeat * 0.5 * bounds.extents.x() / bounds.extents.y(), t_repeat * 0.5, 0 );
+		perfect.extents = Vector3( t_repeat * 0.5 * bounds.extents.x() / bounds.extents.y(), t_repeat * 0.5, 1 );
+	}
+	else{
+		perfect.origin = Vector3( s_repeat * 0.5, t_repeat * 0.5, 0 );
+		perfect.extents = Vector3( s_repeat * 0.5, t_repeat * 0.5, 1 );
+	}
 
 	// the difference between the current texture transform and the perfectly fitted transform
 	Matrix4 matrix( matrix4_translation_for_vec3( bounds.origin - perfect.origin ) );

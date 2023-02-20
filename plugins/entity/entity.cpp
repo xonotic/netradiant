@@ -111,9 +111,10 @@ EntityCreator::KeyValueChangedFunc KeyValue::m_entityKeyValueChanged = 0;
 Counter* EntityKeyValues::m_counter = 0;
 
 bool g_showNames = true;
+bool g_showTargetNames = false;
 bool g_showAngles = true;
 bool g_newLightDraw = true;
-bool g_lightRadii = false;
+bool g_lightRadii = true;
 
 class ConnectEntities
 {
@@ -208,22 +209,48 @@ void connectEntities( const scene::Path& path, const scene::Path& targetPath, in
 	else
 	{
 		ConnectEntities connector( e1, e2, index );
-		const char* value = e2->getKeyValue( "targetname" );
-		if ( !string_empty( value ) ) {
-			connector.connect( value );
-		}
-		else
-		{
-			const char* type = e2->getKeyValue( "classname" );
-			if ( string_empty( type ) ) {
-				type = "t";
+		//killconnect
+		if( index == 1 ){
+			const char* value = e2->getKeyValue( "targetname" );
+			if ( !string_empty( value ) ) {
+				connector.connect( value );
 			}
-			StringOutputStream key( 64 );
-			key << type << "1";
-			GlobalNamespace().makeUnique( key.c_str(), ConnectEntities::ConnectCaller( connector ) );
+			else
+			{
+				const char* type = e2->getKeyValue( "classname" );
+				if ( string_empty( type ) ) {
+					type = "t";
+				}
+				StringOutputStream key( 64 );
+				key << type << "1";
+				GlobalNamespace().makeUnique( key.c_str(), ConnectEntities::ConnectCaller( connector ) );
+			}
+		}
+		//normal connect
+		else{
+			//prioritize existing target key
+			//checking, if ent got other connected ones already, could be better solution
+			const char* value = e1->getKeyValue( "target" );
+			if ( !string_empty( value ) ) {
+				connector.connect( value );
+			}
+			else{
+				value = e2->getKeyValue( "targetname" );
+				if ( !string_empty( value ) ) {
+					connector.connect( value );
+				}
+				else{
+					const char* type = e2->getKeyValue( "classname" );
+					if ( string_empty( type ) ) {
+						type = "t";
+					}
+					StringOutputStream key( 64 );
+					key << type << "1";
+					GlobalNamespace().makeUnique( key.c_str(), ConnectEntities::ConnectCaller( connector ) );
+				}
+			}
 		}
 	}
-
 	SceneChangeNotify();
 }
 void setLightRadii( bool lightRadii ){
@@ -237,6 +264,12 @@ void setShowNames( bool showNames ){
 }
 bool getShowNames(){
 	return g_showNames;
+}
+void setShowTargetNames( bool showNames ){
+	g_showTargetNames = showNames;
+}
+bool getShowTargetNames(){
+	return g_showTargetNames;
 }
 void setShowAngles( bool showAngles ){
 	g_showAngles = showAngles;
@@ -281,7 +314,7 @@ bool filter( const Entity& entity ) const {
 }
 };
 
-filter_entity_classname g_filter_entity_world( "worldspawn" );
+//filter_entity_classname g_filter_entity_world( "worldspawn" );
 filter_entity_classname g_filter_entity_func_group( "func_group" );
 filter_entity_classname g_filter_entity_light( "light" );
 filter_entity_classname g_filter_entity_misc_model( "misc_model" );
@@ -301,9 +334,20 @@ bool filter( const Entity& entity ) const {
 filter_entity_doom3model g_filter_entity_doom3model;
 
 
+class filter_entity_world : public EntityFilter
+{
+public:
+bool filter( const Entity& entity ) const {
+	return string_equal( entity.getKeyValue( "classname" ), "worldspawn" )
+		   || string_equal( entity.getKeyValue( "classname" ), "func_group" );
+}
+};
+
+filter_entity_world g_filter_entity_world;
+
 void Entity_InitFilters(){
 	add_entity_filter( g_filter_entity_world, EXCLUDE_WORLD );
-	add_entity_filter( g_filter_entity_func_group, EXCLUDE_WORLD );
+	add_entity_filter( g_filter_entity_func_group, EXCLUDE_FUNC_GROUPS );
 	add_entity_filter( g_filter_entity_world, EXCLUDE_ENT, true );
 	add_entity_filter( g_filter_entity_trigger, EXCLUDE_TRIGGERS );
 	add_entity_filter( g_filter_entity_misc_model, EXCLUDE_MODELS );
@@ -331,6 +375,7 @@ void Entity_Construct( EGameType gameType ){
 	}
 
 	GlobalPreferenceSystem().registerPreference( "SI_ShowNames", make_property_string( g_showNames ) );
+	GlobalPreferenceSystem().registerPreference( "SI_ShowTargetNames", make_property_string( g_showTargetNames ) );
 	GlobalPreferenceSystem().registerPreference( "SI_ShowAngles", make_property_string( g_showAngles ) );
 	GlobalPreferenceSystem().registerPreference( "NewLightStyle", make_property_string( g_newLightDraw ) );
 	GlobalPreferenceSystem().registerPreference( "LightRadiuses", make_property_string( g_lightRadii ) );

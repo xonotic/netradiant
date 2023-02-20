@@ -68,7 +68,7 @@
 #define Q_CONT_NODROP               0x80000000  /* don't leave bodies or items (death fog, lava) */
 
 #define Q_SURF_NODAMAGE             0x1         /* never give falling damage */
-#define Q_SURF_SLICK                0x2         /* effects game physics */
+#define Q_SURF_SLICK                0x2         /* effects game physics: zero friction on this */
 #define Q_SURF_SKY                  0x4         /* lighting from environment map */
 #define Q_SURF_LADDER               0x8
 #define Q_SURF_NOIMPACT             0x10        /* don't make missile explosions */
@@ -86,6 +86,7 @@
 #define Q_SURF_ALPHASHADOW          0x10000     /* do per-pixel light shadow casting in q3map */
 #define Q_SURF_NODLIGHT             0x20000     /* don't dlight even if solid (solid lava, skies) */
 #define Q_SURF_DUST                 0x40000     /* leave a dust trail when walking on this surface */
+#define Q_SURF_NOOB                 0x80000     /* no overbounces on this surface */
 
 /* ydnar flags */
 #define Q_SURF_VERTEXLIT            ( Q_SURF_POINTLIGHT | Q_SURF_NOLIGHTMAP )
@@ -199,6 +200,9 @@
 		{ "nosteps",        0,                          0,                          Q_SURF_NOSTEPS,             0,                          0,                          0 },
 		{ "nodlight",       0,                          0,                          Q_SURF_NODLIGHT,            0,                          0,                          0 },
 		{ "dust",           0,                          0,                          Q_SURF_DUST,                0,                          0,                          0 },
+		{ "noob",           0,                          0,                          Q_SURF_NOOB,                0,                          0,                          0 },
+		{ "ob",             0,                          0,                          0,                          0,                          C_OB,                       0 },
+
 
 		/* null */
 		{ NULL, 0, 0, 0, 0, 0, 0 }

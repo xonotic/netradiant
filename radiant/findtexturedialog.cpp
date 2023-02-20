@@ -46,6 +46,7 @@
 class FindTextureDialog : public Dialog
 {
 public:
+WindowPositionTracker m_position_tracker;
 static void setReplaceStr( const char* name );
 static void setFindStr( const char* name );
 static bool isOpen();
@@ -122,6 +123,7 @@ static gint replace_focus_in( ui::Widget widget, GdkEventFocus *event, gpointer 
 
 FindTextureDialog::FindTextureDialog(){
 	m_bSelectedOnly = FALSE;
+	m_position_tracker.setPosition( WindowPosition( -1, -1, 0, 0 ) );
 }
 
 FindTextureDialog::~FindTextureDialog(){
@@ -133,6 +135,8 @@ ui::Window FindTextureDialog::BuildDialog(){
 	ui::Entry entry{ui::null};
 
 	auto dlg = ui::Window(create_floating_window( "Find / Replace Texture(s)", m_parent ));
+
+	m_position_tracker.connect( dlg );
 
 	auto hbox = ui::HBox( FALSE, 5 );
 	hbox.show();
@@ -154,7 +158,8 @@ ui::Window FindTextureDialog::BuildDialog(){
     table.attach(label, {0, 1, 0, 1}, {GTK_FILL, 0});
 	gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
 
-	label = ui::Label( "Replace:" );
+	label = ui::Label( "Replace:*" );
+	gtk_widget_set_tooltip_text( label, "Empty = search mode" );
 	label.show();
     table.attach(label, {0, 1, 1, 2}, {GTK_FILL, 0});
 	gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
@@ -168,6 +173,7 @@ ui::Window FindTextureDialog::BuildDialog(){
 	GlobalTextureEntryCompletion::instance().connect( entry );
 
 	entry = ui::Entry(ui::New);
+	gtk_widget_set_tooltip_text( entry, "Empty = search mode" );
 	entry.show();
     table.attach(entry, {1, 2, 1, 2}, {GTK_EXPAND | GTK_FILL, 0});
 	entry.connect( "focus_in_event",
@@ -230,7 +236,10 @@ void FindTextureDialog::setReplaceStr( const char* name ){
 }
 
 void FindTextureDialog::show(){
+	// workaround for strange gtk behaviour - modifying the contents of a window while it is not visible causes the window position to change without sending a configure_event
+	g_FindTextureDialog.m_position_tracker.sync( g_FindTextureDialog.GetWidget() );
 	g_FindTextureDialog.ShowDlg();
+	gtk_window_present( g_FindTextureDialog.GetWidget() );
 }
 
 
@@ -250,8 +259,11 @@ void FindTextureDialog_selectTexture( const char* name ){
 	g_FindTextureDialog.updateTextures( name );
 }
 
+#include "preferencesystem.h"
+
 void FindTextureDialog_Construct(){
 	GlobalCommands_insert( "FindReplaceTextures", FindTextureDialog::ShowCaller() );
+	GlobalPreferenceSystem().registerPreference( "FindReplacehWnd",  make_property_string<WindowPositionTracker_String>( g_FindTextureDialog.m_position_tracker ) );
 }
 
 void FindTextureDialog_Destroy(){

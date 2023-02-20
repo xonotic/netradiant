@@ -25,6 +25,7 @@
 
 #include <uilib/uilib.h>
 #include <gtk/gtk.h>
+#include <gtk/gtkcheckbutton.h>
 
 #include "string/string.h"
 #include "scenelib.h"
@@ -39,6 +40,8 @@
 #include "gtkutil/closure.h"
 
 #include "treemodel.h"
+
+#include "mainframe.h"
 
 void RedrawEntityList();
 typedef FreeCaller<void(), RedrawEntityList> RedrawEntityListCaller;
@@ -60,6 +63,7 @@ IdleDraw m_idleDraw;
 WindowPositionTracker m_positionTracker;
 
 ui::Window m_window;
+ui::Widget m_check;
 ui::TreeView m_tree_view{ui::null};
 ui::TreeModel m_tree_model{ui::null};
 bool m_selection_disabled;
@@ -68,6 +72,7 @@ EntityList() :
 	m_dirty( EntityList::eDefault ),
 	m_idleDraw( RedrawEntityListCaller() ),
 	m_window( ui::null ),
+	m_check( ui::null ),
 	m_selection_disabled( false ){
 }
 
@@ -154,6 +159,9 @@ static gboolean entitylist_tree_select( ui::TreeSelection selection, ui::TreeMod
 		getEntityList().m_selection_disabled = true;
 		selectable->setSelected( path_currently_selected == FALSE );
 		getEntityList().m_selection_disabled = false;
+		if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( getEntityList().m_check ) ) ){
+			FocusAllViews();
+		}
 		return TRUE;
 	}
 
@@ -292,8 +300,13 @@ void EntityList_constructWindow( ui::Window main_window ){
 	getEntityList().m_window = window;
 
 	{
+		ui::VBox vbox = ui::VBox( FALSE, 0 );
+		gtk_container_set_border_width( GTK_CONTAINER( vbox ), 0 );
+		vbox.show();
+		window.add( vbox );
+
 		auto scr = create_scrolled_window( ui::Policy::AUTOMATIC, ui::Policy::AUTOMATIC );
-		window.add(scr);
+		vbox.pack_start( scr, TRUE, TRUE, 0 );
 
 		{
             auto view = ui::TreeView(ui::New);
@@ -315,6 +328,13 @@ void EntityList_constructWindow( ui::Window main_window ){
 			view.show();
 			scr.add(view);
 			getEntityList().m_tree_view = view;
+		}
+		{
+			ui::Widget check = ui::Widget::from( gtk_check_button_new_with_label( "Focus on Selected" ) );
+			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( check ), FALSE );
+			check.show();
+			vbox.pack_start( check, FALSE, FALSE, 0 );
+			getEntityList().m_check = check;
 		}
 	}
 

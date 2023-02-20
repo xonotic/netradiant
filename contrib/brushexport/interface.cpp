@@ -5,6 +5,7 @@
 #include "callbacks.h"
 #include "support.h"
 #include "gtkutil/dialog.h"
+#include "plugin.h"
 
 #define GLADE_HOOKUP_OBJECT( component,widget,name ) \
 	g_object_set_data_full( G_OBJECT( component ), name, \
@@ -20,6 +21,8 @@ ui::Widget create_w_plugplug2( ui::Window main_window ){
 
 	auto w_plugplug2 = main_window.create_dialog_window( "BrushExport", G_CALLBACK( dialog_delete_callback ), &dialog );
 	gtk_widget_set_name( w_plugplug2, "w_plugplug2" );
+	gtk_window_set_position( GTK_WINDOW( w_plugplug2 ), GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_transient_for( GTK_WINDOW( w_plugplug2 ), GTK_WINDOW( g_pRadiantWnd ) );
 	gtk_window_set_destroy_with_parent( w_plugplug2, TRUE );
 
 	auto vbox1 = ui::VBox( FALSE, 0 );

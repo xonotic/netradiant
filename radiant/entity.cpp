@@ -47,6 +47,9 @@
 #include "qe3.h"
 #include "commands.h"
 
+#include "brushmanip.h"
+#include "patchmanip.h"
+
 #include "uilib/uilib.h"
 
 struct entity_globals_t
@@ -100,17 +103,20 @@ void post( const scene::Path& path, scene::Instance& instance ) const {
 
 		EntityCopyingVisitor visitor( *Node_getEntity( node ) );
 
-		entity->forEachKeyValue( visitor );
+		//entity->forEachKeyValue( visitor );
 
 		NodeSmartReference child( path.top().get() );
 		NodeSmartReference parent( path.parent().get() );
-		Node_getTraversable( parent )->erase( child );
+		//Node_getTraversable( parent )->erase( child );
 		if ( Node_getTraversable( child ) != 0
 			 && Node_getTraversable( node ) != 0
 			 && node_is_group( node ) ) {
 			parentBrushes( child, node );
 		}
 		Node_getTraversable( parent )->insert( node );
+		/* must do this after inserting node, otherwise problem: targeted + having model + not loaded b4 new entities aren't selectable normally + rendered only while 0 0 0 is rendered */
+		entity->forEachKeyValue( visitor );
+		Node_getTraversable( parent )->erase( child );
 	}
 }
 };
@@ -306,9 +312,22 @@ void Entity_createFromSelection( const char* name, const Vector3& origin ){
 
 	bool isModel = ( string_compare_nocase_n( name, "misc_", 5 ) == 0 && string_equal_nocase( name + string_length( name ) - 5, "model" ) ) // misc_*model (also misc_model)
 				   || string_equal_nocase( name, "model_static" )
-				   || ( GlobalSelectionSystem().countSelected() == 0 && string_equal_nocase( name, "func_static" ) );
+				   || ( GlobalSelectionSystem().countSelected() == 0 && string_equal_nocase( name, "func_static" ) && g_pGameDescription->mGameType == "doom3" );
 
 	bool brushesSelected = Scene_countSelectedBrushes( GlobalSceneGraph() ) != 0;
+
+	//is important to have retexturing here; if doing in the end, undo doesn't succeed;
+	if ( string_compare_nocase_n( name, "trigger_", 8 ) == 0 && brushesSelected ){
+		const char* shader = g_pGameDescription->getKeyValue( "shader_trigger" );
+		if ( shader && *shader ){
+			Scene_PatchSetShader_Selected( GlobalSceneGraph(), shader );
+			Scene_BrushSetShader_Selected( GlobalSceneGraph(), shader );
+		}
+		else{
+			Scene_PatchSetShader_Selected( GlobalSceneGraph(), "textures/common/trigger" );
+			Scene_BrushSetShader_Selected( GlobalSceneGraph(), "textures/common/trigger" );
+		}
+	}
 
 	if ( !( entityClass->fixedsize || isModel ) && !brushesSelected ) {
 		globalErrorStream() << "failed to create a group entity - no brushes are selected\n";
@@ -472,6 +491,10 @@ void Entity_normalizeColor(){
 		const scene::Path& path = GlobalSelectionSystem().ultimateSelected().path();
 		Entity* entity = Node_getEntity( path.top() );
 
+		if( entity == 0 && path.size() == 3 ){
+			entity = Node_getEntity( path.parent() );
+		}
+
 		if ( entity != 0 ) {
 			const char* strColor = entity->getKeyValue( "_color" );
 			if ( !string_empty( strColor ) ) {
@@ -485,6 +508,9 @@ void Entity_normalizeColor(){
 							 g_entity_globals.color_entity[1],
 							 g_entity_globals.color_entity[2] );
 
+					StringOutputStream command( 256 );
+					command << "entityNormalizeColour " << buffer;
+					UndoableCommand undo( command.c_str() );
 					Scene_EntitySetKeyValue_Selected( "_color", buffer );
 				}
 			}
@@ -494,9 +520,12 @@ void Entity_normalizeColor(){
 
 void Entity_setColour(){
 	if ( GlobalSelectionSystem().countSelected() != 0 ) {
-		bool normalize = false;
 		const scene::Path& path = GlobalSelectionSystem().ultimateSelected().path();
 		Entity* entity = Node_getEntity( path.top() );
+
+		if( entity == 0 && path.size() == 3 ){
+			entity = Node_getEntity( path.parent() );
+		}
 
 		if ( entity != 0 ) {
 			const char* strColor = entity->getKeyValue( "_color" );
@@ -506,21 +535,15 @@ void Entity_setColour(){
 					g_entity_globals.color_entity = rgb;
 				}
 			}
-
-			if ( g_pGameDescription->mGameType == "doom3" ) {
-				normalize = false;
-			}
-
 			if ( color_dialog( MainFrame_getWindow(), g_entity_globals.color_entity ) ) {
-				if ( normalize ) {
-					NormalizeColor( g_entity_globals.color_entity );
-				}
-
 				char buffer[128];
 				sprintf( buffer, "%g %g %g", g_entity_globals.color_entity[0],
 						 g_entity_globals.color_entity[1],
 						 g_entity_globals.color_entity[2] );
 
+				StringOutputStream command( 256 );
+				command << "entitySetColour " << buffer;
+				UndoableCommand undo( command.c_str() );
 				Scene_EntitySetKeyValue_Selected( "_color", buffer );
 			}
 		}
@@ -560,7 +583,7 @@ const char *misc_model_dialog( ui::Widget parent ){
 	}
 	return 0;
 }
-
+/*
 struct LightRadii {
 	static void Export(const EntityCreator &self, const Callback<void(bool)> &returnz) {
 		returnz(self.getLightRadii());
@@ -585,15 +608,31 @@ void Entity_constructPage( PreferenceGroup& group ){
 void Entity_registerPreferencesPage(){
 	PreferencesDialog_addDisplayPage( makeCallbackF(Entity_constructPage) );
 }
+*/
 
+void ShowLightRadiiToggle(){
+	GlobalEntityCreator().setLightRadii( !GlobalEntityCreator().getLightRadii() );
+	UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowLightRadiiToggle> ShowLightRadiiToggleCaller;
+void ShowLightRadiiExport( const Callback<void(bool)> & importer ){
+	GlobalEntityCreator().getLightRadii();
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowLightRadiiExport> ShowLightRadiiExportCaller;
+
+ShowLightRadiiExportCaller g_show_lightradii_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_lightradii_callback( g_show_lightradii_caller );
+ToggleItem g_show_lightradii( g_show_lightradii_callback );
 
 void Entity_constructMenu( ui::Menu menu ){
 	create_menu_item_with_mnemonic( menu, "_Regroup", "GroupSelection" );
 	create_menu_item_with_mnemonic( menu, "_Ungroup", "UngroupSelection" );
 	create_menu_item_with_mnemonic( menu, "_Connect", "ConnectSelection" );
-	create_menu_item_with_mnemonic( menu, "_KillConnect", "KillConnectSelection" );
+	if ( g_pGameDescription->mGameType == "nexuiz" ) {
+		create_menu_item_with_mnemonic( menu, "_KillConnect", "KillConnectSelection" );
+	}
 	create_menu_item_with_mnemonic( menu, "_Select Color...", "EntityColor" );
-	create_menu_item_with_mnemonic( menu, "_Normalize Color...", "NormalizeColor" );
+	create_menu_item_with_mnemonic( menu, "_Normalize Color", "NormalizeColor" );
 }
 
 
@@ -605,10 +644,12 @@ void Entity_Construct(){
 	GlobalCommands_insert( "GroupSelection", makeCallbackF(Entity_groupSelected) );
 	GlobalCommands_insert( "UngroupSelection", makeCallbackF(Entity_ungroupSelected) );
 
+	GlobalToggles_insert( "ShowLightRadiuses", makeCallbackF( ShowLightRadiiToggle ), ToggleItem::AddCallbackCaller( g_show_lightradii ) );
+
 	GlobalPreferenceSystem().registerPreference( "SI_Colors5", make_property_string( g_entity_globals.color_entity ) );
 	GlobalPreferenceSystem().registerPreference( "LastLightIntensity", make_property_string( g_iLastLightIntensity ) );
 
-	Entity_registerPreferencesPage();
+//	Entity_registerPreferencesPage();
 }
 
 void Entity_Destroy(){

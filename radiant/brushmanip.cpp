@@ -139,24 +139,29 @@ void Brush_ConstructPrism( Brush& brush, const AABB& bounds, std::size_t sides, 
 		double sv = sin( i * 3.14159265 * 2 / sides );
 		double cv = cos( i * 3.14159265 * 2 / sides );
 
-		planepts[0][( axis + 1 ) % 3] = static_cast<float>( floor( mid[( axis + 1 ) % 3] + radius * cv + 0.5 ) );
-		planepts[0][( axis + 2 ) % 3] = static_cast<float>( floor( mid[( axis + 2 ) % 3] + radius * sv + 0.5 ) );
+//		planepts[0][( axis + 1 ) % 3] = static_cast<float>( floor( mid[( axis + 1 ) % 3] + radius * cv + 0.5 ) );
+//		planepts[0][( axis + 2 ) % 3] = static_cast<float>( floor( mid[( axis + 2 ) % 3] + radius * sv + 0.5 ) );
+		planepts[0][( axis + 1 ) % 3] = static_cast<float>( mid[( axis + 1 ) % 3] + radius * cv );
+		planepts[0][( axis + 2 ) % 3] = static_cast<float>( mid[( axis + 2 ) % 3] + radius * sv );
 		planepts[0][axis] = mins[axis];
 
 		planepts[1][( axis + 1 ) % 3] = planepts[0][( axis + 1 ) % 3];
 		planepts[1][( axis + 2 ) % 3] = planepts[0][( axis + 2 ) % 3];
 		planepts[1][axis] = maxs[axis];
 
-		planepts[2][( axis + 1 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 1 ) % 3] - radius * sv + 0.5 ) );
-		planepts[2][( axis + 2 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 2 ) % 3] + radius * cv + 0.5 ) );
+//		planepts[2][( axis + 1 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 1 ) % 3] - radius * sv + 0.5 ) );
+//		planepts[2][( axis + 2 ) % 3] = static_cast<float>( floor( planepts[0][( axis + 2 ) % 3] + radius * cv + 0.5 ) );
+		planepts[2][( axis + 1 ) % 3] = static_cast<float>( planepts[0][( axis + 1 ) % 3] - radius * sv );
+		planepts[2][( axis + 2 ) % 3] = static_cast<float>( planepts[0][( axis + 2 ) % 3] + radius * cv );
 		planepts[2][axis] = maxs[axis];
+		//globalOutputStream() << planepts[0] << "   " << planepts[2] << "  #" << i << "   sin " << sv << "  cos " << cv << "\n";
 
 		brush.addPlane( planepts[0], planepts[1], planepts[2], shader, projection );
 	}
 }
 
 const std::size_t c_brushCone_minSides = 3;
-const std::size_t c_brushCone_maxSides = 32;
+const std::size_t c_brushCone_maxSides = c_brush_maxFaces - 1;
 const char* const c_brushCone_name = "brushCone";
 
 void Brush_ConstructCone( Brush& brush, const AABB& bounds, std::size_t sides, const char* shader, const TextureProjection& projection ){
@@ -190,16 +195,20 @@ void Brush_ConstructCone( Brush& brush, const AABB& bounds, std::size_t sides, c
 		double sv = sin( i * 3.14159265 * 2 / sides );
 		double cv = cos( i * 3.14159265 * 2 / sides );
 
-		planepts[0][0] = static_cast<float>( floor( mid[0] + radius * cv + 0.5 ) );
-		planepts[0][1] = static_cast<float>( floor( mid[1] + radius * sv + 0.5 ) );
+		planepts[0][0] = static_cast<float>( mid[0] + radius * cv );
+		planepts[0][1] = static_cast<float>( mid[1] + radius * sv );
+//		planepts[0][0] = static_cast<float>( floor( mid[0] + radius * cv + 0.5 ) );
+//		planepts[0][1] = static_cast<float>( floor( mid[1] + radius * sv + 0.5 ) );
 		planepts[0][2] = mins[2];
 
 		planepts[1][0] = mid[0];
 		planepts[1][1] = mid[1];
 		planepts[1][2] = maxs[2];
 
-		planepts[2][0] = static_cast<float>( floor( planepts[0][0] - radius * sv + 0.5 ) );
-		planepts[2][1] = static_cast<float>( floor( planepts[0][1] + radius * cv + 0.5 ) );
+		planepts[2][0] = static_cast<float>( planepts[0][0] - radius * sv );
+		planepts[2][1] = static_cast<float>( planepts[0][1] + radius * cv );
+//		planepts[2][0] = static_cast<float>( floor( planepts[0][0] - radius * sv + 0.5 ) );
+//		planepts[2][1] = static_cast<float>( floor( planepts[0][1] + radius * cv + 0.5 ) );
 		planepts[2][2] = maxs[2];
 
 		brush.addPlane( planepts[0], planepts[1], planepts[2], shader, projection );
@@ -626,6 +635,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			Instance_getSelectable( instance )->setSelected( true );
 		}
 	}
+	else{
+		return false;
+	}
 	return true;
 }
 };
@@ -638,8 +650,8 @@ void Scene_BrushSelectByShader_Component( scene::Graph& graph, const char* name 
 	Scene_ForEachSelectedBrush_ForEachFaceInstance(graph, [&](FaceInstance &face) {
 		printf("checking %s = %s\n", face.getFace().GetShader(), name);
 		if (shader_equal(face.getFace().GetShader(), name)) {
-			face.setSelected(SelectionSystem::eFace, true);
-		}
+		face.setSelected( SelectionSystem::eFace, true );
+	}
 	});
 }
 
@@ -649,7 +661,7 @@ void Scene_BrushGetTexdef_Selected( scene::Graph& graph, TextureProjection& proj
 		if (!done) {
 			done = true;
 			face.GetTexdef(projection);
-		}
+}
 	});
 }
 
@@ -847,11 +859,17 @@ filter_brush_all_faces g_filter_brush_caulk( &g_filter_face_caulk );
 filter_face_shader_prefix g_filter_face_caulk_ja( "textures/system/caulk" );
 filter_brush_all_faces g_filter_brush_caulk_ja( &g_filter_face_caulk_ja );
 
-filter_face_shader_prefix g_filter_face_liquids( "textures/liquids/" );
+filter_face_flags g_filter_face_liquids( QER_LIQUID );
 filter_brush_any_face g_filter_brush_liquids( &g_filter_face_liquids );
+
+filter_face_shader_prefix g_filter_face_liquidsdir( "textures/liquids/" );
+filter_brush_any_face g_filter_brush_liquidsdir( &g_filter_face_liquidsdir );
 
 filter_face_shader g_filter_face_hint( "textures/common/hint" );
 filter_brush_any_face g_filter_brush_hint( &g_filter_face_hint );
+
+filter_face_shader g_filter_face_hintlocal( "textures/common/hintlocal" );
+filter_brush_any_face g_filter_brush_hintlocal( &g_filter_face_hintlocal );
 
 filter_face_shader g_filter_face_hint_q2( "textures/hint" );
 filter_brush_any_face g_filter_brush_hint_q2( &g_filter_face_hint_q2 );
@@ -863,7 +881,7 @@ filter_face_shader g_filter_face_subtlehint( "textures/common/subtlehint" );
 filter_brush_any_face g_filter_brush_subtlehint( &g_filter_face_subtlehint );
 
 filter_face_shader g_filter_face_areaportal( "textures/common/areaportal" );
-filter_brush_all_faces g_filter_brush_areaportal( &g_filter_face_areaportal );
+filter_brush_any_face g_filter_brush_areaportal( &g_filter_face_areaportal );
 
 filter_face_shader g_filter_face_visportal( "textures/editor/visportal" );
 filter_brush_any_face g_filter_brush_visportal( &g_filter_face_visportal );
@@ -874,8 +892,8 @@ filter_brush_all_faces g_filter_brush_clusterportal( &g_filter_face_clusterporta
 filter_face_shader g_filter_face_lightgrid( "textures/common/lightgrid" );
 filter_brush_all_faces g_filter_brush_lightgrid( &g_filter_face_lightgrid );
 
-filter_face_flags g_filter_face_translucent( QER_TRANS );
-filter_brush_all_faces g_filter_brush_translucent( &g_filter_face_translucent );
+filter_face_flags g_filter_face_translucent( QER_TRANS | QER_ALPHATEST );
+filter_brush_any_face g_filter_brush_translucent( &g_filter_face_translucent );
 
 filter_face_contents g_filter_face_detail( BRUSH_DETAIL_MASK );
 filter_brush_all_faces g_filter_brush_detail( &g_filter_face_detail );
@@ -896,7 +914,9 @@ void BrushFilters_construct(){
 	add_face_filter( g_filter_face_caulk, EXCLUDE_CAULK );
 	add_face_filter( g_filter_face_caulk_ja, EXCLUDE_CAULK );
 	add_brush_filter( g_filter_brush_liquids, EXCLUDE_LIQUIDS );
+	add_brush_filter( g_filter_brush_liquidsdir, EXCLUDE_LIQUIDS );
 	add_brush_filter( g_filter_brush_hint, EXCLUDE_HINTSSKIPS );
+	add_brush_filter( g_filter_brush_hintlocal, EXCLUDE_HINTSSKIPS );
 	add_brush_filter( g_filter_brush_hint_q2, EXCLUDE_HINTSSKIPS );
 	add_brush_filter( g_filter_brush_hint_ja, EXCLUDE_HINTSSKIPS );
 	add_brush_filter( g_filter_brush_subtlehint, EXCLUDE_HINTSSKIPS );
@@ -1266,10 +1286,10 @@ void Brush_constructMenu( ui::Menu menu ){
 		if ( g_Layout_enableDetachableMenus.m_value ) {
 			menu_tearoff( menu_in_menu );
 		}
-		create_menu_item_with_mnemonic( menu_in_menu, "Make _Hollow", "CSGMakeHollow" );
-		create_menu_item_with_mnemonic( menu_in_menu, "Make _Room", "CSGMakeRoom" );
 		create_menu_item_with_mnemonic( menu_in_menu, "CSG _Subtract", "CSGSubtract" );
 		create_menu_item_with_mnemonic( menu_in_menu, "CSG _Merge", "CSGMerge" );
+		create_menu_item_with_mnemonic( menu_in_menu, "Make _Room", "CSGRoom" );
+		create_menu_item_with_mnemonic( menu_in_menu, "CSG _Tool", "CSGTool" );
 	}
 	menu_separator( menu );
 	{
@@ -1285,7 +1305,7 @@ void Brush_constructMenu( ui::Menu menu ){
 	menu_separator( menu );
 	create_menu_item_with_mnemonic( menu, "Make detail", "MakeDetail" );
 	create_menu_item_with_mnemonic( menu, "Make structural", "MakeStructural" );
-	create_menu_item_with_mnemonic( menu, "Snap selection to _grid", "SnapToGrid" );
+//	create_menu_item_with_mnemonic( menu, "Snap selection to _grid", "SnapToGrid" );
 
 	create_check_menu_item_with_mnemonic( menu, "Texture Lock", "TogTexLock" );
 	menu_separator( menu );

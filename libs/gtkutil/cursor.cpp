@@ -27,13 +27,36 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+// Note: NetRadiantCustom disables them but we still make use of them.
+#if 1
+/* Note: here is an alternative implementation,
+it may be useful to try it on platforms were
+	gdk_cursor_new(GDK_BLANK_CURSOR)
+does not work:
+
 GdkCursor* create_blank_cursor(){
-	return gdk_cursor_new( GDK_BLANK_CURSOR );
+	GdkPixmap *pixmap;
+	GdkBitmap *mask;
+	char buffer [( 32 * 32 ) / 8];
+	memset( buffer, 0, ( 32 * 32 ) / 8 );
+	GdkColor white = {0, 0xffff, 0xffff, 0xffff};
+	GdkColor black = {0, 0x0000, 0x0000, 0x0000};
+	pixmap = gdk_bitmap_create_from_data( 0, buffer, 32, 32 );
+	mask   = gdk_bitmap_create_from_data( 0, buffer, 32, 32 );
+	GdkCursor *cursor = gdk_cursor_new_from_pixmap( pixmap, mask, &white, &black, 1, 1 );
+	gdk_drawable_unref( pixmap );
+	gdk_drawable_unref( mask );
+
+	return cursor;
+}
+*/
+GdkCursor* create_blank_cursor(){
+	return gdk_cursor_new(GDK_BLANK_CURSOR);
 }
 
 void set_cursor( ui::Widget widget, GdkCursorType cursor_type ){
 	GdkCursor* cursor = gdk_cursor_new( cursor_type );
-	gdk_window_set_cursor( gtk_widget_get_window( widget ), cursor );
+	gdk_window_set_cursor( gtk_widget_get_window(widget), cursor );
 	gdk_cursor_unref( cursor );
 }
 
@@ -44,6 +67,7 @@ void blank_cursor( ui::Widget widget ){
 void default_cursor( ui::Widget widget ){
 	gdk_window_set_cursor( gtk_widget_get_window( widget ), NULL );
 }
+#endif
 
 void Sys_GetCursorPos( ui::Widget widget, int *x, int *y ){
 	GdkDisplay *display = gtk_widget_get_display( GTK_WIDGET( widget ) );
@@ -71,6 +95,13 @@ gboolean FreezePointer::motion_delta(ui::Widget widget, GdkEventMotion *event, F
 	Sys_GetCursorPos( widget, &current_x, &current_y );
 	int dx = current_x - self->last_x;
 	int dy = current_y - self->last_y;
+#if 0 // NetRadiantCustom
+	int ddx = current_x - self->center_x;
+	int ddy = current_y - self->center_y;
+#else
+	int ddx = current_x - self->recorded_x;
+	int ddy = current_y - self->recorded_y;
+#endif
 	self->last_x = current_x;
 	self->last_y = current_y;
 	if ( dx != 0 || dy != 0 ) {
@@ -81,7 +112,6 @@ gboolean FreezePointer::motion_delta(ui::Widget widget, GdkEventMotion *event, F
 		int translated_x, translated_y;
 
 		gdk_window_get_origin( gtk_widget_get_window( widget ), &window_x, &window_y);
-
 
 		translated_x = current_x - ( window_x );
 		translated_y = current_y - ( window_y );
@@ -136,12 +166,16 @@ gboolean FreezePointer::motion_delta(ui::Widget widget, GdkEventMotion *event, F
 			self->last_y = reposition_y;
 		}
 #else
-		int ddx = current_x - self->recorded_x;
-		int ddy = current_y - self->recorded_y;
 		if (ddx < -32 || ddx > 32 || ddy < -32 || ddy > 32) {
+#if 0 // NetRadiantCustom
+			Sys_SetCursorPos( widget, self->center_x, self->center_y );
+			self->last_x = self->center_x;
+			self->last_y = self->center_y;
+#else
 			Sys_SetCursorPos( widget, self->recorded_x, self->recorded_y );
 			self->last_x = self->recorded_x;
 			self->last_y = self->recorded_y;
+#endif
 		}
 #endif
 		self->m_function( dx, dy, event->state, self->m_data );
@@ -149,6 +183,8 @@ gboolean FreezePointer::motion_delta(ui::Widget widget, GdkEventMotion *event, F
 	return FALSE;
 }
 
+/* NetRadiantCustom did this instead:
+void FreezePointer::freeze_pointer(ui::Window window, ui::Widget widget, FreezePointer::MotionDeltaFunction function, void *data) */
 void FreezePointer::freeze_pointer(ui::Widget widget, FreezePointer::MotionDeltaFunction function, void *data)
 {
 	/* FIXME: This bug can happen if the pointer goes outside of the
@@ -188,18 +224,42 @@ void FreezePointer::freeze_pointer(ui::Widget widget, FreezePointer::MotionDelta
 	third-party updates that may fix the mouse pointer
 	visibility issue. */
 #else
-	GdkCursor* cursor = create_blank_cursor();
+#if 0 // NetRadiantCustom
+	//GdkCursor* cursor = create_blank_cursor();
+	GdkCursor* cursor = gdk_cursor_new( GDK_BLANK_CURSOR );
 	//GdkGrabStatus status =
+	/*	fixes cursor runaways during srsly quick drags in camera
+	drags with pressed buttons have no problem at all w/o this	*/
+	gdk_pointer_grab( gtk_widget_get_window( widget ), TRUE, mask, 0, cursor, GDK_CURRENT_TIME );
+	//gdk_window_set_cursor ( GTK_WIDGET( window )->window, cursor );
+	/*	is needed to fix activating neighbour widgets, that happens, if using upper one	*/
+	gtk_grab_add( widget );
+	m_weedjet = widget;
+#else
+ 	GdkCursor* cursor = create_blank_cursor();
+ 	//GdkGrabStatus status =
 	gdk_pointer_grab( gtk_widget_get_window( widget ), TRUE, mask, 0, cursor, GDK_CURRENT_TIME );
 	gdk_cursor_unref( cursor );
+#endif
 #endif
 
 	Sys_GetCursorPos( widget, &recorded_x, &recorded_y );
 
-	Sys_SetCursorPos( widget, recorded_x, recorded_y );
+#if 0 // NetRadiantCustom
+	/*	using center for tracking for max safety	*/
+	gdk_window_get_origin( GTK_WIDGET( widget )->window, &center_x, &center_y );
+	auto allocation = widget.dimensions();
+	center_y += allocation.height / 2;
+	center_x += allocation.width / 2;
 
+	Sys_SetCursorPos( widget, center_x, center_y );
+
+	last_x = center_x;
+	last_y = center_y;
+#else
 	last_x = recorded_x;
 	last_y = recorded_y;
+#endif
 
 	m_function = function;
 	m_data = data;
@@ -207,7 +267,8 @@ void FreezePointer::freeze_pointer(ui::Widget widget, FreezePointer::MotionDelta
 	handle_motion = widget.connect( "motion_notify_event", G_CALLBACK( motion_delta ), this );
 }
 
-void FreezePointer::unfreeze_pointer(ui::Widget widget)
+// Only NetRadiantCustom uses centerize code.
+void FreezePointer::unfreeze_pointer(ui::Widget widget, bool centerize)
 {
 	g_signal_handler_disconnect( G_OBJECT( widget ), handle_motion );
 
@@ -218,8 +279,26 @@ void FreezePointer::unfreeze_pointer(ui::Widget widget)
 	/* The pointer was visible during all the move operation,
 	so, keep the current position. */
 #else
+	// NetRadiantCustom still uses window instead of widget.
+#if 0 // NetRadiantCustom
+	if ( centerize ){
+		Sys_SetCursorPos( window, center_x, center_y );
+	}
+	else{
+		Sys_SetCursorPos( window, recorded_x, recorded_y );
+	}
+#else
 	Sys_SetCursorPos( widget, recorded_x, recorded_y );
 #endif
+#endif
 
+//	gdk_window_set_cursor( GTK_WIDGET( window )->window, 0 );
 	gdk_pointer_ungrab( GDK_CURRENT_TIME );
+
+#if 0 // NetRadiantCustom
+	if ( m_weedjet )
+	{
+		gtk_grab_remove( m_weedjet );
+	}
+#endif
 }

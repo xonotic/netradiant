@@ -101,7 +101,35 @@ void LoadScriptFile( const char *filename, int index ){
 	endofscript = qfalse;
 	tokenready = qfalse;
 }
+/* &unload current; for autopacker */
+void SilentLoadScriptFile( const char *filename, int index ){
+	int size;
 
+	if ( script->buffer != NULL && !endofscript ) {
+		free( script->buffer );
+		script->buffer = NULL;
+	}
+
+	script = scriptstack;
+
+	script++;
+	if ( script == &scriptstack[MAX_INCLUDES] ) {
+		Error( "script file exceeded MAX_INCLUDES" );
+	}
+	strcpy( script->filename, ExpandPath( filename ) );
+
+	size = vfsLoadFile( script->filename, (void **)&script->buffer, index );
+
+	if ( size == -1 ) {
+		Sys_Printf( "Script file %s was not found\n", script->filename );
+	}
+	script->line = 1;
+	script->script_p = script->buffer;
+	script->end_p = script->buffer + size;
+
+	endofscript = qfalse;
+	tokenready = qfalse;
+}
 
 /*
    ==============
@@ -147,7 +175,7 @@ void UnGetToken( void ){
 
 qboolean EndOfScript( qboolean crossline ){
 	if ( !crossline ) {
-		Error( "Line %i is incomplete\n",scriptline );
+		Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 	}
 
 	if ( !strcmp( script->filename, "memory buffer" ) ) {
@@ -206,7 +234,7 @@ skipspace:
 		}
 		if ( *script->script_p++ == '\n' ) {
 			if ( !crossline ) {
-				Error( "Line %i is incomplete\n",scriptline );
+				Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 			}
 			script->line++;
 			scriptline = script->line;
@@ -221,7 +249,7 @@ skipspace:
 	if ( *script->script_p == ';' || *script->script_p == '#'
 		 || ( script->script_p[0] == '/' && script->script_p[1] == '/' ) ) {
 		if ( !crossline ) {
-			Error( "Line %i is incomplete\n",scriptline );
+			Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 		}
 		while ( *script->script_p++ != '\n' )
 			if ( script->script_p >= script->end_p ) {
@@ -235,10 +263,10 @@ skipspace:
 	// /* */ comments
 	if ( script->script_p[0] == '/' && script->script_p[1] == '*' ) {
 		if ( !crossline ) {
-			Error( "Line %i is incomplete\n",scriptline );
+			Error( "Line %i is incomplete\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 		}
 		script->script_p += 2;
-		while ( script->script_p[0] != '*' && script->script_p[1] != '/' )
+		while ( script->script_p[0] != '*' || script->script_p[1] != '/' )
 		{
 			if ( *script->script_p == '\n' ) {
 				script->line++;
@@ -268,7 +296,7 @@ skipspace:
 				break;
 			}
 			if ( token_p == &token[MAXTOKEN] ) {
-				Error( "Token too large on line %i\n",scriptline );
+				Error( "Token too large on line %i\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 			}
 		}
 		script->script_p++;
@@ -281,7 +309,7 @@ skipspace:
 				break;
 			}
 			if ( token_p == &token[MAXTOKEN] ) {
-				Error( "Token too large on line %i\n",scriptline );
+				Error( "Token too large on line %i\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 			}
 		}
 	}

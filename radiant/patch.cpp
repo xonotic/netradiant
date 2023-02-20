@@ -812,20 +812,20 @@ void Patch::InsertPoints( EMatrixMajor mt, bool bFirst ){
 		return;
 	}
 	if ( bFirst ) {
-		pos = height - 1;
+		pos = 2;
 	}
 	else
 	{
-		pos = 2;
+		pos = height - 1;
 	}
 
 	if ( pos >= height ) {
 		if ( bFirst ) {
-			pos = height - 1;
+			pos = 2;
 		}
 		else
 		{
-			pos = 2;
+			pos = height - 1;
 		}
 	}
 	else if ( pos == 0 ) {
@@ -956,19 +956,19 @@ void Patch::RemovePoints( EMatrixMajor mt, bool bFirst ){
 		return;
 	}
 	if ( bFirst ) {
-		pos = height - 3;
+		pos = 2;
 	}
 	else
 	{
-		pos = 2;
+		pos = height - 3;
 	}
 	if ( pos >= height ) {
 		if ( bFirst ) {
-			pos = height - 3;
+			pos = 2;
 		}
 		else
 		{
-			pos = 2;
+			pos = height - 3;
 		}
 	}
 	else if ( pos == 0 ) {
@@ -2775,6 +2775,417 @@ void Patch::BuildVertexArray(){
 	}
 }
 
+
+Vector3 getAverageNormal(const Vector3& normal1, const Vector3& normal2)
+{
+	// Beware of normals with 0 length
+	if ( vector3_length_squared( normal1 ) == 0 ) return normal2;
+	if ( vector3_length_squared( normal2 ) == 0 ) return normal1;
+
+	// Both normals have length > 0
+	//Vector3 n1 = vector3_normalised( normal1 );
+	//Vector3 n2 = vector3_normalised( normal2 );
+
+	// Get the angle bisector
+	if( vector3_length_squared( normal1 + normal2 ) == 0 ) return normal1;
+
+	Vector3 normal = vector3_normalised (normal1 + normal2);
+
+	// Now calculate the length correction out of the angle
+	// of the two normals
+		/* float factor = cos(n1.angle(n2) * 0.5); */
+	float factor = (float) vector3_dot( normal1, normal2 );
+	if ( factor > 1.0 ) factor = 1;
+	if ( factor < -1.0 ) factor = -1;
+	factor = acos( factor );
+
+	factor = cos( factor * 0.5 );
+
+	// Check for div by zero (if the normals are antiparallel)
+	// and stretch the resulting normal, if necessary
+	if (factor != 0)
+	{
+		normal /= factor;
+	}
+
+	return normal;
+}
+
+void Patch::createThickenedOpposite(const Patch& sourcePatch,
+									const float thickness,
+									const int axis,
+									bool& no12,
+									bool& no34)
+{
+	// Clone the dimensions from the other patch
+	setDims(sourcePatch.getWidth(), sourcePatch.getHeight());
+
+	// Also inherit the tesselation from the source patch
+		//setFixedSubdivisions(sourcePatch.subdivionsFixed(), sourcePatch.getSubdivisions());
+
+	// Copy the shader from the source patch
+	SetShader(sourcePatch.GetShader());
+
+	// if extrudeAxis == 0,0,0 the patch is extruded along its vertex normals
+	Vector3 extrudeAxis(0,0,0);
+
+	switch (axis) {
+		case 0: // X-Axis
+			extrudeAxis = Vector3(1,0,0);
+			break;
+		case 1: // Y-Axis
+			extrudeAxis = Vector3(0,1,0);
+			break;
+		case 2: // Z-Axis
+			extrudeAxis = Vector3(0,0,1);
+			break;
+		default:
+			// Default value already set during initialisation
+			break;
+	}
+
+	//check if certain seams are required + cycling in normals calculation is needed
+	//( endpoints != startpoints ) - not a cylinder or something
+	for (std::size_t col = 0; col < m_width; col++){
+		if( vector3_length_squared( sourcePatch.ctrlAt( 0, col ).m_vertex - sourcePatch.ctrlAt( m_height - 1, col ).m_vertex ) > 0.1f ){
+			//globalOutputStream() << "yes12.\n";
+			no12 = false;
+			break;
+		}
+	}
+	for (std::size_t row = 0; row < m_height; row++){
+		if( vector3_length_squared( sourcePatch.ctrlAt( row, 0 ).m_vertex - sourcePatch.ctrlAt( row, m_width - 1 ).m_vertex ) > 0.1f ){
+			no34 = false;
+			//globalOutputStream() << "yes34.\n";
+			break;
+		}
+	}
+
+	for (std::size_t col = 0; col < m_width; col++)
+	{
+		for (std::size_t row = 0; row < m_height; row++)
+		{
+			// The current control vertex on the other patch
+			const PatchControl& curCtrl = sourcePatch.ctrlAt(row, col);
+
+			Vector3 normal;
+
+			// Are we extruding along vertex normals (i.e. extrudeAxis == 0,0,0)?
+			if (extrudeAxis == Vector3(0,0,0))
+			{
+				// The col tangents (empty if 0,0,0)
+				Vector3 colTangent[2] = { Vector3(0,0,0), Vector3(0,0,0) };
+
+				// Are we at the beginning/end of the row? + not cylinder
+				if ( (col == 0 || col == m_width - 1) && !no34 )
+				{
+					// Get the next col index
+					std::size_t nextCol = (col == m_width - 1) ? (col - 1) : (col + 1);
+
+					const PatchControl& colNeighbour = sourcePatch.ctrlAt(row, nextCol);
+
+					// One available tangent
+					colTangent[0] = colNeighbour.m_vertex - curCtrl.m_vertex;
+					// Reverse it if we're at the end of the column
+					colTangent[0] *= (col == m_width - 1) ? -1 : +1;
+					//normalize
+					if ( vector3_length_squared( colTangent[0] ) != 0 ) vector3_normalise( colTangent[0] );
+				}
+				// We are in between, two tangents can be calculated
+				else
+				{
+					// Take two neighbouring vertices that should form a line segment
+					std::size_t nextCol, prevCol;
+					if( col == 0 ){
+						nextCol = col+1;
+						prevCol = m_width-2;
+					}
+					else if( col == m_width - 1 ){
+						nextCol = 1;
+						prevCol = col-1;
+					}
+					else{
+						nextCol = col+1;
+						prevCol = col-1;
+					}
+					const PatchControl& neighbour1 = sourcePatch.ctrlAt(row, nextCol);
+					const PatchControl& neighbour2 = sourcePatch.ctrlAt(row, prevCol);
+
+
+					// Calculate both available tangents
+					colTangent[0] = neighbour1.m_vertex - curCtrl.m_vertex;
+					colTangent[1] = neighbour2.m_vertex - curCtrl.m_vertex;
+
+					// Reverse the second one
+					colTangent[1] *= -1;
+
+					//normalize b4 stuff
+					if ( vector3_length_squared( colTangent[0] ) != 0 ) vector3_normalise( colTangent[0] );
+					if ( vector3_length_squared( colTangent[1] ) != 0 ) vector3_normalise( colTangent[1] );
+
+					// Cull redundant tangents (parallel)
+					if ( vector3_length_squared( colTangent[1] + colTangent[0] ) == 0 ||
+						vector3_length_squared( colTangent[1] - colTangent[0] ) == 0 ){
+						colTangent[1] = Vector3(0,0,0);
+					}
+				}
+
+				// Calculate the tangent vectors to the next row
+				Vector3 rowTangent[2] = { Vector3(0,0,0), Vector3(0,0,0) };
+
+				// Are we at the beginning or the end?
+				if ( (row == 0 || row == m_height - 1) && !no12 )
+				{
+					// Yes, only calculate one row tangent
+					// Get the next row index
+					std::size_t nextRow = (row == m_height - 1) ? (row - 1) : (row + 1);
+
+					const PatchControl& rowNeighbour = sourcePatch.ctrlAt(nextRow, col);
+
+					// First tangent
+					rowTangent[0] = rowNeighbour.m_vertex - curCtrl.m_vertex;
+					// Reverse it accordingly
+					rowTangent[0] *= (row == m_height - 1) ? -1 : +1;
+					//normalize
+					if ( vector3_length_squared( rowTangent[0] ) != 0 ) vector3_normalise( rowTangent[0] );
+				}
+				else
+				{
+					// Two tangents to calculate
+					std::size_t nextRow, prevRow;
+					if( row == 0 ){
+						nextRow = row+1;
+						prevRow = m_height-2;
+					}
+					else if( row == m_height - 1 ){
+						nextRow = 1;
+						prevRow = row-1;
+					}
+					else{
+						nextRow = row+1;
+						prevRow = row-1;
+					}
+					const PatchControl& rowNeighbour1 = sourcePatch.ctrlAt(nextRow, col);
+					const PatchControl& rowNeighbour2 = sourcePatch.ctrlAt(prevRow, col);
+
+					// First tangent
+					rowTangent[0] = rowNeighbour1.m_vertex - curCtrl.m_vertex;
+					rowTangent[1] = rowNeighbour2.m_vertex - curCtrl.m_vertex;
+
+					// Reverse the second one
+					rowTangent[1] *= -1;
+
+					//normalize b4 stuff
+					if ( vector3_length_squared( rowTangent[0] ) != 0 ) vector3_normalise( rowTangent[0] );
+					if ( vector3_length_squared( rowTangent[1] ) != 0 ) vector3_normalise( rowTangent[1] );
+
+					// Cull redundant tangents (parallel)
+					if ( vector3_length_squared( rowTangent[1] + rowTangent[0] ) == 0 ||
+						vector3_length_squared( rowTangent[1] - rowTangent[0] ) == 0 ){
+						rowTangent[1] = Vector3(0,0,0);
+					}
+				}
+
+
+				//clean parallel pairs...
+				if ( vector3_length_squared( rowTangent[0] + colTangent[0] ) == 0 ||
+					vector3_length_squared( rowTangent[0] - colTangent[0] ) == 0 ){
+					rowTangent[0] = Vector3(0,0,0);
+				}
+				if ( vector3_length_squared( rowTangent[1] + colTangent[1] ) == 0 ||
+					vector3_length_squared( rowTangent[1] - colTangent[1] ) == 0 ){
+					rowTangent[1] = Vector3(0,0,0);
+				}
+				if ( vector3_length_squared( rowTangent[0] + colTangent[1] ) == 0 ||
+					vector3_length_squared( rowTangent[0] - colTangent[1] ) == 0 ){
+					colTangent[1] = Vector3(0,0,0);
+				}
+				if ( vector3_length_squared( rowTangent[1] + colTangent[0] ) == 0 ||
+					vector3_length_squared( rowTangent[1] - colTangent[0] ) == 0 ){
+					rowTangent[1] = Vector3(0,0,0);
+				}
+
+				//clean dummies
+				if ( vector3_length_squared( colTangent[0] ) == 0 ){
+					colTangent[0] = colTangent[1];
+					colTangent[1] = Vector3(0,0,0);
+				}
+				if ( vector3_length_squared( rowTangent[0] ) == 0 ){
+					rowTangent[0] = rowTangent[1];
+					rowTangent[1] = Vector3(0,0,0);
+				}
+				if( vector3_length_squared( rowTangent[0] ) == 0 || vector3_length_squared( colTangent[0] ) == 0 ){
+					normal = extrudeAxis;
+
+				}
+				else{
+					// If two column + two row tangents are available, take the length-corrected average
+					if ( ( fabs( colTangent[1][0] ) + fabs( colTangent[1][1] ) + fabs( colTangent[1][2] ) ) > 0 &&
+							( fabs( rowTangent[1][0] ) + fabs( rowTangent[1][1] ) + fabs( rowTangent[1][2] ) ) > 0 )
+					{
+						// Two column normals to calculate
+						Vector3 normal1 = vector3_normalised( vector3_cross( rowTangent[0], colTangent[0] ) );
+						Vector3 normal2 = vector3_normalised( vector3_cross( rowTangent[1], colTangent[1] ) );
+
+						normal = getAverageNormal(normal1, normal2);
+						/*globalOutputStream() << "0\n";
+						globalOutputStream() << normal1 << "\n";
+						globalOutputStream() << normal2 << "\n";
+						globalOutputStream() << normal << "\n";*/
+
+					}
+					// If two column tangents are available, take the length-corrected average
+					else if ( ( fabs( colTangent[1][0] ) + fabs( colTangent[1][1] ) + fabs( colTangent[1][2] ) ) > 0)
+					{
+						// Two column normals to calculate
+						Vector3 normal1 = vector3_normalised( vector3_cross( rowTangent[0], colTangent[0] ) );
+						Vector3 normal2 = vector3_normalised( vector3_cross( rowTangent[0], colTangent[1] ) );
+
+						normal = getAverageNormal(normal1, normal2);
+						/*globalOutputStream() << "1\n";
+						globalOutputStream() << normal1 << "\n";
+						globalOutputStream() << normal2 << "\n";
+						globalOutputStream() << normal << "\n";*/
+
+					}
+					else
+					{
+						// One column tangent available, maybe we have a second rowtangent?
+						if ( ( fabs( rowTangent[1][0] ) + fabs( rowTangent[1][1] ) + fabs( rowTangent[1][2] ) ) > 0)
+						{
+							// Two row normals to calculate
+							Vector3 normal1 = vector3_normalised( vector3_cross( rowTangent[0], colTangent[0] ) );
+							Vector3 normal2 = vector3_normalised( vector3_cross( rowTangent[1], colTangent[0] ) );
+
+							normal = getAverageNormal(normal1, normal2);
+							/*globalOutputStream() << "2\n";
+							globalOutputStream() << rowTangent[0] << "\n";
+							globalOutputStream() << colTangent[0] << "\n";
+							globalOutputStream() << vector3_cross( rowTangent[0], colTangent[0]) << "\n";
+							globalOutputStream() << normal1 << "\n";
+							globalOutputStream() << normal2 << "\n";
+							globalOutputStream() << normal << "\n";*/
+
+						}
+						else
+						{
+							if ( vector3_length_squared( vector3_cross( rowTangent[0], colTangent[0] ) ) > 0 ){
+								normal = vector3_normalised( vector3_cross( rowTangent[0], colTangent[0] ) );
+								/*globalOutputStream() << "3\n";
+								globalOutputStream() << (float)vector3_length_squared( vector3_cross( rowTangent[0], colTangent[0] ) ) << "\n";
+								globalOutputStream() << normal << "\n";*/
+							}
+							else{
+								normal = extrudeAxis;
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				// Take the predefined extrude direction instead
+				normal = extrudeAxis;
+			}
+
+			// Store the new coordinates into this patch at the current coords
+			ctrlAt(row, col).m_vertex = curCtrl.m_vertex + normal*thickness;
+
+			// Clone the texture cooordinates of the source patch
+			ctrlAt(row, col).m_texcoord = curCtrl.m_texcoord;
+		}
+	}
+
+	// Notify the patch about the change
+	controlPointsChanged();
+}
+
+void Patch::createThickenedWall(const Patch& sourcePatch,
+								const Patch& targetPatch,
+								const int wallIndex)
+{
+	// Copy the shader from the source patch
+	SetShader(sourcePatch.GetShader());
+
+	// The start and end control vertex indices
+	int start = 0;
+	int end = 0;
+	// The increment (incr = 1 for the "long" edge, incr = width for the "short" edge)
+	int incr = 1;
+
+	// These are the target dimensions of this wall
+	// The width is depending on which edge is "seamed".
+	int cols = 0;
+	int rows = 3;
+
+	int sourceWidth = static_cast<int>(sourcePatch.getWidth());
+	int sourceHeight = static_cast<int>(sourcePatch.getHeight());
+/*
+	bool sourceTesselationFixed = sourcePatch.subdivionsFixed();
+	Subdivisions sourceTesselationX(sourcePatch.getSubdivisions().x(), 1);
+	Subdivisions sourceTesselationY(sourcePatch.getSubdivisions().y(), 1);
+*/
+	// Determine which of the four edges have to be connected
+	// and calculate the start, end & stepsize for the following loop
+	switch (wallIndex) {
+		case 0:
+			cols = sourceWidth;
+			start = 0;
+			end = sourceWidth - 1;
+			incr = 1;
+			//setFixedSubdivisions(sourceTesselationFixed, sourceTesselationX);
+			break;
+		case 1:
+			cols = sourceWidth;
+			start = sourceWidth * (sourceHeight-1);
+			end = sourceWidth*sourceHeight - 1;
+			incr = 1;
+			//setFixedSubdivisions(sourceTesselationFixed, sourceTesselationX);
+			break;
+		case 2:
+			cols = sourceHeight;
+			start = 0;
+			end = sourceWidth*(sourceHeight-1);
+			incr = sourceWidth;
+			//setFixedSubdivisions(sourceTesselationFixed, sourceTesselationY);
+			break;
+		case 3:
+			cols = sourceHeight;
+			start = sourceWidth - 1;
+			end = sourceWidth*sourceHeight - 1;
+			incr = sourceWidth;
+			//setFixedSubdivisions(sourceTesselationFixed, sourceTesselationY);
+			break;
+	}
+
+	setDims(cols, rows);
+
+	const PatchControlArray& sourceCtrl = sourcePatch.getControlPoints();
+	const PatchControlArray& targetCtrl = targetPatch.getControlPoints();
+
+	int col = 0;
+	// Now go through the control vertices with these calculated stepsize
+	for (int idx = start; idx <= end; idx += incr, col++) {
+		Vector3 sourceCoord = sourceCtrl[idx].m_vertex;
+		Vector3 targetCoord = targetCtrl[idx].m_vertex;
+		Vector3 middleCoord = (sourceCoord + targetCoord) / 2;
+
+		// Now assign the vertex coordinates
+		ctrlAt(0, col).m_vertex = sourceCoord;
+		ctrlAt(1, col).m_vertex = middleCoord;
+		ctrlAt(2, col).m_vertex = targetCoord;
+	}
+
+	if (wallIndex == 0 || wallIndex == 3) {
+		InvertMatrix();
+	}
+
+	// Notify the patch about the change
+	controlPointsChanged();
+
+	// Texture the patch "naturally"
+	NaturalTexture();
+}
 
 
 class PatchFilterWrapper : public Filter

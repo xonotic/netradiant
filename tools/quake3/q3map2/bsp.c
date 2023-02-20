@@ -44,7 +44,6 @@
 
    ------------------------------------------------------------------------------- */
 
-
 /*
    ProcessAdvertisements()
    copies advertisement info into the BSP structures
@@ -320,6 +319,10 @@ void ProcessWorldModel( const char *portalFilePath, const char *lineFilePath ){
 	/* check for patches with adjacent edges that need to lod together */
 	PatchMapDrawSurfs( e );
 
+	if ( debugClip ) {
+		AddTriangleModels( e );
+	}
+
 	/* build an initial bsp tree using all of the sides of all of the structural brushes */
 	faces = MakeStructuralBSPFaceList( entities[ 0 ].brushes );
 	tree = FaceBSP( faces );
@@ -388,7 +391,9 @@ void ProcessWorldModel( const char *portalFilePath, const char *lineFilePath ){
 	FloodAreas( tree );
 
 	/* create drawsurfs for triangle models */
-	AddTriangleModels( e );
+	if ( !debugClip ) {
+		AddTriangleModels( e );
+	}
 
 	/* create drawsurfs for surface models */
 	AddEntitySurfaceModels( e );
@@ -632,6 +637,8 @@ void ProcessModels( const char *portalFilePath, const char *lineFilePath ){
 	/* restore -v setting */
 	verbose = oldVerbose;
 
+	Sys_FPrintf( SYS_VRB, "%9i bspModels in total\n", numBSPModels );
+
 	/* write fogs */
 	EmitFogs();
 
@@ -717,6 +724,7 @@ int BSPMain( int argc, char **argv ){
 	/* note it */
 	Sys_Printf( "--- BSP ---\n" );
 
+	doingBSP = qtrue;
 	SetDrawSurfacesBuffer();
 	mapDrawSurfs = safe_malloc0( sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
 	numMapDrawSurfs = 0;
@@ -870,8 +878,8 @@ int BSPMain( int argc, char **argv ){
 				Sys_Printf( "The -mv argument is deprecated, use \"-maxlightmapvertices\" instead\n" );
 			}
 			else {
-				Sys_Printf( "Maximum lightmapped surface vertex count set to %d\n", maxLMSurfaceVerts );
-			}
+			Sys_Printf( "Maximum lightmapped surface vertex count set to %d\n", maxLMSurfaceVerts );
+		}
 		}
 		else if ( !strcmp( argv[ i ], "-np" ) ) {
 			npDegrees = atof( argv[ i + 1 ] );
@@ -981,6 +989,15 @@ int BSPMain( int argc, char **argv ){
 			Sys_Printf( "Debug portal surfaces enabled\n" );
 			debugPortals = qtrue;
 		}
+		else if ( !strcmp( argv[ i ], "-debugclip" ) ) {
+			Sys_Printf( "Debug model clip enabled\n" );
+			debugClip = qtrue;
+		}
+		else if ( !strcmp( argv[ i ],  "-clipdepth" ) ) {
+			clipDepthGlobal = atof( argv[ i + 1 ] );
+			i++;
+			Sys_Printf( "Model autoclip thickness set to %.3f\n", clipDepthGlobal );
+		}
 		else if ( !strcmp( argv[ i ], "-sRGBtex" ) ) {
 			texturesRGB = qtrue;
 			Sys_Printf( "Textures are in sRGB\n" );
@@ -1003,13 +1020,11 @@ int BSPMain( int argc, char **argv ){
 			colorsRGB = qfalse;
 			Sys_Printf( "Colors are linear\n" );
 		}
-		else if ( !strcmp( argv[ i ], "-altsplit" ) )
-		{
+		else if ( !strcmp( argv[ i ], "-altsplit" ) ) {
 			Sys_Printf( "Alternate BSP splitting (by 27) enabled\n" );
 			bspAlternateSplitWeights = qtrue;
 		}
-		else if ( !strcmp( argv[ i ], "-deep" ) )
-		{
+		else if ( !strcmp( argv[ i ], "-deep" ) ) {
 			Sys_Printf( "Deep BSP tree generation enabled\n" );
 			deepBSP = qtrue;
 		}
@@ -1049,8 +1064,13 @@ int BSPMain( int argc, char **argv ){
 			argv[ i ] = NULL;
 			Sys_Printf( "Use %s as surface file\n", surfaceFilePath );
 		}
-		else{
-			Sys_FPrintf( SYS_WRN, "WARNING: Unknown option \"%s\"\n", argv[ i ] );
+		else if ( !strcmp( argv[ i ], "-noob" ) ) {
+			Sys_Printf( "No oBs!\n" );
+			noob = qtrue;
+		}
+		else
+		{
+			Sys_Printf( "WARNING: Unknown option \"%s\"\n", argv[ i ] );
 		}
 	}
 

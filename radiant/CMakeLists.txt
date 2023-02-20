@@ -35,12 +35,14 @@ set(RADIANTLIST
     error.cpp error.h
     feedback.cpp feedback.h
     filetypes.cpp filetypes.h
+    filterbar.cpp filterbar.h
     filters.cpp filters.h
     findtexturedialog.cpp findtexturedialog.h
     grid.cpp grid.h
     groupdialog.cpp groupdialog.h
     gtkdlgs.cpp gtkdlgs.h
     gtkmisc.cpp gtkmisc.h
+	gtktheme.cpp gtktheme.h
     help.cpp help.h
     image.cpp image.h
     main.cpp main.h

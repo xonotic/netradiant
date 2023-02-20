@@ -119,25 +119,43 @@ void Move_End();
 bool m_move_started;
 guint m_move_focusOut;
 
-void Zoom_Begin();
+void Zoom_Begin( int x, int y );
 void Zoom_End();
 bool m_zoom_started;
 guint m_zoom_focusOut;
 
+void ZoomIn();
+void ZoomOut();
+void ZoomInWithMouse( int pointx, int pointy );
+void FocusOnBounds( AABB& bounds );
+
 void Redraw();
+
+void RenderActive();
 
 void SetActive( bool b ){
 	m_bActive = b;
+	RenderActive();
 };
 bool Active(){
 	return m_bActive;
 };
+struct camera_icon_t
+{
+	float x, y, fov, box;
+	double a;
+};
+camera_icon_t Cam;
+void UpdateCameraIcon();
+
 
 void Clipper_OnLButtonDown( int x, int y );
 void Clipper_OnLButtonUp( int x, int y );
 void Clipper_OnMouseMoved( int x, int y );
 void Clipper_Crosshair_OnMouseMoved( int x, int y );
 void DropClipPoint( int pointx, int pointy );
+
+void SetCustomPivotOrigin( int pointx, int pointy );
 
 void SetViewType( VIEWTYPE n );
 bool m_bActive;
@@ -196,10 +214,12 @@ bool m_entityCreate;
 
 public:
 void ButtonState_onMouseDown( unsigned int buttons ){
-	m_buttonstate |= buttons;
+	//m_buttonstate |= buttons;
+	m_buttonstate = buttons;
 }
 void ButtonState_onMouseUp( unsigned int buttons ){
-	m_buttonstate &= ~buttons;
+	//m_buttonstate &= ~buttons;
+	m_buttonstate = 0;
 }
 unsigned int getButtonState() const {
 	return m_buttonstate;
@@ -233,6 +253,7 @@ inline void XYWnd_Update( XYWnd& xywnd ){
 	xywnd.queueDraw();
 }
 
+void XY_Centralize();
 
 struct xywindow_globals_t
 {
@@ -251,14 +272,15 @@ struct xywindow_globals_t
 	Vector3 AxisColorY;
 	Vector3 AxisColorZ;
 
-	bool m_bRightClick;
+//	bool m_bRightClick;
 	bool m_bNoStipple;
+	bool m_bZoomInToPointer;
 
 	xywindow_globals_t() :
-		color_gridback( 1.f, 1.f, 1.f ),
-		color_gridminor( 0.75f, 0.75f, 0.75f ),
-		color_gridmajor( 0.5f, 0.5f, 0.5f ),
-		color_gridblock( 0.f, 0.f, 1.f ),
+		color_gridback( 0.77f, 0.77f, 0.77f ),
+		color_gridminor( 0.83f, 0.83f, 0.83f ),
+		color_gridmajor( 0.89f, 0.89f, 0.89f ),
+		color_gridblock( 1.0f, 1.0f, 1.0f ),
 		color_gridtext( 0.f, 0.f, 0.f ),
 		color_brushes( 0.f, 0.f, 0.f ),
 		color_selbrushes( 1.f, 0.f, 0.f ),
@@ -270,8 +292,9 @@ struct xywindow_globals_t
 		AxisColorX( 1.f, 0.f, 0.f ),
 		AxisColorY( 0.f, 1.f, 0.f ),
 		AxisColorZ( 0.f, 0.f, 1.f ),
-		m_bRightClick( true ),
-		m_bNoStipple( false ){
+//		m_bRightClick( true ),
+		m_bNoStipple( true ),
+		m_bZoomInToPointer( true ){
 	}
 
 };

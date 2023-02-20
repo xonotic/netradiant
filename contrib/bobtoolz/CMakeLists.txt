@@ -2,7 +2,7 @@ radiant_plugin(bobtoolz
         dialogs/dialogs-gtk.cpp dialogs/dialogs-gtk.h
 
         bobToolz.h
-        bobToolz-GTK.cpp
+        bobToolz-GTK.cpp bobToolz-GTK.h
         bsploader.cpp bsploader.h
         cportals.cpp CPortals.h
         ctfresource_gtk.h

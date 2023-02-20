@@ -73,9 +73,12 @@ void Create();
 void SaveWindowInfo();
 void Shutdown();
 
+public:
 ui::Widget m_vSplit{ui::null};
 ui::Widget m_hSplit{ui::null};
 ui::Widget m_vSplit2{ui::null};
+
+private:
 
 XYWnd* m_pXYWnd;
 XYWnd* m_pYZWnd;
@@ -143,7 +146,7 @@ bool FloatingGroupDialog(){
 extern MainFrame* g_pParentWnd;
 
 ui::Window MainFrame_getWindow();
-
+/*
 enum EMouseButtonMode
 {
 	ETwoButton = 0,
@@ -158,11 +161,11 @@ struct glwindow_globals_t
 		m_nMouseType( EThreeButton ){
 	}
 };
-
+*/
 void GLWindow_Construct();
 void GLWindow_Destroy();
 
-extern glwindow_globals_t g_glwindow_globals;
+//extern glwindow_globals_t g_glwindow_globals;
 template<typename Value>
 class LatchedValue;
 extern LatchedValue<bool> g_Layout_enableDetachableMenus;
@@ -245,6 +248,7 @@ void UpdateAllWindows();
 
 
 void ClipperChangeNotify();
+void ClipperMode();
 
 void DefaultMode();
 
@@ -287,5 +291,7 @@ MouseEventHandlerId XYWindowMouseDown_connect( const MouseEventHandler& handler 
 void XYWindowMouseDown_disconnect( MouseEventHandlerId id );
 
 extern ui::Widget g_page_entity;
+
+void FocusAllViews();
 
 #endif

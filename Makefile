@@ -15,7 +15,7 @@ MAKEFILE_CONF      ?= Makefile.conf
 # user customizable stuf
 # you may override this in Makefile.conf or the environment
 BUILD              ?= debug
-# or: release, or: extradebug, or: profile
+# or: release, or: debug, or: extradebug, or: profile, or: native
 OS                 ?= $(shell uname)
 # or: Linux, Win32, Darwin
 LDFLAGS            ?=
@@ -498,7 +498,9 @@ endif
 %.o: %.c $(if $(findstring $(DEPEND_ON_MAKEFILE),yes),$(wildcard Makefile*),) | dependencies-check
 	$(CC) $< $(CFLAGS) $(CFLAGS_COMMON) $(CPPFLAGS_EXTRA) $(CPPFLAGS_COMMON) $(CPPFLAGS) $(TARGET_ARCH) -c -o $@
 
-
+ifeq ($(OS),Win32)
+$(INSTALLDIR)/q3map2.$(EXE): LDFLAGS_EXTRA := -Wl,--large-address-aware,--stack,4194304
+endif
 $(INSTALLDIR)/q3map2.$(EXE): LIBS_EXTRA := $(LIBS_XML) $(LIBS_GLIB) $(LIBS_PNG) $(LIBS_JPEG) $(LIBS_WEBP) $(LIBS_ZLIB)
 $(INSTALLDIR)/q3map2.$(EXE): CPPFLAGS_EXTRA := $(CPPFLAGS_XML) $(CPPFLAGS_GLIB) $(CPPFLAGS_PNG) $(CPPFLAGS_JPEG) $(CPPFLAGS_WEBP) -Itools/quake3/common -Ilibs -Iinclude
 $(INSTALLDIR)/q3map2.$(EXE): \
@@ -512,6 +514,7 @@ $(INSTALLDIR)/q3map2.$(EXE): \
 	tools/quake3/common/scriplib.o \
 	tools/quake3/common/threads.o \
 	tools/quake3/common/vfs.o \
+	tools/quake3/common/miniz.o \
 	tools/quake3/q3map2/brush.o \
 	tools/quake3/q3map2/brush_primit.o \
 	tools/quake3/q3map2/bspfile_abstract.o \
@@ -625,6 +628,7 @@ $(INSTALLDIR)/q3data.$(EXE): \
 	tools/quake3/common/scriplib.o \
 	tools/quake3/common/trilib.o \
 	tools/quake3/common/vfs.o \
+	tools/quake3/common/miniz.o \
 	tools/quake3/q3data/3dslib.o \
 	tools/quake3/q3data/compress.o \
 	tools/quake3/q3data/images.o \
@@ -672,6 +676,7 @@ $(INSTALLDIR)/radiant.$(EXE): \
 	radiant/error.o \
 	radiant/feedback.o \
 	radiant/filetypes.o \
+	radiant/filterbar.o \
 	radiant/filters.o \
 	radiant/findtexturedialog.o \
 	radiant/glwidget.o \
@@ -679,6 +684,7 @@ $(INSTALLDIR)/radiant.$(EXE): \
 	radiant/groupdialog.o \
 	radiant/gtkdlgs.o \
 	radiant/gtkmisc.o \
+	radiant/gtktheme.o \
 	radiant/help.o \
 	radiant/image.o \
 	radiant/mainframe.o \

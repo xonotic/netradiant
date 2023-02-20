@@ -534,7 +534,7 @@ void HelpMain(const char* arg)
 				help_funcs[i]();
 				return;
 			}
-		}
+	}
 	}
 
 	HelpOptions("Stages", 0, terminalColumns, stages, sizeof(stages)/sizeof(struct HelpOption));

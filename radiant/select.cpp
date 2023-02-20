@@ -41,6 +41,7 @@
 #include "gtkutil/widget.h"
 #include "brushmanip.h"
 #include "brush.h"
+#include "patch.h"
 #include "patchmanip.h"
 #include "patchdialog.h"
 #include "selection.h"
@@ -112,26 +113,32 @@ SelectByBounds( AABB* aabbs, Unsigned count )
 }
 
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	Selectable* selectable = Instance_getSelectable( instance );
+	if( path.top().get().visible() ){
+		Selectable* selectable = Instance_getSelectable( instance );
 
-	// ignore worldspawn
-	Entity* entity = Node_getEntity( path.top() );
-	if ( entity ) {
-		if ( string_equal( entity->getKeyValue( "classname" ), "worldspawn" ) ) {
-			return true;
-		}
-	}
-
-	if ( ( path.size() > 1 ) &&
-		 ( !path.top().get().isRoot() ) &&
-		 ( selectable != 0 )
-		 ) {
-		for ( Unsigned i = 0; i < m_count; ++i )
-		{
-			if ( policy.Evaluate( m_aabbs[i], instance ) ) {
-				selectable->setSelected( true );
+		// ignore worldspawn
+		Entity* entity = Node_getEntity( path.top() );
+		if ( entity ) {
+			if ( string_equal( entity->getKeyValue( "classname" ), "worldspawn" ) ) {
+				return true;
 			}
 		}
+
+		if ( ( path.size() > 1 ) &&
+			( !path.top().get().isRoot() ) &&
+			( selectable != 0 ) &&
+			( !node_is_group( path.top() ) )
+			) {
+			for ( Unsigned i = 0; i < m_count; ++i )
+			{
+				if ( policy.Evaluate( m_aabbs[i], instance ) ) {
+					selectable->setSelected( true );
+				}
+			}
+		}
+	}
+	else{
+		return false;
 	}
 
 	return true;
@@ -271,12 +278,17 @@ void Select_Delete( void ){
 class InvertSelectionWalker : public scene::Graph::Walker
 {
 SelectionSystem::EMode m_mode;
+SelectionSystem::EComponentMode m_compmode;
 mutable Selectable* m_selectable;
 public:
-InvertSelectionWalker( SelectionSystem::EMode mode )
-	: m_mode( mode ), m_selectable( 0 ){
+InvertSelectionWalker( SelectionSystem::EMode mode, SelectionSystem::EComponentMode compmode )
+	: m_mode( mode ), m_compmode( compmode ), m_selectable( 0 ){
 }
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	if( !path.top().get().visible() ){
+		m_selectable = 0;
+		return false;
+	}
 	Selectable* selectable = Instance_getSelectable( instance );
 	if ( selectable ) {
 		switch ( m_mode )
@@ -290,6 +302,18 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			m_selectable = path.top().get().visible() ? selectable : 0;
 			break;
 		case SelectionSystem::eComponent:
+			BrushInstance* brushinstance = Instance_getBrush( instance );
+			if( brushinstance != 0 ){
+				if( brushinstance->isSelected() )
+					brushinstance->invertComponentSelection( m_compmode );
+			}
+			else{
+				PatchInstance* patchinstance = Instance_getPatch( instance );
+				if( patchinstance != 0 && m_compmode == SelectionSystem::eVertex ){
+					if( patchinstance->isSelected() )
+						patchinstance->invertComponentSelection();
+				}
+			}
 			break;
 		}
 	}
@@ -304,12 +328,63 @@ void post( const scene::Path& path, scene::Instance& instance ) const {
 };
 
 void Scene_Invert_Selection( scene::Graph& graph ){
-	graph.traverse( InvertSelectionWalker( GlobalSelectionSystem().Mode() ) );
+	graph.traverse( InvertSelectionWalker( GlobalSelectionSystem().Mode(), GlobalSelectionSystem().ComponentMode() ) );
 }
 
 void Select_Invert(){
 	Scene_Invert_Selection( GlobalSceneGraph() );
 }
+
+//interesting printings
+class ExpandSelectionToEntitiesWalker_dbg : public scene::Graph::Walker
+{
+mutable std::size_t m_depth;
+NodeSmartReference worldspawn;
+public:
+ExpandSelectionToEntitiesWalker_dbg() : m_depth( 0 ), worldspawn( Map_FindOrInsertWorldspawn( g_map ) ){
+}
+bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	++m_depth;
+	globalOutputStream() << "pre depth_" << m_depth;
+	globalOutputStream() << " path.size()_" << path.size();
+	if ( path.top().get() == worldspawn )
+		globalOutputStream() << " worldspawn";
+	if( path.top().get().isRoot() )
+		globalOutputStream() << " path.top().get().isRoot()";
+	Entity* entity = Node_getEntity( path.top() );
+	if ( entity != 0 ){
+		globalOutputStream() << " entity!=0";
+		if( entity->isContainer() ){
+			globalOutputStream() << " entity->isContainer()";
+		}
+		globalOutputStream() << " classname_" << entity->getKeyValue( "classname" );
+	}
+	globalOutputStream() << "\n";
+//	globalOutputStream() << "" <<  ;
+//	globalOutputStream() << "" <<  ;
+//	globalOutputStream() << "" <<  ;
+//	globalOutputStream() << "" <<  ;
+	return true;
+}
+void post( const scene::Path& path, scene::Instance& instance ) const {
+	globalOutputStream() << "post depth_" << m_depth;
+	globalOutputStream() << " path.size()_" << path.size();
+	if ( path.top().get() == worldspawn )
+		globalOutputStream() << " worldspawn";
+	if( path.top().get().isRoot() )
+		globalOutputStream() << " path.top().get().isRoot()";
+	Entity* entity = Node_getEntity( path.top() );
+	if ( entity != 0 ){
+		globalOutputStream() << " entity!=0";
+		if( entity->isContainer() ){
+			globalOutputStream() << " entity->isContainer()";
+		}
+		globalOutputStream() << " classname_" << entity->getKeyValue( "classname" );
+	}
+	globalOutputStream() << "\n";
+	--m_depth;
+}
+};
 
 class ExpandSelectionToEntitiesWalker : public scene::Graph::Walker
 {
@@ -322,17 +397,21 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 	++m_depth;
 
 	// ignore worldspawn
-	NodeSmartReference me( path.top().get() );
-	if ( me == worldspawn ) {
-		return false;
-	}
+//	NodeSmartReference me( path.top().get() );
+//	if ( me == worldspawn ) {
+//		return false;
+//	}
 
 	if ( m_depth == 2 ) { // entity depth
 		// traverse and select children if any one is selected
-		if ( instance.childSelected() ) {
-			Instance_setSelected( instance, true );
+		bool beselected = false;
+		if ( instance.childSelected() || instance.isSelected() ) {
+			beselected = true;
+			if( path.top().get() != worldspawn ){
+				Instance_setSelected( instance, true );
+			}
 		}
-		return Node_getEntity( path.top() )->isContainer() && instance.isSelected();
+		return Node_getEntity( path.top() )->isContainer() && beselected;
 	}
 	else if ( m_depth == 3 ) { // primitive depth
 		Instance_setSelected( instance, true );
@@ -373,9 +452,9 @@ void UpdateWorkzone_ForSelection(){
 
 // update the workzone to the current selection
 void UpdateWorkzone_ForSelectionChanged( const Selectable& selectable ){
-	if ( selectable.isSelected() ) {
+	//if ( selectable.isSelected() ) {
 		UpdateWorkzone_ForSelection();
-	}
+	//}
 }
 
 void Select_SetShader( const char* shader ){
@@ -384,6 +463,13 @@ void Select_SetShader( const char* shader ){
 		Scene_PatchSetShader_Selected( GlobalSceneGraph(), shader );
 	}
 	Scene_BrushSetShader_Component_Selected( GlobalSceneGraph(), shader );
+}
+
+void Select_SetShader_Undo( const char* shader ){
+	if ( GlobalSelectionSystem().countSelectedComponents() != 0 || GlobalSelectionSystem().countSelected() != 0 ) {
+		UndoableCommand undo( "textureNameSetSelected" );
+		Select_SetShader( shader );
+	}
 }
 
 void Select_SetTexdef( const TextureProjection& projection ){
@@ -514,20 +600,20 @@ inline Quaternion quaternion_for_axis90( axis_t axis, sign_t sign ){
 
 void Select_RotateAxis( int axis, float deg ){
 	if ( fabs( deg ) == 90.f ) {
-		GlobalSelectionSystem().rotateSelected( quaternion_for_axis90( (axis_t)axis, ( deg > 0 ) ? eSignPositive : eSignNegative ) );
+		GlobalSelectionSystem().rotateSelected( quaternion_for_axis90( (axis_t)axis, ( deg > 0 ) ? eSignPositive : eSignNegative ), true );
 	}
 	else
 	{
 		switch ( axis )
 		{
 		case 0:
-			GlobalSelectionSystem().rotateSelected( quaternion_for_matrix4_rotation( matrix4_rotation_for_x_degrees( deg ) ) );
+			GlobalSelectionSystem().rotateSelected( quaternion_for_matrix4_rotation( matrix4_rotation_for_x_degrees( deg ) ), false );
 			break;
 		case 1:
-			GlobalSelectionSystem().rotateSelected( quaternion_for_matrix4_rotation( matrix4_rotation_for_y_degrees( deg ) ) );
+			GlobalSelectionSystem().rotateSelected( quaternion_for_matrix4_rotation( matrix4_rotation_for_y_degrees( deg ) ), false );
 			break;
 		case 2:
-			GlobalSelectionSystem().rotateSelected( quaternion_for_matrix4_rotation( matrix4_rotation_for_z_degrees( deg ) ) );
+			GlobalSelectionSystem().rotateSelected( quaternion_for_matrix4_rotation( matrix4_rotation_for_z_degrees( deg ) ), false );
 			break;
 		}
 	}
@@ -605,15 +691,32 @@ class EntityFindByPropertyValueWalker : public scene::Graph::Walker
 {
 const PropertyValues& m_propertyvalues;
 const char *m_prop;
+const NodeSmartReference worldspawn;
 public:
 EntityFindByPropertyValueWalker( const char *prop, const PropertyValues& propertyvalues )
-	: m_propertyvalues( propertyvalues ), m_prop( prop ){
+	: m_propertyvalues( propertyvalues ), m_prop( prop ), worldspawn( Map_FindOrInsertWorldspawn( g_map ) ){
 }
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	if( !path.top().get().visible() ){
+		return false;
+	}
+	// ignore worldspawn
+	if ( path.top().get() == worldspawn ) {
+		return false;
+	}
+
 	Entity* entity = Node_getEntity( path.top() );
-	if ( entity != 0
-		 && propertyvalues_contain( m_propertyvalues, entity->getKeyValue( m_prop ) ) ) {
-		Instance_getSelectable( instance )->setSelected( true );
+	if ( entity != 0 ){
+		if( propertyvalues_contain( m_propertyvalues, entity->getKeyValue( m_prop ) ) ) {
+			Instance_getSelectable( instance )->setSelected( true );
+			return true;
+		}
+		return false;
+	}
+	else if( path.size() > 2 && !path.top().get().isRoot() ){
+		Selectable* selectable = Instance_getSelectable( instance );
+		if( selectable != 0 )
+			selectable->setSelected( true );
 	}
 	return true;
 }
@@ -627,9 +730,37 @@ class EntityGetSelectedPropertyValuesWalker : public scene::Graph::Walker
 {
 PropertyValues& m_propertyvalues;
 const char *m_prop;
+const NodeSmartReference worldspawn;
 public:
 EntityGetSelectedPropertyValuesWalker( const char *prop, PropertyValues& propertyvalues )
-	: m_propertyvalues( propertyvalues ), m_prop( prop ){
+	: m_propertyvalues( propertyvalues ), m_prop( prop ), worldspawn( Map_FindOrInsertWorldspawn( g_map ) ){
+}
+bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	Entity* entity = Node_getEntity( path.top() );
+	if ( entity != 0 ){
+		if( path.top().get() != worldspawn ){
+			Selectable* selectable = Instance_getSelectable( instance );
+			if ( ( selectable != 0 && selectable->isSelected() ) || instance.childSelected() ) {
+				if ( !propertyvalues_contain( m_propertyvalues, entity->getKeyValue( m_prop ) ) ) {
+					m_propertyvalues.push_back( entity->getKeyValue( m_prop ) );
+				}
+			}
+		}
+		return false;
+	}
+	return true;
+}
+};
+/*
+class EntityGetSelectedPropertyValuesWalker : public scene::Graph::Walker
+{
+PropertyValues& m_propertyvalues;
+const char *m_prop;
+mutable bool m_selected_children;
+const NodeSmartReference worldspawn;
+public:
+EntityGetSelectedPropertyValuesWalker( const char *prop, PropertyValues& propertyvalues )
+	: m_propertyvalues( propertyvalues ), m_prop( prop ), m_selected_children( false ), worldspawn( Map_FindOrInsertWorldspawn( g_map ) ){
 }
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
 	Selectable* selectable = Instance_getSelectable( instance );
@@ -640,12 +771,27 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			if ( !propertyvalues_contain( m_propertyvalues, entity->getKeyValue( m_prop ) ) ) {
 				m_propertyvalues.push_back( entity->getKeyValue( m_prop ) );
 			}
+			return false;
+		}
+		else{
+			m_selected_children = true;
 		}
 	}
 	return true;
 }
+void post( const scene::Path& path, scene::Instance& instance ) const {
+	Entity* entity = Node_getEntity( path.top() );
+	if( entity != 0 && m_selected_children ){
+		m_selected_children = false;
+		if( path.top().get() == worldspawn )
+			return;
+		if ( !propertyvalues_contain( m_propertyvalues, entity->getKeyValue( m_prop ) ) ) {
+			m_propertyvalues.push_back( entity->getKeyValue( m_prop ) );
+		}
+	}
+}
 };
-
+*/
 void Scene_EntityGetPropertyValues( scene::Graph& graph, const char *prop, PropertyValues& propertyvalues ){
 	graph.traverse( EntityGetSelectedPropertyValuesWalker( prop, propertyvalues ) );
 }
@@ -694,11 +840,21 @@ void Select_FitTexture( float horizontal, float vertical ){
 	SceneChangeNotify();
 }
 
+
+#include "commands.h"
+#include "dialog.h"
+
 inline void hide_node( scene::Node& node, bool hide ){
 	hide
 	? node.enable( scene::Node::eHidden )
 	: node.disable( scene::Node::eHidden );
 }
+
+bool g_nodes_be_hidden = false;
+
+ConstReferenceCaller<bool, void(const Callback<void(bool)> &), PropertyImpl<bool>::Export> g_hidden_caller( g_nodes_be_hidden );
+
+ToggleItem g_hidden_item( g_hidden_caller );
 
 class HideSelectedWalker : public scene::Graph::Walker
 {
@@ -711,6 +867,7 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 	Selectable* selectable = Instance_getSelectable( instance );
 	if ( selectable != 0
 		 && selectable->isSelected() ) {
+		g_nodes_be_hidden = m_hide;
 		hide_node( path.top(), m_hide );
 	}
 	return true;
@@ -729,6 +886,7 @@ void Select_Hide(){
 void HideSelected(){
 	Select_Hide();
 	GlobalSelectionSystem().setSelectedAll( false );
+	g_hidden_item.update();
 }
 
 
@@ -752,8 +910,9 @@ void Scene_Hide_All( bool hide ){
 void Select_ShowAllHidden(){
 	Scene_Hide_All( false );
 	SceneChangeNotify();
+	g_nodes_be_hidden = false;
+	g_hidden_item.update();
 }
-
 
 
 void Selection_Flipx(){
@@ -785,7 +944,89 @@ void Selection_Rotatez(){
 	UndoableCommand undo( "rotateSelected -axis z -angle -90" );
 	Select_RotateAxis( 2,-90 );
 }
+#include "xywindow.h"
+void Selection_FlipHorizontally(){
+	VIEWTYPE viewtype = GlobalXYWnd_getCurrentViewType();
+	switch ( viewtype )
+	{
+	case XY:
+	case XZ:
+		Selection_Flipx();
+		break;
+	default:
+		Selection_Flipy();
+		break;
+	}
+}
 
+void Selection_FlipVertically(){
+	VIEWTYPE viewtype = GlobalXYWnd_getCurrentViewType();
+	switch ( viewtype )
+	{
+	case XZ:
+	case YZ:
+		Selection_Flipz();
+		break;
+	default:
+		Selection_Flipy();
+		break;
+	}
+}
+
+void Selection_RotateClockwise(){
+	UndoableCommand undo( "rotateSelected Clockwise 90" );
+	VIEWTYPE viewtype = GlobalXYWnd_getCurrentViewType();
+	switch ( viewtype )
+	{
+	case XY:
+		Select_RotateAxis( 2, -90 );
+		break;
+	case XZ:
+		Select_RotateAxis( 1, 90 );
+		break;
+	default:
+		Select_RotateAxis( 0, -90 );
+		break;
+	}
+}
+
+void Selection_RotateAnticlockwise(){
+	UndoableCommand undo( "rotateSelected Anticlockwise 90" );
+	VIEWTYPE viewtype = GlobalXYWnd_getCurrentViewType();
+	switch ( viewtype )
+	{
+	case XY:
+		Select_RotateAxis( 2, 90 );
+		break;
+	case XZ:
+		Select_RotateAxis( 1, -90 );
+		break;
+	default:
+		Select_RotateAxis( 0, 90 );
+		break;
+	}
+
+}
+
+
+
+void Select_registerCommands(){
+	GlobalCommands_insert( "ShowHidden", makeCallbackF( Select_ShowAllHidden ), Accelerator( 'H', (GdkModifierType)GDK_SHIFT_MASK ) );
+	GlobalToggles_insert( "HideSelected", makeCallbackF( HideSelected ), ToggleItem::AddCallbackCaller( g_hidden_item ), Accelerator( 'H' ) );
+
+	GlobalCommands_insert( "MirrorSelectionX", makeCallbackF( Selection_Flipx ) );
+	GlobalCommands_insert( "RotateSelectionX", makeCallbackF( Selection_Rotatex ) );
+	GlobalCommands_insert( "MirrorSelectionY", makeCallbackF( Selection_Flipy ) );
+	GlobalCommands_insert( "RotateSelectionY", makeCallbackF( Selection_Rotatey ) );
+	GlobalCommands_insert( "MirrorSelectionZ", makeCallbackF( Selection_Flipz ) );
+	GlobalCommands_insert( "RotateSelectionZ", makeCallbackF( Selection_Rotatez ) );
+
+	GlobalCommands_insert( "MirrorSelectionHorizontally", makeCallbackF( Selection_FlipHorizontally ) );
+	GlobalCommands_insert( "MirrorSelectionVertically", makeCallbackF( Selection_FlipVertically ) );
+
+	GlobalCommands_insert( "RotateSelectionClockwise", makeCallbackF( Selection_RotateClockwise ) );
+	GlobalCommands_insert( "RotateSelectionAnticlockwise", makeCallbackF( Selection_RotateAnticlockwise ) );
+}
 
 
 void Nudge( int nDim, float fNudge ){
@@ -874,6 +1115,9 @@ struct RotateDialog
 static gboolean rotatedlg_apply( ui::Widget widget, RotateDialog* rotateDialog ){
 	Vector3 eulerXYZ;
 
+	gtk_spin_button_update ( rotateDialog->x );
+	gtk_spin_button_update ( rotateDialog->y );
+	gtk_spin_button_update ( rotateDialog->z );
 	eulerXYZ[0] = static_cast<float>( gtk_spin_button_get_value( rotateDialog->x ) );
 	eulerXYZ[1] = static_cast<float>( gtk_spin_button_get_value( rotateDialog->y ) );
 	eulerXYZ[2] = static_cast<float>( gtk_spin_button_get_value( rotateDialog->z ) );
@@ -882,7 +1126,7 @@ static gboolean rotatedlg_apply( ui::Widget widget, RotateDialog* rotateDialog )
 	command << "rotateSelectedEulerXYZ -x " << eulerXYZ[0] << " -y " << eulerXYZ[1] << " -z " << eulerXYZ[2];
 	UndoableCommand undo( command.c_str() );
 
-	GlobalSelectionSystem().rotateSelected( quaternion_for_euler_xyz_degrees( eulerXYZ ) );
+	GlobalSelectionSystem().rotateSelected( quaternion_for_euler_xyz_degrees( eulerXYZ ), false );
 	return TRUE;
 }
 
@@ -898,6 +1142,7 @@ static gboolean rotatedlg_cancel( ui::Widget widget, RotateDialog* rotateDialog 
 
 static gboolean rotatedlg_ok( ui::Widget widget, RotateDialog* rotateDialog ){
 	rotatedlg_apply( widget, rotateDialog );
+//	rotatedlg_cancel( widget, rotateDialog );
 	rotateDialog->window.hide();
 	return TRUE;
 }
@@ -938,7 +1183,7 @@ void DoRotateDlg(){
 				}
 				{
 					auto adj = ui::Adjustment( 0, -359, 359, 1, 10, 0 );
-					auto spin = ui::SpinButton( adj, 1, 0 );
+					auto spin = ui::SpinButton( adj, 1, 1 );
 					spin.show();
                     table.attach(spin, {1, 2, 0, 1}, {GTK_EXPAND | GTK_FILL, 0});
                     spin.dimensions(64, -1);
@@ -950,7 +1195,7 @@ void DoRotateDlg(){
 				}
 				{
 					auto adj = ui::Adjustment( 0, -359, 359, 1, 10, 0 );
-					auto spin = ui::SpinButton( adj, 1, 0 );
+					auto spin = ui::SpinButton( adj, 1, 1 );
 					spin.show();
                     table.attach(spin, {1, 2, 1, 2}, {GTK_EXPAND | GTK_FILL, 0});
                     spin.dimensions(64, -1);
@@ -960,7 +1205,7 @@ void DoRotateDlg(){
 				}
 				{
 					auto adj = ui::Adjustment( 0, -359, 359, 1, 10, 0 );
-					auto spin = ui::SpinButton( adj, 1, 0 );
+					auto spin = ui::SpinButton( adj, 1, 1 );
 					spin.show();
                     table.attach(spin, {1, 2, 2, 3}, {GTK_EXPAND | GTK_FILL, 0});
                     spin.dimensions(64, -1);
@@ -1038,6 +1283,7 @@ static gboolean scaledlg_cancel( ui::Widget widget, ScaleDialog* scaleDialog ){
 
 static gboolean scaledlg_ok( ui::Widget widget, ScaleDialog* scaleDialog ){
 	scaledlg_apply( widget, scaleDialog );
+	//scaledlg_cancel( widget, scaleDialog );
 	scaleDialog->window.hide();
 	return TRUE;
 }
@@ -1125,4 +1371,80 @@ void DoScaleDlg(){
 	}
 
 	g_scale_dialog.window.show();
+}
+
+
+class EntityGetSelectedPropertyValuesWalker_nonEmpty : public scene::Graph::Walker
+{
+PropertyValues& m_propertyvalues;
+const char *m_prop;
+const NodeSmartReference worldspawn;
+public:
+EntityGetSelectedPropertyValuesWalker_nonEmpty( const char *prop, PropertyValues& propertyvalues )
+	: m_propertyvalues( propertyvalues ), m_prop( prop ), worldspawn( Map_FindOrInsertWorldspawn( g_map ) ){
+}
+bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	Entity* entity = Node_getEntity( path.top() );
+	if ( entity != 0 ){
+		if( path.top().get() != worldspawn ){
+			Selectable* selectable = Instance_getSelectable( instance );
+			if ( ( selectable != 0 && selectable->isSelected() ) || instance.childSelected() ) {
+				const char* keyvalue = entity->getKeyValue( m_prop );
+				if ( !string_empty( keyvalue ) && !propertyvalues_contain( m_propertyvalues, keyvalue ) ) {
+					m_propertyvalues.push_back( keyvalue );
+				}
+			}
+		}
+		return false;
+	}
+	return true;
+}
+};
+
+void Scene_EntityGetPropertyValues_nonEmpty( scene::Graph& graph, const char *prop, PropertyValues& propertyvalues ){
+	graph.traverse( EntityGetSelectedPropertyValuesWalker_nonEmpty( prop, propertyvalues ) );
+}
+
+#include "preferences.h"
+
+void Select_ConnectedEntities( bool targeting, bool targets, bool focus ){
+	PropertyValues target_propertyvalues;
+	PropertyValues targetname_propertyvalues;
+	const char *target_prop = "target";
+	const char *targetname_prop;
+	if ( g_pGameDescription->mGameType == "doom3" ) {
+		targetname_prop = "name";
+	}
+	else{
+		targetname_prop = "targetname";
+	}
+
+	if( targeting ){
+		Scene_EntityGetPropertyValues_nonEmpty( GlobalSceneGraph(), targetname_prop, targetname_propertyvalues );
+	}
+	if( targets ){
+		Scene_EntityGetPropertyValues_nonEmpty( GlobalSceneGraph(), target_prop, target_propertyvalues );
+	}
+
+	if( target_propertyvalues.empty() && targetname_propertyvalues.empty() ){
+		globalErrorStream() << "SelectConnectedEntities: nothing found\n";
+		return;
+	}
+
+	if( !targeting || !targets ){
+		GlobalSelectionSystem().setSelectedAll( false );
+	}
+	if ( targeting && !targetname_propertyvalues.empty() ) {
+		Scene_EntitySelectByPropertyValues( GlobalSceneGraph(), target_prop, targetname_propertyvalues );
+	}
+	if ( targets && !target_propertyvalues.empty() ) {
+		Scene_EntitySelectByPropertyValues( GlobalSceneGraph(), targetname_prop, target_propertyvalues );
+	}
+	if( focus ){
+		FocusAllViews();
+	}
+}
+
+void SelectConnectedEntities(){
+	Select_ConnectedEntities( true, true, false );
 }

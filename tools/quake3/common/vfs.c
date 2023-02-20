@@ -52,9 +52,14 @@
 #include "vfs.h"
 #include <unzip.h>
 #include <glib.h>
+#define GARUX_DISABLE_BAD_MINIZ
+#ifndef GARUX_DISABLE_BAD_MINIZ
+#include "miniz.h"
+#endif
 
 typedef struct
 {
+	char* unzFilePath;
 	char*   name;
 	unzFile zipfile;
 	unz_file_pos zippos;
@@ -71,6 +76,7 @@ static int g_numDirs;
 char g_strForbiddenDirs[VFS_MAXDIRS][PATH_MAX + 1];
 int g_numForbiddenDirs = 0;
 static gboolean g_bUsePak = TRUE;
+char g_strLoadedFileLocation[1024];
 
 // =============================================================================
 // Static functions
@@ -120,6 +126,8 @@ static void vfsInitPakFile( const char *filename ){
 	}
 	unzGoToFirstFile( uf );
 
+	char* unzFilePath = strdup( filename );
+
 	for ( i = 0; i < gi.number_entry; i++ )
 	{
 		char filename_inzip[NAME_MAX];
@@ -147,6 +155,7 @@ static void vfsInitPakFile( const char *filename ){
 		file->name = strdup( filename_lower );
 		file->size = file_info.uncompressed_size;
 		file->zipfile = uf;
+		file->unzFilePath = unzFilePath;
 		file->zippos = pos;
 
 		if ( ( i + 1 ) < gi.number_entry ) {
@@ -256,6 +265,72 @@ void vfsInitDirectory( const char *path ){
 	}
 }
 
+
+// lists all .shader files
+void vfsListShaderFiles( char* list, int *num ){
+	//char filename[PATH_MAX];
+	char *dirlist;
+	GDir *dir;
+	int i, k;
+	char path[NAME_MAX];
+/* search in dirs */
+	for ( i = 0; i < g_numDirs; i++ ){
+		strncpy( path, g_strDirs[ i ], NAME_MAX );
+		strcat( path, "scripts/" );
+
+		dir = g_dir_open( path, 0, NULL );
+
+		if ( dir != NULL ) {
+			while ( 1 )
+			{
+				const char* name = g_dir_read_name( dir );
+				if ( name == NULL ) {
+					break;
+				}
+				dirlist = g_strdup( name );
+				char *ext = strrchr( dirlist, '.' );
+
+				if ( ( ext == NULL ) || ( Q_stricmp( ext, ".shader" ) != 0 ) ) {
+					continue;
+				}
+
+				for ( k = 0; k < *num; k++ ){
+					if ( !Q_stricmp( list + k*65, dirlist ) ) goto shISdouplicate;
+				}
+				strcpy( list + (*num)*65, dirlist );
+				(*num)++;
+shISdouplicate:
+				g_free( dirlist );
+			}
+			g_dir_close( dir );
+		}
+	}
+	/* search in packs */
+	GSList *lst;
+
+	for ( lst = g_pakFiles; lst != NULL; lst = g_slist_next( lst ) )
+	{
+		VFS_PAKFILE* file = (VFS_PAKFILE*)lst->data;
+
+		char *ext = strrchr( file->name, '.' );
+
+		if ( ( ext == NULL ) || ( Q_stricmp( ext, ".shader" ) != 0 ) ) {
+			continue;
+		}
+		//name + ext this time
+		ext = strrchr( file->name, '/' );
+		ext++;
+
+		for ( k = 0; k < *num; k++ ){
+			if ( !Q_stricmp( list + k*65, ext ) ) goto shISdouplicate2;
+		}
+		strcpy( list + (*num)*65, ext );
+		(*num)++;
+shISdouplicate2:
+		continue;
+	}
+}
+
 // frees all memory that we allocated
 void vfsShutdown(){
 	while ( g_unzFiles )
@@ -267,6 +342,7 @@ void vfsShutdown(){
 	while ( g_pakFiles )
 	{
 		VFS_PAKFILE* file = (VFS_PAKFILE*)g_pakFiles->data;
+		free( file->unzFilePath );
 		free( file->name );
 		free( file );
 		g_pakFiles = g_slist_remove( g_pakFiles, file );
@@ -364,6 +440,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 
 	// filename is a full path
 	if ( index == -1 ) {
+		strcpy( g_strLoadedFileLocation, filename );
 		long len;
 		FILE *f;
 
@@ -405,6 +482,8 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 		strcat( tmp, filename );
 		if ( access( tmp, R_OK ) == 0 ) {
 			if ( count == index ) {
+				strcpy( g_strLoadedFileLocation, tmp );
+
 				long len;
 				FILE *f;
 
@@ -453,6 +532,10 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 		}
 
 		if ( count == index ) {
+			strcpy( g_strLoadedFileLocation, file->unzFilePath );
+			strcat( g_strLoadedFileLocation, " :: " );
+			strcat( g_strLoadedFileLocation, filename );
+
 
 		if ( unzGoToFilePos( file->zipfile, &file->zippos ) != UNZ_OK ) {
 			return -1;
@@ -515,4 +598,138 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 
 	g_free( lower );
 	return -1;
+}
+
+
+qboolean vfsPackFile( const char *filename, const char *packname, const int compLevel ){
+#ifndef GARUX_DISABLE_BAD_MINIZ
+	int i;
+	char tmp[NAME_MAX], fixed[NAME_MAX];
+	GSList *lst;
+
+	byte *bufferptr = NULL;
+	strcpy( fixed, filename );
+	vfsFixDOSName( fixed );
+	g_strdown( fixed );
+
+	for ( i = 0; i < g_numDirs; i++ )
+	{
+		strcpy( tmp, g_strDirs[i] );
+		strcat( tmp, filename );
+		if ( access( tmp, R_OK ) == 0 ) {
+			if ( access( packname, R_OK ) == 0 ) {
+				mz_zip_archive zip;
+				memset( &zip, 0, sizeof(zip) );
+				mz_zip_reader_init_file( &zip, packname, 0 );
+				mz_zip_writer_init_from_reader( &zip, packname );
+
+				mz_bool success = MZ_TRUE;
+				success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
+				if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
+					Error( "Failed creating zip archive \"%s\"!\n", packname );
+				}
+				mz_zip_reader_end( &zip);
+				mz_zip_writer_end( &zip );
+			}
+			else{
+				mz_zip_archive zip;
+				memset( &zip, 0, sizeof(zip) );
+				if( !mz_zip_writer_init_file( &zip, packname, 0 ) ){
+					Error( "Failed creating zip archive \"%s\"!\n", packname );
+				}
+				mz_bool success = MZ_TRUE;
+				success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
+				if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
+					Error( "Failed creating zip archive \"%s\"!\n", packname );
+				}
+				mz_zip_writer_end( &zip );
+			}
+
+			return qtrue;
+		}
+	}
+
+	for ( lst = g_pakFiles; lst != NULL; lst = g_slist_next( lst ) )
+	{
+		VFS_PAKFILE* file = (VFS_PAKFILE*)lst->data;
+
+		if ( strcmp( file->name, fixed ) != 0 ) {
+			continue;
+		}
+
+		memcpy( file->zipfile, &file->zipinfo, sizeof( unz_s ) );
+
+		if ( unzOpenCurrentFile( file->zipfile ) != UNZ_OK ) {
+			return qfalse;
+		}
+
+		bufferptr = safe_malloc( file->size + 1 );
+		// we need to end the buffer with a 0
+		( (char*) ( bufferptr ) )[file->size] = 0;
+
+		mz_uint16 DOS_time = (mz_uint16)(((file->zipinfo.cur_file_info.tmu_date.tm_hour) << 11) + ((file->zipinfo.cur_file_info.tmu_date.tm_min) << 5) + ((file->zipinfo.cur_file_info.tmu_date.tm_sec) >> 1));
+		mz_uint16 DOS_date = (mz_uint16)(((file->zipinfo.cur_file_info.tmu_date.tm_year - 1980) << 9) + ((file->zipinfo.cur_file_info.tmu_date.tm_mon + 1) << 5) + file->zipinfo.cur_file_info.tmu_date.tm_mday);
+
+		i = unzReadCurrentFile( file->zipfile, bufferptr, file->size );
+		unzCloseCurrentFile( file->zipfile );
+		if ( i < 0 ) {
+			return qfalse;
+		}
+		else{
+			mz_bool success = MZ_TRUE;
+			success &= mz_zip_add_mem_to_archive_file_in_place_with_time( packname, filename, bufferptr, i, 0, 0, compLevel, DOS_time, DOS_date );
+				if ( !success ){
+					Error( "Failed creating zip archive \"%s\"!\n", packname );
+				}
+			free( bufferptr );
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+#else
+		Error( "Disabled because of miniz issue" );
+#endif
+}
+
+qboolean vfsPackFile_Absolute_Path( const char *filepath, const char *filename, const char *packname, const int compLevel ){
+#ifndef GARUX_DISABLE_BAD_MINIZ
+	char tmp[NAME_MAX];
+	strcpy( tmp, filepath );
+	if ( access( tmp, R_OK ) == 0 ) {
+		if ( access( packname, R_OK ) == 0 ) {
+			mz_zip_archive zip;
+			memset( &zip, 0, sizeof(zip) );
+			mz_zip_reader_init_file( &zip, packname, 0 );
+			mz_zip_writer_init_from_reader( &zip, packname );
+
+			mz_bool success = MZ_TRUE;
+			success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
+			if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
+				Error( "Failed creating zip archive \"%s\"!\n", packname );
+			}
+			mz_zip_reader_end( &zip);
+			mz_zip_writer_end( &zip );
+		}
+		else{
+			mz_zip_archive zip;
+			memset( &zip, 0, sizeof(zip) );
+			if( !mz_zip_writer_init_file( &zip, packname, 0 ) ){
+				Error( "Failed creating zip archive \"%s\"!\n", packname );
+			}
+			mz_bool success = MZ_TRUE;
+			success &= mz_zip_writer_add_file( &zip, filename, tmp, 0, 0, compLevel );
+			if ( !success || !mz_zip_writer_finalize_archive( &zip ) ){
+				Error( "Failed creating zip archive \"%s\"!\n", packname );
+			}
+			mz_zip_writer_end( &zip );
+		}
+
+		return qtrue;
+	}
+
+	return qfalse;
+#else
+		Error( "Disabled because of miniz issue" );
+#endif
 }

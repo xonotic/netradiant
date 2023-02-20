@@ -531,10 +531,12 @@ Callback<void()> m_changed;
 bool m_useCenterKey;
 
 Doom3LightRadius( const char* defaultRadius ) : m_defaultRadius( 300, 300, 300 ), m_center( 0, 0, 0 ), m_useCenterKey( false ){
-	if ( !string_parse_vector3( defaultRadius, m_defaultRadius ) ) {
+	if ( g_lightType == LIGHTTYPE_DOOM3 ){
+		if ( !string_parse_vector3( defaultRadius, m_defaultRadius ) ) {
 		globalErrorStream() << "Doom3LightRadius: failed to parse default light radius\n";
-	}
+		}
 	m_radius = m_defaultRadius;
+	}
 }
 
 void lightRadiusChanged( const char* value ){
@@ -653,11 +655,11 @@ void render( RenderStateFlags state ) const {
 	aabb_draw_wire( points );
 }
 };
-
+/*
 inline void default_extents( Vector3& extents ){
-	extents = Vector3( 8, 8, 8 );
+	extents = Vector3( 12, 12, 12 );
 }
-
+*/
 class ShaderRef
 {
 CopiedString m_name;
@@ -771,6 +773,8 @@ Doom3GroupOrigin m_funcStaticOrigin;
 LightRadii m_radii;
 Doom3LightRadius m_doom3Radius;
 
+AABB m_aabb_light;
+
 RenderLightRadiiWire m_radii_wire;
 RenderLightRadiiFill m_radii_fill;
 RenderLightRadiiBox m_radii_box;
@@ -803,16 +807,14 @@ RenderLightProjection m_renderProjection;
 
 LightShader m_shader;
 
-AABB m_aabb_light;
-
 Callback<void()> m_transformChanged;
 Callback<void()> m_boundsChanged;
 Callback<void()> m_evaluateTransform;
 
 void construct(){
 	default_rotation( m_rotation );
-	m_aabb_light.origin = Vector3( 0, 0, 0 );
-	default_extents( m_aabb_light.extents );
+	//m_aabb_light.origin = Vector3( 0, 0, 0 );
+	//default_extents( m_aabb_light.extents );
 
 	m_keyObservers.insert( "classname", ClassnameFilter::ClassnameChangedCaller( m_filter ) );
 	m_keyObservers.insert( Static<KeyIsName>::instance().m_nameKey, NamedEntity::IdentifierChangedCaller( m_named ) );
@@ -980,6 +982,7 @@ Light( EntityClass* eclass, scene::Node& node, const Callback<void()>& transform
 	m_nameKeys( m_entity ),
 	m_funcStaticOrigin( m_traverse, m_originKey.m_origin ),
 	m_doom3Radius( EntityClass_valueForKey( m_entity.getEntityClass(), "light_radius" ) ),
+	m_aabb_light( Vector3( 0, 0, 0 ), Vector3( 12, 12, 12 ) ),
 	m_radii_wire( m_radii, m_aabb_light.origin ),
 	m_radii_fill( m_radii, m_aabb_light.origin ),
 	m_radii_box( m_aabb_light.origin ),
@@ -1003,6 +1006,7 @@ Light( const Light& other, scene::Node& node, const Callback<void()>& transformC
 	m_nameKeys( m_entity ),
 	m_funcStaticOrigin( m_traverse, m_originKey.m_origin ),
 	m_doom3Radius( EntityClass_valueForKey( m_entity.getEntityClass(), "light_radius" ) ),
+	m_aabb_light( Vector3( 0, 0, 0 ), Vector3( 12, 12, 12 ) ),
 	m_radii_wire( m_radii, m_aabb_light.origin ),
 	m_radii_fill( m_radii, m_aabb_light.origin ),
 	m_radii_box( m_aabb_light.origin ),
@@ -1143,7 +1147,7 @@ void renderSolid( Renderer& renderer, const VolumeTest& volume, const Matrix4& l
 }
 void renderWireframe( Renderer& renderer, const VolumeTest& volume, const Matrix4& localToWorld, bool selected ) const {
 	renderSolid( renderer, volume, localToWorld, selected );
-	if ( g_showNames ) {
+	if ( g_showNames && !string_equal( m_named.name(), "light" ) ) {
 		renderer.addRenderable( m_renderName, localToWorld );
 	}
 }

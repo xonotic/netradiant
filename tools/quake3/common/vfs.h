@@ -39,6 +39,11 @@
 #if GDEF_OS_WINDOWS
 #include <wtypes.h>
 #include <io.h>
+
+#ifndef R_OK
+#define R_OK 04
+#endif
+
 #define S_ISDIR( mode ) ( mode & _S_IFDIR )
 #else // !GDEF_OS_WINDOWS
 #include <dirent.h>
@@ -62,8 +67,12 @@ void vfsInitDirectory( const char *path );
 void vfsShutdown();
 int vfsGetFileCount( const char *filename );
 int vfsLoadFile( const char *filename, void **buffer, int index );
+void vfsListShaderFiles( char* list, int *num );
+qboolean vfsPackFile( const char *filename, const char *packname, const int compLevel );
+qboolean vfsPackFile_Absolute_Path( const char *filepath, const char *filename, const char *packname, const int compLevel );
 
 extern char g_strForbiddenDirs[VFS_MAXDIRS][PATH_MAX + 1];
 extern int g_numForbiddenDirs;
+extern char g_strLoadedFileLocation[1024];
 
 #endif // _VFS_H_

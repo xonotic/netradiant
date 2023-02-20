@@ -93,9 +93,9 @@ struct camwindow_globals_private_t
 		m_nAngleSpeed( 3 ),
 		m_bCamInverseMouse( false ),
 		m_bCamDiscrete( true ),
-		m_bCubicClipping( true ),
+		m_bCubicClipping( false ),
 		m_showStats( true ),
-		m_nStrafeMode( 0 ){
+		m_nStrafeMode( 3 ){
 	}
 
 };
@@ -147,6 +147,7 @@ struct camera_t
 
 	bool m_strafe; // true when in strafemode toggled by the ctrl-key
 	bool m_strafe_forward; // true when in strafemode by ctrl-key and shift is pressed for forward strafing
+	bool m_strafe_forward_invert; //silly option to invert forward strafing to support old fegs
 
 	unsigned int movementflags; // movement flags
 	Timer m_keycontrol_timer;
@@ -285,7 +286,7 @@ void Camera_FreeMove( camera_t& camera, int dx, int dy ){
 
 		camera.origin -= camera.vright * strafespeed * dx;
 		if ( camera.m_strafe_forward ) {
-			camera.origin += camera.vpn * strafespeed * dy;
+			camera.origin += camera.m_strafe_forward_invert ? ( camera.vpn * strafespeed * dy ) : ( -camera.vpn * strafespeed * dy );
 		}
 		else{
 			camera.origin += camera.vup * strafespeed * dy;
@@ -366,7 +367,10 @@ const unsigned int MOVE_UP = 1 << 6;
 const unsigned int MOVE_DOWN = 1 << 7;
 const unsigned int MOVE_PITCHUP = 1 << 8;
 const unsigned int MOVE_PITCHDOWN = 1 << 9;
-const unsigned int MOVE_ALL = MOVE_FORWARD | MOVE_BACK | MOVE_ROTRIGHT | MOVE_ROTLEFT | MOVE_STRAFERIGHT | MOVE_STRAFELEFT | MOVE_UP | MOVE_DOWN | MOVE_PITCHUP | MOVE_PITCHDOWN;
+const unsigned int MOVE_FOCUS = 1 << 10;
+const unsigned int MOVE_ALL = MOVE_FORWARD | MOVE_BACK | MOVE_ROTRIGHT | MOVE_ROTLEFT | MOVE_STRAFERIGHT | MOVE_STRAFELEFT | MOVE_UP | MOVE_DOWN | MOVE_PITCHUP | MOVE_PITCHDOWN | MOVE_FOCUS;
+
+Vector3 Camera_getFocusPos( camera_t& camera );
 
 void Cam_KeyControl( camera_t& camera, float dtime ){
 	// Update angles
@@ -410,6 +414,9 @@ void Cam_KeyControl( camera_t& camera, float dtime ){
 	}
 	if ( camera.movementflags & MOVE_DOWN ) {
 		vector3_add( camera.origin, vector3_scaled( g_vector3_axis_z, -dtime * g_camwindow_globals_private.m_nMoveSpeed ) );
+	}
+	if ( camera.movementflags & MOVE_FOCUS ) {
+		camera.origin = Camera_getFocusPos( camera );
 	}
 
 	Camera_updateModelview( camera );
@@ -514,6 +521,12 @@ void Camera_PitchDown_KeyUp( camera_t& camera ){
 	Camera_clearMovementFlags( camera, MOVE_PITCHDOWN );
 }
 
+void Camera_Focus_KeyDown( camera_t& camera ){
+	Camera_setMovementFlags( camera, MOVE_FOCUS );
+}
+void Camera_Focus_KeyUp( camera_t& camera ){
+	Camera_clearMovementFlags( camera, MOVE_FOCUS );
+}
 
 typedef ReferenceCaller<camera_t, void(), &Camera_MoveForward_KeyDown> FreeMoveCameraMoveForwardKeyDownCaller;
 typedef ReferenceCaller<camera_t, void(), &Camera_MoveForward_KeyUp> FreeMoveCameraMoveForwardKeyUpCaller;
@@ -528,6 +541,8 @@ typedef ReferenceCaller<camera_t, void(), &Camera_MoveUp_KeyUp> FreeMoveCameraMo
 typedef ReferenceCaller<camera_t, void(), &Camera_MoveDown_KeyDown> FreeMoveCameraMoveDownKeyDownCaller;
 typedef ReferenceCaller<camera_t, void(), &Camera_MoveDown_KeyUp> FreeMoveCameraMoveDownKeyUpCaller;
 
+typedef ReferenceCaller<camera_t, void(), &Camera_Focus_KeyDown> FreeMoveCameraFocusKeyDownCaller;
+typedef ReferenceCaller<camera_t, void(), &Camera_Focus_KeyUp> FreeMoveCameraFocusKeyUpCaller;
 
 const float MIN_FOV = 60;
 const float MAX_FOV = 179;
@@ -628,16 +643,12 @@ void Camera_motionDelta( int x, int y, unsigned int state, void* data ){
 
 	cam->m_mouseMove.motion_delta( x, y, state );
 
+	cam->m_strafe_forward_invert = false;
+
 	switch ( g_camwindow_globals_private.m_nStrafeMode )
 	{
 	case 0:
-		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0;
-		if ( cam->m_strafe ) {
-			cam->m_strafe_forward = ( state & GDK_SHIFT_MASK ) != 0;
-		}
-		else{
-			cam->m_strafe_forward = false;
-		}
+		cam->m_strafe = false;
 		break;
 	case 1:
 		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0 && ( state & GDK_SHIFT_MASK ) == 0;
@@ -647,8 +658,23 @@ void Camera_motionDelta( int x, int y, unsigned int state, void* data ){
 		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0 && ( state & GDK_SHIFT_MASK ) == 0;
 		cam->m_strafe_forward = cam->m_strafe;
 		break;
+	case 4:
+		cam->m_strafe_forward_invert = true; // fall through
+	default: /* 3 & 4 */
+		cam->m_strafe = ( state & GDK_CONTROL_MASK ) != 0;
+		if ( cam->m_strafe ) {
+			cam->m_strafe_forward = ( state & GDK_SHIFT_MASK ) != 0;
+		}
+		else{
+			cam->m_strafe_forward = false;
+		}
+		break;
 	}
 }
+
+
+
+
 
 class CamWnd
 {
@@ -711,7 +737,7 @@ static void releaseStates(){
 
 camera_t& getCamera(){
 	return m_Camera;
-};
+}
 
 void BenchMark();
 void Cam_ChangeFloor( bool up );
@@ -799,7 +825,7 @@ void Camera_setAngles( CamWnd& camwnd, const Vector3& angles ){
 // CamWnd class
 
 gboolean enable_freelook_button_press( ui::Widget widget, GdkEventButton* event, CamWnd* camwnd ){
-	if ( event->type == GDK_BUTTON_PRESS && event->button == 3 ) {
+	if ( event->type == GDK_BUTTON_PRESS && event->button == 3 && modifiers_for_state( event->state ) == c_modifierNone ) {
 		camwnd->EnableFreeMove();
 		return TRUE;
 	}
@@ -807,7 +833,7 @@ gboolean enable_freelook_button_press( ui::Widget widget, GdkEventButton* event,
 }
 
 gboolean disable_freelook_button_press( ui::Widget widget, GdkEventButton* event, CamWnd* camwnd ){
-	if ( event->type == GDK_BUTTON_PRESS && event->button == 3 ) {
+	if ( event->type == GDK_BUTTON_PRESS && event->button == 3 && modifiers_for_state( event->state ) == c_modifierNone ) {
 		camwnd->DisableFreeMove();
 		return TRUE;
 	}
@@ -832,6 +858,7 @@ void camwnd_update_xor_rectangle( CamWnd& self, rect_t area ){
 
 gboolean selection_button_press( ui::Widget widget, GdkEventButton* event, WindowObserver* observer ){
 	if ( event->type == GDK_BUTTON_PRESS ) {
+		gtk_widget_grab_focus( widget );
 		observer->onMouseDown( WindowVector_forDouble( event->x, event->y ), button_for_button( event->button ), modifiers_for_state( event->state ) );
 	}
 	return FALSE;
@@ -874,9 +901,39 @@ gboolean selection_motion_freemove( ui::Widget widget, GdkEventMotion *event, Wi
 }
 
 gboolean wheelmove_scroll( ui::Widget widget, GdkEventScroll* event, CamWnd* camwnd ){
+	//gtk_window_set_focus( camwnd->m_parent, camwnd->m_gl_widget );
+	gtk_widget_grab_focus( camwnd->m_gl_widget );
+	if( !gtk_window_is_active( camwnd->m_parent ) )
+		gtk_window_present( camwnd->m_parent );
+
 	if ( event->direction == GDK_SCROLL_UP ) {
 		Camera_Freemove_updateAxes( camwnd->getCamera() );
-		Camera_setOrigin( *camwnd, vector3_added( Camera_getOrigin( *camwnd ), vector3_scaled( camwnd->getCamera().forward, static_cast<float>( g_camwindow_globals_private.m_nMoveSpeed ) ) ) );
+		if( camwnd->m_bFreeMove || !g_camwindow_globals.m_bZoomInToPointer ){
+			Camera_setOrigin( *camwnd, vector3_added( Camera_getOrigin( *camwnd ), vector3_scaled( camwnd->getCamera().forward, static_cast<float>( g_camwindow_globals_private.m_nMoveSpeed ) ) ) );
+		}
+		else{
+			//Matrix4 maa = matrix4_multiplied_by_matrix4( camwnd->getCamera().projection, camwnd->getCamera().modelview );
+			Matrix4 maa = camwnd->getCamera().m_view->GetViewMatrix();
+			matrix4_affine_invert( maa );
+
+			float x = static_cast<float>( event->x );
+			float y = static_cast<float>( event->y );
+			Vector3 normalized;
+
+			normalized[0] = 2.0f * ( x ) / static_cast<float>( camwnd->getCamera().width ) - 1.0f;
+			normalized[1] = 2.0f * ( y )/ static_cast<float>( camwnd->getCamera().height ) - 1.0f;
+			normalized[1] *= -1.f;
+			normalized[2] = 0.f;
+
+			normalized *= 16.0f;
+				//globalOutputStream() << normalized << " normalized    ";
+			matrix4_transform_point( maa, normalized );
+				//globalOutputStream() << normalized << "\n";
+			Vector3 norm = vector3_normalised( normalized - Camera_getOrigin( *camwnd ) );
+				//globalOutputStream() << normalized - Camera_getOrigin( *camwnd ) << "  normalized - Camera_getOrigin( *camwnd )\n";
+				//globalOutputStream() << norm << "  norm\n";
+			Camera_setOrigin( *camwnd, vector3_added( Camera_getOrigin( *camwnd ), vector3_scaled( norm, static_cast<float>( g_camwindow_globals_private.m_nMoveSpeed ) ) ) );
+		}
 	}
 	else if ( event->direction == GDK_SCROLL_DOWN ) {
 		Camera_Freemove_updateAxes( camwnd->getCamera() );
@@ -913,83 +970,107 @@ void KeyEvent_disconnect( const char* name ){
 }
 
 void CamWnd_registerCommands( CamWnd& camwnd ){
-	GlobalKeyEvents_insert( "CameraForward", Accelerator( GDK_KEY_Up ),
+	GlobalKeyEvents_insert( "CameraForward", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_MoveForward_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveForward_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraBack", Accelerator( GDK_KEY_Down ),
+	GlobalKeyEvents_insert( "CameraBack", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_MoveBack_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveBack_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraLeft", Accelerator( GDK_KEY_Left ),
+	GlobalKeyEvents_insert( "CameraLeft", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_RotateLeft_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_RotateLeft_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraRight", Accelerator( GDK_KEY_Right ),
+	GlobalKeyEvents_insert( "CameraRight", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_RotateRight_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_RotateRight_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraStrafeRight", Accelerator( GDK_KEY_period ),
+	GlobalKeyEvents_insert( "CameraStrafeRight", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_MoveRight_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveRight_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraStrafeLeft", Accelerator( GDK_KEY_comma ),
+	GlobalKeyEvents_insert( "CameraStrafeLeft", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_MoveLeft_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveLeft_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraUp", Accelerator( 'D' ),
+	GlobalKeyEvents_insert( "CameraUp", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_MoveUp_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveUp_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraDown", Accelerator( 'C' ),
+	GlobalKeyEvents_insert( "CameraDown", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_MoveDown_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_MoveDown_KeyUp>( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraAngleDown", Accelerator( 'A' ),
-							ReferenceCaller<camera_t, void(), Camera_PitchDown_KeyDown>( camwnd.getCamera() ),
-							ReferenceCaller<camera_t, void(), Camera_PitchDown_KeyUp>( camwnd.getCamera() )
-							);
-	GlobalKeyEvents_insert( "CameraAngleUp", Accelerator( 'Z' ),
+	GlobalKeyEvents_insert( "CameraAngleUp", accelerator_null(),
 							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyDown>( camwnd.getCamera() ),
 							ReferenceCaller<camera_t, void(), Camera_PitchUp_KeyUp>( camwnd.getCamera() )
 							);
+	GlobalKeyEvents_insert( "CameraAngleDown", accelerator_null(),
+							ReferenceCaller<camera_t, void(), Camera_PitchDown_KeyDown>( camwnd.getCamera() ),
+							ReferenceCaller<camera_t, void(), Camera_PitchDown_KeyUp>( camwnd.getCamera() )
+							);
 
-	GlobalKeyEvents_insert( "CameraFreeMoveForward", Accelerator( GDK_KEY_Up ),
+
+	GlobalKeyEvents_insert( "CameraFreeMoveForward", accelerator_null(),
 							FreeMoveCameraMoveForwardKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveForwardKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveBack", Accelerator( GDK_KEY_Down ),
+	GlobalKeyEvents_insert( "CameraFreeMoveBack", accelerator_null(),
 							FreeMoveCameraMoveBackKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveBackKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveLeft", Accelerator( GDK_KEY_Left ),
+	GlobalKeyEvents_insert( "CameraFreeMoveLeft", accelerator_null(),
 							FreeMoveCameraMoveLeftKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveLeftKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveRight", Accelerator( GDK_KEY_Right ),
+	GlobalKeyEvents_insert( "CameraFreeMoveRight", accelerator_null(),
 							FreeMoveCameraMoveRightKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveRightKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveUp", Accelerator( 'D' ),
+
+	GlobalKeyEvents_insert( "CameraFreeMoveForward2", accelerator_null(),
+							FreeMoveCameraMoveForwardKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveForwardKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveBack2", accelerator_null(),
+							FreeMoveCameraMoveBackKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveBackKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveLeft2", accelerator_null(),
+							FreeMoveCameraMoveLeftKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveLeftKeyUpCaller( camwnd.getCamera() )
+							);
+	GlobalKeyEvents_insert( "CameraFreeMoveRight2", accelerator_null(),
+							FreeMoveCameraMoveRightKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraMoveRightKeyUpCaller( camwnd.getCamera() )
+							);
+
+	GlobalKeyEvents_insert( "CameraFreeMoveUp", accelerator_null(),
 							FreeMoveCameraMoveUpKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveUpKeyUpCaller( camwnd.getCamera() )
 							);
-	GlobalKeyEvents_insert( "CameraFreeMoveDown", Accelerator( 'C' ),
+	GlobalKeyEvents_insert( "CameraFreeMoveDown", accelerator_null(),
 							FreeMoveCameraMoveDownKeyDownCaller( camwnd.getCamera() ),
 							FreeMoveCameraMoveDownKeyUpCaller( camwnd.getCamera() )
 							);
 
-	GlobalCommands_insert( "CameraForward", ReferenceCaller<camera_t, void(), Camera_MoveForward_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Up ) );
-	GlobalCommands_insert( "CameraBack", ReferenceCaller<camera_t, void(), Camera_MoveBack_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Down ) );
-	GlobalCommands_insert( "CameraLeft", ReferenceCaller<camera_t, void(), Camera_RotateLeft_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Left ) );
-	GlobalCommands_insert( "CameraRight", ReferenceCaller<camera_t, void(), Camera_RotateRight_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_Right ) );
-	GlobalCommands_insert( "CameraStrafeRight", ReferenceCaller<camera_t, void(), Camera_MoveRight_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_period ) );
-	GlobalCommands_insert( "CameraStrafeLeft", ReferenceCaller<camera_t, void(), Camera_MoveLeft_Discrete>( camwnd.getCamera() ), Accelerator( GDK_KEY_comma ) );
+	GlobalKeyEvents_insert( "CameraFreeFocus", accelerator_null(),
+							FreeMoveCameraFocusKeyDownCaller( camwnd.getCamera() ),
+							FreeMoveCameraFocusKeyUpCaller( camwnd.getCamera() )
+							);
 
-	GlobalCommands_insert( "CameraUp", ReferenceCaller<camera_t, void(), Camera_MoveUp_Discrete>( camwnd.getCamera() ), Accelerator( 'D' ) );
-	GlobalCommands_insert( "CameraDown", ReferenceCaller<camera_t, void(), Camera_MoveDown_Discrete>( camwnd.getCamera() ), Accelerator( 'C' ) );
-	GlobalCommands_insert( "CameraAngleUp", ReferenceCaller<camera_t, void(), Camera_PitchUp_Discrete>( camwnd.getCamera() ), Accelerator( 'A' ) );
-	GlobalCommands_insert( "CameraAngleDown", ReferenceCaller<camera_t, void(), Camera_PitchDown_Discrete>( camwnd.getCamera() ), Accelerator( 'Z' ) );
+	GlobalCommands_insert( "CameraForward", ReferenceCaller<camera_t, void(), Camera_MoveForward_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraBack", ReferenceCaller<camera_t, void(), Camera_MoveBack_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraLeft", ReferenceCaller<camera_t, void(), Camera_RotateLeft_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraRight", ReferenceCaller<camera_t, void(), Camera_RotateRight_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraStrafeRight", ReferenceCaller<camera_t, void(), Camera_MoveRight_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraStrafeLeft", ReferenceCaller<camera_t, void(), Camera_MoveLeft_Discrete>( camwnd.getCamera() ) );
+
+	GlobalCommands_insert( "CameraUp", ReferenceCaller<camera_t, void(), Camera_MoveUp_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraDown", ReferenceCaller<camera_t, void(), Camera_MoveDown_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraAngleUp", ReferenceCaller<camera_t, void(), Camera_PitchUp_Discrete>( camwnd.getCamera() ) );
+	GlobalCommands_insert( "CameraAngleDown", ReferenceCaller<camera_t, void(), Camera_PitchDown_Discrete>( camwnd.getCamera() ) );
 }
 
 void CamWnd_Move_Enable( CamWnd& camwnd ){
@@ -1058,20 +1139,20 @@ struct CamWnd_Move_Discrete {
 	}
 
 	static void Import_(CamWnd &camwnd, bool value) {
-		if (g_camwindow_globals_private.m_bCamDiscrete) {
-			CamWnd_Move_Discrete_Disable(camwnd);
+	if ( g_camwindow_globals_private.m_bCamDiscrete ) {
+		CamWnd_Move_Discrete_Disable( camwnd );
 		} else {
-			CamWnd_Move_Disable(camwnd);
-		}
-
-		g_camwindow_globals_private.m_bCamDiscrete = value;
-
-		if (g_camwindow_globals_private.m_bCamDiscrete) {
-			CamWnd_Move_Discrete_Enable(camwnd);
-		} else {
-			CamWnd_Move_Enable(camwnd);
-		}
+		CamWnd_Move_Disable( camwnd );
 	}
+
+	g_camwindow_globals_private.m_bCamDiscrete = value;
+
+	if ( g_camwindow_globals_private.m_bCamDiscrete ) {
+		CamWnd_Move_Discrete_Enable( camwnd );
+		} else {
+		CamWnd_Move_Enable( camwnd );
+	}
+}
 };
 
 
@@ -1118,8 +1199,16 @@ void CamWnd_Add_Handlers_FreeMove( CamWnd& camwnd ){
 	KeyEvent_connect( "CameraFreeMoveBack" );
 	KeyEvent_connect( "CameraFreeMoveLeft" );
 	KeyEvent_connect( "CameraFreeMoveRight" );
+
+	KeyEvent_connect( "CameraFreeMoveForward2" );
+	KeyEvent_connect( "CameraFreeMoveBack2" );
+	KeyEvent_connect( "CameraFreeMoveLeft2" );
+	KeyEvent_connect( "CameraFreeMoveRight2" );
+
 	KeyEvent_connect( "CameraFreeMoveUp" );
 	KeyEvent_connect( "CameraFreeMoveDown" );
+
+	KeyEvent_connect( "CameraFreeFocus" );
 }
 
 void CamWnd_Remove_Handlers_FreeMove( CamWnd& camwnd ){
@@ -1127,8 +1216,16 @@ void CamWnd_Remove_Handlers_FreeMove( CamWnd& camwnd ){
 	KeyEvent_disconnect( "CameraFreeMoveBack" );
 	KeyEvent_disconnect( "CameraFreeMoveLeft" );
 	KeyEvent_disconnect( "CameraFreeMoveRight" );
+
+	KeyEvent_disconnect( "CameraFreeMoveForward2" );
+	KeyEvent_disconnect( "CameraFreeMoveBack2" );
+	KeyEvent_disconnect( "CameraFreeMoveLeft2" );
+	KeyEvent_disconnect( "CameraFreeMoveRight2" );
+
 	KeyEvent_disconnect( "CameraFreeMoveUp" );
 	KeyEvent_disconnect( "CameraFreeMoveDown" );
+
+	KeyEvent_disconnect( "CameraFreeFocus" );
 
 	g_signal_handler_disconnect( G_OBJECT( camwnd.m_gl_widget ), camwnd.m_selection_button_press_handler );
 	g_signal_handler_disconnect( G_OBJECT( camwnd.m_gl_widget ), camwnd.m_selection_button_release_handler );
@@ -1218,6 +1315,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 			m_bestDown = floorHeight;
 		}
 	}
+	else if( !path.top().get().visible() ){
+		return false;
+	}
 	return true;
 }
 };
@@ -1294,6 +1394,8 @@ void CamWnd::EnableFreeMove(){
 
 	gtk_window_set_focus( m_parent, m_gl_widget );
 	m_freemove_handle_focusout = m_gl_widget.connect( "focus_out_event", G_CALLBACK( camwindow_freemove_focusout ), this );
+	/* We chose to replace m_parent by m_gl_widget but NetRadiantCustom does:
+	m_freezePointer.freeze_pointer( m_parent, m_gl_widget, Camera_motionDelta, &m_Camera ); */
 	m_freezePointer.freeze_pointer( m_gl_widget, Camera_motionDelta, &m_Camera );
 
 	CamWnd_Update( *this );
@@ -1309,7 +1411,8 @@ void CamWnd::DisableFreeMove(){
 	CamWnd_Remove_Handlers_FreeMove( *this );
 	CamWnd_Add_Handlers_Move( *this );
 
-	m_freezePointer.unfreeze_pointer( m_gl_widget );
+	m_freezePointer.unfreeze_pointer( m_gl_widget, true );
+
 	g_signal_handler_disconnect( G_OBJECT( m_gl_widget ), m_freemove_handle_focusout );
 
 	CamWnd_Update( *this );
@@ -1393,7 +1496,7 @@ void render( const Matrix4& modelview, const Matrix4& projection ){
    Cam_Draw
    ==============
  */
-
+/*
 void ShowStatsToggle(){
 	g_camwindow_globals_private.m_showStats ^= 1;
 }
@@ -1403,6 +1506,22 @@ void ShowStatsExport( const Callback<void(bool)> &importer ){
 }
 
 FreeCaller<void(const Callback<void(bool)>&), ShowStatsExport> g_show_stats_caller;
+Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
+ToggleItem g_show_stats( g_show_stats_callback );
+*/
+
+void ShowStatsToggle(){
+	g_camwindow_globals_private.m_showStats ^= 1;
+//	g_show_stats.update();
+	UpdateAllWindows();
+}
+typedef FreeCaller<void(), ShowStatsToggle> ShowStatsToggleCaller;
+void ShowStatsExport( const Callback<void(bool)> & importer ){
+	importer( g_camwindow_globals_private.m_showStats );
+}
+typedef FreeCaller<void(const Callback<void(bool)> &), ShowStatsExport> ShowStatsExportCaller;
+
+ShowStatsExportCaller g_show_stats_caller;
 Callback<void(const Callback<void(bool)> &)> g_show_stats_callback( g_show_stats_caller );
 ToggleItem g_show_stats( g_show_stats_callback );
 
@@ -1495,9 +1614,9 @@ void CamWnd::Cam_Draw(){
 		break;
 	}
 
-	if ( !g_xywindow_globals.m_bNoStipple ) {
+//	if ( !g_xywindow_globals.m_bNoStipple ) {
 		globalstate |= RENDER_LINESTIPPLE | RENDER_POLYGONSTIPPLE;
-	}
+//	}
 
 	{
 		CamRenderer renderer( globalstate, m_state_select2, m_state_select1, m_view.getViewer() );
@@ -1598,16 +1717,61 @@ void CamWnd::BenchMark(){
 }
 
 
-void fill_view_camera_menu( ui::Menu menu ){
-	create_check_menu_item_with_mnemonic( menu, "Camera View", "ToggleCamera" );
-}
-
 void GlobalCamera_ResetAngles(){
 	CamWnd& camwnd = *g_camwnd;
 	Vector3 angles;
 	angles[CAMERA_ROLL] = angles[CAMERA_PITCH] = 0;
 	angles[CAMERA_YAW] = 22.5f * floorf( ( Camera_getAngles( camwnd )[CAMERA_YAW] + 11 ) / 22.5f );
 	Camera_setAngles( camwnd, angles );
+}
+
+#include "select.h"
+
+Vector3 Camera_getFocusPos( camera_t& camera ){
+	Vector3 camorigin( Camera_getOrigin( camera ) );
+	AABB aabb( aabb_for_minmax( Select_getWorkZone().d_work_min, Select_getWorkZone().d_work_max ) );
+	View& view = *( camera.m_view );
+#if 0
+	Vector3 angles( Camera_getAngles( camera ) );
+	Vector3 radangles( degrees_to_radians( angles[0] ), degrees_to_radians( angles[1] ), degrees_to_radians( angles[2] ) );
+	Vector3 viewvector;
+	viewvector[0] = cos( radangles[1] ) * cos( radangles[0] );
+	viewvector[1] = sin( radangles[1] ) * cos( radangles[0] );
+	viewvector[2] = sin( radangles[0] );
+#elif 0
+	Vector3 viewvector( -view.GetModelview()[2], -view.GetModelview()[6], -view.GetModelview()[10] );
+#elif 1
+	Vector3 viewvector( -camera.vpn );
+#endif
+
+	Plane3 frustumPlanes[4];
+	frustumPlanes[0] = plane3_translated( view.getFrustum().left, camorigin - aabb.origin );
+	frustumPlanes[1] = plane3_translated( view.getFrustum().right, camorigin - aabb.origin );
+	frustumPlanes[2] = plane3_translated( view.getFrustum().top, camorigin - aabb.origin );
+	frustumPlanes[3] = plane3_translated( view.getFrustum().bottom, camorigin - aabb.origin );
+
+	float offset = 64.0f;
+
+	Vector3 corners[8];
+	aabb_corners( aabb, corners );
+
+	for ( size_t i = 0; i < 4; ++i ){
+		for ( size_t j = 0; j < 8; ++j ){
+			Ray ray( aabb.origin, -viewvector );
+			//Plane3 newplane( frustumPlanes[i].normal(), vector3_dot( frustumPlanes[i].normal(), corners[j] - frustumPlanes[i].normal() * 16.0f ) );
+			Plane3 newplane( frustumPlanes[i].normal(), vector3_dot( frustumPlanes[i].normal(), corners[j] ) );
+			float d = vector3_dot( ray.direction, newplane.normal() );
+			if( d != 0 ){
+				float s = vector3_dot( newplane.normal() * newplane.dist() - ray.origin, newplane.normal() ) / d;
+				offset = std::max( offset, s );
+			}
+		}
+	}
+	return ( aabb.origin - viewvector * offset );
+}
+
+void GlobalCamera_FocusOnSelected(){
+	Camera_setOrigin( *g_camwnd, Camera_getFocusPos( g_camwnd->getCamera() ) );
 }
 
 void Camera_ChangeFloorUp(){
@@ -1673,7 +1837,7 @@ void Camera_ToggleFarClip(){
 
 
 void CamWnd_constructToolbar( ui::Toolbar toolbar ){
-	toolbar_append_toggle_button( toolbar, "Cubic clip the camera view (\\)", "view_cubicclipping.png", "ToggleCubicClip" );
+	toolbar_append_toggle_button( toolbar, "Cubic clip the camera view (Ctrl + \\)", "view_cubicclipping.png", "ToggleCubicClip" );
 }
 
 void CamWnd_registerShortcuts(){
@@ -1783,22 +1947,22 @@ struct RenderMode {
 
 	static void Import(int value) {
 		switch (value) {
-			case 0:
-				CamWnd_SetMode(cd_wire);
-				break;
-			case 1:
-				CamWnd_SetMode(cd_solid);
-				break;
-			case 2:
-				CamWnd_SetMode(cd_texture);
-				break;
-			case 3:
-				CamWnd_SetMode(cd_lighting);
-				break;
-			default:
-				CamWnd_SetMode(cd_texture);
-		}
+	case 0:
+		CamWnd_SetMode( cd_wire );
+		break;
+	case 1:
+		CamWnd_SetMode( cd_solid );
+		break;
+	case 2:
+		CamWnd_SetMode( cd_texture );
+		break;
+	case 3:
+		CamWnd_SetMode( cd_lighting );
+		break;
+	default:
+		CamWnd_SetMode( cd_texture );
 	}
+}
 };
 
 void Camera_constructPreferences( PreferencesPage& page ){
@@ -1807,6 +1971,7 @@ void Camera_constructPreferences( PreferencesPage& page ){
 	page.appendCheckBox( "", "Link strafe speed to movement speed", g_camwindow_globals_private.m_bCamLinkSpeed );
 	page.appendSlider( "Rotation Speed", g_camwindow_globals_private.m_nAngleSpeed, TRUE, 0, 0, 3, 1, 180, 1, 10 );
 	page.appendCheckBox( "", "Invert mouse vertical axis", g_camwindow_globals_private.m_bCamInverseMouse );
+	page.appendCheckBox( "", "Zoom In to Mouse pointer", g_camwindow_globals.m_bZoomInToPointer );
 	page.appendCheckBox(
 		"", "Discrete movement",
 		make_property<CamWnd_Move_Discrete>()
@@ -1836,7 +2001,7 @@ void Camera_constructPreferences( PreferencesPage& page ){
 			);
 	}
 
-	const char* strafe_mode[] = { "Both", "Forward", "Up" };
+	const char* strafe_mode[] = { "None", "Up", "Forward", "Both", "Both Inverted" };
 
 	page.appendCombo(
 		"Strafe Mode",
@@ -1902,6 +2067,7 @@ void CameraSpeed_decrease(){
 /// \brief Initialisation for things that have the same lifespan as this module.
 void CamWnd_Construct(){
 	GlobalCommands_insert( "CenterView", makeCallbackF(GlobalCamera_ResetAngles), Accelerator( GDK_KEY_End ) );
+	GlobalCommands_insert( "CameraFocusOnSelected", makeCallbackF( GlobalCamera_FocusOnSelected ), Accelerator( GDK_KEY_Tab ) );
 
 	GlobalToggles_insert( "ToggleCubicClip", makeCallbackF(Camera_ToggleFarClip), ToggleItem::AddCallbackCaller( g_getfarclip_item ), Accelerator( '\\', (GdkModifierType)GDK_CONTROL_MASK ) );
 	GlobalCommands_insert( "CubicClipZoomIn", makeCallbackF(Camera_CubeIn), Accelerator( '[', (GdkModifierType)GDK_CONTROL_MASK ) );
@@ -1911,8 +2077,8 @@ void CamWnd_Construct(){
 	GlobalCommands_insert( "DownFloor", makeCallbackF(Camera_ChangeFloorDown), Accelerator( GDK_KEY_Next ) );
 
 	GlobalToggles_insert( "ToggleCamera", ToggleShown::ToggleCaller( g_camera_shown ), ToggleItem::AddCallbackCaller( g_camera_shown.m_item ), Accelerator( 'C', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
-	GlobalCommands_insert( "LookThroughSelected", makeCallbackF(GlobalCamera_LookThroughSelected) );
-	GlobalCommands_insert( "LookThroughCamera", makeCallbackF(GlobalCamera_LookThroughCamera) );
+//	GlobalCommands_insert( "LookThroughSelected", makeCallbackF(GlobalCamera_LookThroughSelected) );
+//	GlobalCommands_insert( "LookThroughCamera", makeCallbackF(GlobalCamera_LookThroughCamera) );
 
 	if ( g_pGameDescription->mGameType == "doom3" ) {
 		GlobalCommands_insert( "TogglePreview", makeCallbackF(CamWnd_TogglePreview), Accelerator( GDK_KEY_F3 ) );
@@ -1928,18 +2094,28 @@ void CamWnd_Construct(){
 	GlobalShortcuts_insert( "CameraBack", Accelerator( GDK_KEY_Down ) );
 	GlobalShortcuts_insert( "CameraLeft", Accelerator( GDK_KEY_Left ) );
 	GlobalShortcuts_insert( "CameraRight", Accelerator( GDK_KEY_Right ) );
-	GlobalShortcuts_insert( "CameraStrafeRight", Accelerator( GDK_KEY_period ) );
-	GlobalShortcuts_insert( "CameraStrafeLeft", Accelerator( GDK_KEY_comma ) );
+	GlobalShortcuts_insert( "CameraStrafeRight", Accelerator( 'D' ) );
+	GlobalShortcuts_insert( "CameraStrafeLeft", Accelerator( 'A' ) );
 
-	GlobalShortcuts_insert( "CameraUp", Accelerator( 'D' ) );
-	GlobalShortcuts_insert( "CameraDown", Accelerator( 'C' ) );
-	GlobalShortcuts_insert( "CameraAngleUp", Accelerator( 'A' ) );
-	GlobalShortcuts_insert( "CameraAngleDown", Accelerator( 'Z' ) );
+	GlobalShortcuts_insert( "CameraUp", accelerator_null() );
+	GlobalShortcuts_insert( "CameraDown", accelerator_null() );
+	GlobalShortcuts_insert( "CameraAngleUp", accelerator_null() );
+	GlobalShortcuts_insert( "CameraAngleDown", accelerator_null() );
 
-	GlobalShortcuts_insert( "CameraFreeMoveForward", Accelerator( GDK_KEY_Up ) );
-	GlobalShortcuts_insert( "CameraFreeMoveBack", Accelerator( GDK_KEY_Down ) );
-	GlobalShortcuts_insert( "CameraFreeMoveLeft", Accelerator( GDK_KEY_Left ) );
-	GlobalShortcuts_insert( "CameraFreeMoveRight", Accelerator( GDK_KEY_Right ) );
+	GlobalShortcuts_insert( "CameraFreeMoveForward", Accelerator( 'W' ) );
+	GlobalShortcuts_insert( "CameraFreeMoveBack", Accelerator( 'S' ) );
+	GlobalShortcuts_insert( "CameraFreeMoveLeft", Accelerator( 'A' ) );
+	GlobalShortcuts_insert( "CameraFreeMoveRight", Accelerator( 'D' ) );
+
+	GlobalShortcuts_insert( "CameraFreeMoveForward2", Accelerator( GDK_KEY_Up ) );
+	GlobalShortcuts_insert( "CameraFreeMoveBack2", Accelerator( GDK_KEY_Down ) );
+	GlobalShortcuts_insert( "CameraFreeMoveLeft2", Accelerator( GDK_KEY_Left ) );
+	GlobalShortcuts_insert( "CameraFreeMoveRight2", Accelerator( GDK_KEY_Right ) );
+
+	GlobalShortcuts_insert( "CameraFreeMoveUp", accelerator_null() );
+	GlobalShortcuts_insert( "CameraFreeMoveDown", accelerator_null() );
+
+	GlobalShortcuts_insert( "CameraFreeFocus", Accelerator( GDK_KEY_Tab ) );
 
 	GlobalToggles_insert( "ShowStats", makeCallbackF(ShowStatsToggle), ToggleItem::AddCallbackCaller( g_show_stats ) );
 
@@ -1956,6 +2132,7 @@ void CamWnd_Construct(){
 	GlobalPreferenceSystem().registerPreference( "SI_Colors12", make_property_string( g_camwindow_globals.color_selbrushes3d ) );
 	GlobalPreferenceSystem().registerPreference( "CameraRenderMode", make_property_string<RenderMode>() );
 	GlobalPreferenceSystem().registerPreference( "StrafeMode", make_property_string( g_camwindow_globals_private.m_nStrafeMode ) );
+	GlobalPreferenceSystem().registerPreference( "3DZoomInToPointer", make_property_string( g_camwindow_globals.m_bZoomInToPointer ) );
 
 	CamWnd_constructStatic();
 

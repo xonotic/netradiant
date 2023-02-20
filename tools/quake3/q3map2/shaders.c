@@ -70,7 +70,7 @@ void ColorMod( colorMod_t *cm, int numVerts, bspDrawVert_t *drawVerts ){
 			VectorSet( mult, 1.0f, 1.0f, 1.0f );
 			mult[ 3 ] = 1.0f;
 			VectorSet( add, 0.0f, 0.0f, 0.0f );
-			mult[ 3 ] = 0.0f;
+			add[ 3 ] = 0.0f;
 
 			/* switch on type */
 			switch ( cm2->type )
@@ -645,8 +645,8 @@ static shaderInfo_t *AllocShaderInfo( void ){
 	/* set defaults */
 	ApplySurfaceParm( "default", &si->contentFlags, &si->surfaceFlags, &si->compileFlags );
 
-	si->backsplashFraction = DEF_BACKSPLASH_FRACTION;
-	si->backsplashDistance = DEF_BACKSPLASH_DISTANCE;
+	si->backsplashFraction = DEF_BACKSPLASH_FRACTION * g_backsplashFractionScale;
+	si->backsplashDistance = g_backsplashDistance < -900.0f ? DEF_BACKSPLASH_DISTANCE : g_backsplashDistance;
 
 	si->bounceScale = DEF_RADIOSITY_BOUNCE;
 
@@ -660,7 +660,7 @@ static shaderInfo_t *AllocShaderInfo( void ){
 	si->patchShadows = qfalse;
 	si->vertexShadows = qtrue;  /* ydnar: changed default behavior */
 	si->forceSunlight = qfalse;
-	si->vertexScale = 1.0;
+	si->vertexScale = vertexglobalscale;
 	si->notjunc = qfalse;
 
 	/* ydnar: set texture coordinate transform matrix to identity */
@@ -727,6 +727,9 @@ void FinishShader( shaderInfo_t *si ){
 			}
 		}
 	}
+		if (noob && !(si->compileFlags & C_OB)){
+			ApplySurfaceParm( "noob", &si->contentFlags, &si->surfaceFlags, &si->compileFlags );
+		}
 
 	/* set to finished */
 	si->finished = qtrue;
@@ -808,10 +811,12 @@ static void LoadShaderImages( shaderInfo_t *si ){
 	if ( VectorLength( si->color ) <= 0.0f ) {
 		ColorNormalize( color, si->color );
 		VectorScale( color, ( 1.0f / count ), si->averageColor );
+		si->averageColor[ 3 ] = color[ 3 ] / count;
 	}
 	else
 	{
 		VectorCopy( si->color, si->averageColor );
+		si->averageColor[ 3 ] = 1.0f;
 	}
 }
 
@@ -942,17 +947,17 @@ void Parse1DMatrixAppend( char *buffer, int x, vec_t *m ){
 
 
 	if ( !GetTokenAppend( buffer, qtrue ) || strcmp( token, "(" ) ) {
-		Error( "Parse1DMatrixAppend(): line %d: ( not found!", scriptline );
+		Error( "Parse1DMatrixAppend(): line %d: ( not found!\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 	}
 	for ( i = 0; i < x; i++ )
 	{
 		if ( !GetTokenAppend( buffer, qfalse ) ) {
-			Error( "Parse1DMatrixAppend(): line %d: Number not found!", scriptline );
+			Error( "Parse1DMatrixAppend(): line %d: Number not found!\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 		}
 		m[ i ] = atof( token );
 	}
 	if ( !GetTokenAppend( buffer, qtrue ) || strcmp( token, ")" ) ) {
-		Error( "Parse1DMatrixAppend(): line %d: ) not found!", scriptline );
+		Error( "Parse1DMatrixAppend(): line %d: ) not found!\nFile location be: %s\n", scriptline, g_strLoadedFileLocation );
 	}
 }
 
@@ -1014,12 +1019,12 @@ static void ParseShaderFile( const char *filename ){
 		}
 		if ( strcmp( token, "{" ) ) {
 			if ( si != NULL ) {
-				Error( "ParseShaderFile(): %s, line %d: { not found!\nFound instead: %s\nLast known shader: %s",
-					   filename, scriptline, token, si->shader );
+				Error( "ParseShaderFile(): %s, line %d: { not found!\nFound instead: %s\nLast known shader: %s\nFile location be: %s\n",
+					   filename, scriptline, token, si->shader, g_strLoadedFileLocation );
 			}
 			else{
-				Error( "ParseShaderFile(): %s, line %d: { not found!\nFound instead: %s",
-					   filename, scriptline, token );
+				Error( "ParseShaderFile(): %s, line %d: { not found!\nFound instead: %s\nFile location be: %s\n",
+					   filename, scriptline, token, g_strLoadedFileLocation );
 			}
 		}
 
@@ -1057,7 +1062,6 @@ static void ParseShaderFile( const char *filename ){
 							 !Q_stricmp( token, "clampMap" ) ||
 							 !Q_stricmp( token, "animMap" ) ||
 							 !Q_stricmp( token, "clampAnimMap" ) ||
-							 !Q_stricmp( token, "clampMap" ) ||
 							 !Q_stricmp( token, "mapComp" ) ||
 							 !Q_stricmp( token, "mapNoComp" ) ) {
 							/* skip one token for animated stages */
@@ -1599,11 +1603,11 @@ static void ParseShaderFile( const char *filename ){
 				/* q3map_vertexScale (scale vertex lighting by this fraction) */
 				else if ( !Q_stricmp( token, "q3map_vertexScale" ) ) {
 					GetTokenAppend( shaderText, qfalse );
-					si->vertexScale = atof( token );
+					si->vertexScale *= atof( token );
 				}
 
 				/* q3map_noVertexLight */
-				else if ( !Q_stricmp( token, "q3map_noVertexLight" )  ) {
+				else if ( !Q_stricmp( token, "q3map_noVertexLight" ) ) {
 					si->noVertexLight = qtrue;
 				}
 

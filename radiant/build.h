@@ -41,5 +41,6 @@ void BuildMenu_Destroy();
 void Build_constructMenu( ui::Menu menu );
 extern ui::Menu g_bsp_menu;
 
+void Build_runRecentExecutedBuild();
 
 #endif

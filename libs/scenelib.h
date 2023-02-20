@@ -740,6 +740,10 @@ bool parentSelected() const {
 	}
 	return m_parentSelected;
 }
+Instance* parent() const
+{
+	return m_parent;
+}
 };
 }
 
@@ -763,7 +767,14 @@ public:
 InstanceWalker( const Functor& functor ) : m_functor( functor ){
 }
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	m_functor( instance );
+	//m_functor( instance );
+	//return true;
+	if ( path.top().get().visible() ) {
+		m_functor( instance );
+	}
+	else{
+		return false;
+	}
 	return true;
 }
 };

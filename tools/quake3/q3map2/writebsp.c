@@ -114,15 +114,20 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 		/* if not Smokin'Guns like tex file */
 		if ( !game->texFile )
 		{
-			/* ydnar: handle custom surface/content flags */
-			if ( surfaceFlags != NULL && bspShaders[ i ].surfaceFlags != *surfaceFlags ) {
-				continue;
-			}
-			if ( contentFlags != NULL && bspShaders[ i ].contentFlags != *contentFlags ) {
-				continue;
+		/* ydnar: handle custom surface/content flags */
+		if ( surfaceFlags != NULL && bspShaders[ i ].surfaceFlags != *surfaceFlags ) {
+			continue;
+		}
+		if ( contentFlags != NULL && bspShaders[ i ].contentFlags != *contentFlags ) {
+			continue;
+		}
+		}
+		if ( !doingBSP ){
+			si = ShaderInfoForShader( shader );
+			if ( si->remapShader && si->remapShader[ 0 ] ) {
+				shader = si->remapShader;
 			}
 		}
-
 		/* compare name */
 		if ( !Q_stricmp( shader, bspShaders[ i ].shader ) ) {
 			return i;
@@ -150,13 +155,13 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 	/* if not Smokin'Guns like tex file */
 	if ( !game->texFile )
 	{
-		/* handle custom content/surface flags */
-		if ( surfaceFlags != NULL ) {
-			bspShaders[ i ].surfaceFlags = *surfaceFlags;
-		}
-		if ( contentFlags != NULL ) {
-			bspShaders[ i ].contentFlags = *contentFlags;
-		}
+	/* handle custom content/surface flags */
+	if ( surfaceFlags != NULL ) {
+		bspShaders[ i ].surfaceFlags = *surfaceFlags;
+	}
+	if ( contentFlags != NULL ) {
+		bspShaders[ i ].contentFlags = *contentFlags;
+	}
 	}
 
 	/* recursively emit any damage shaders */

@@ -100,12 +100,12 @@ void QE_InitVFS(){
 		// if we have a home dir
 		if ( !string_equal( homepath, enginepath ) )
 		{
-			// ~/.<gameprefix>/<fs_game>
-			if ( homepath && !g_disableHomePath ) {
-				StringOutputStream userGamePath( 256 );
+		// ~/.<gameprefix>/<fs_game>
+		if ( homepath && !string_equal( enginepath, homepath ) && !g_disableHomePath ) {
+			StringOutputStream userGamePath( 256 );
 				userGamePath << homepath << gamename << '/';
-				GlobalFileSystem().initDirectory( userGamePath.c_str() );
-			}
+			GlobalFileSystem().initDirectory( userGamePath.c_str() );
+		}
 		}
 
 		// <fs_basepath>/<fs_game>
@@ -119,12 +119,12 @@ void QE_InitVFS(){
 	// if we have a home dir
 	if ( !string_equal( homepath, enginepath ) )
 	{
-		// ~/.<gameprefix>/<fs_main>
-		if ( homepath && !g_disableHomePath ) {
-			StringOutputStream userBasePath( 256 );
+	// ~/.<gameprefix>/<fs_main>
+	if ( homepath && !string_equal( enginepath, homepath ) && !g_disableHomePath ) {
+		StringOutputStream userBasePath( 256 );
 			userBasePath << homepath << basegame << '/';
-			GlobalFileSystem().initDirectory( userBasePath.c_str() );
-		}
+		GlobalFileSystem().initDirectory( userBasePath.c_str() );
+	}
 	}
 
 	// <fs_basepath>/<fs_main>
@@ -227,7 +227,15 @@ void bsp_init(){
 	name.append( mapname, path_get_filename_base_end( mapname ) - mapname );
 	name += ".bsp";
 
-	build_set_variable( "MapFile", mapname );
+	if( region_active ){
+		StringOutputStream name( 256 );
+		name << StringRange( mapname, path_get_filename_base_end( mapname ) ) << ".reg";
+		build_set_variable( "MapFile", name.c_str() );
+	}
+	else{
+		build_set_variable( "MapFile", mapname );
+	}
+
 	build_set_variable( "BspFile", name.c_str() );
 }
 

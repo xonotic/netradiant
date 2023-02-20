@@ -69,7 +69,7 @@ qboolean PlaneEqual( plane_t *p, vec3_t normal, vec_t dist ){
 
 	/* compare */
 	// We check equality of each component since we're using '<', not '<='
-	// (the epsilons may be zero).  We want to use '<' intead of '<=' to be
+	// (the epsilons may be zero).  We want to use '<' instead of '<=' to be
 	// consistent with the true meaning of "epsilon", and also because other
 	// parts of the code uses this inequality.
 	if ( ( p->dist == dist || fabs( p->dist - dist ) < de ) &&
@@ -164,6 +164,44 @@ qboolean SnapNormal( vec3_t normal ){
 	// normalized).  The original SnapNormal() didn't snap such vectors - it
 	// only snapped vectors that were near a perfect axis.
 
+	//adjusting vectors, that are near perfect axis, with bigger epsilon
+	//they cause precision errors
+
+
+	if ( ( normal[0] != 0.0 || normal[1] != 0.0 ) && fabs(normal[0]) < 0.00025 && fabs(normal[1]) < 0.00025){
+		normal[0] = normal[1] = 0.0;
+		adjusted = qtrue;
+	}
+	else if ( ( normal[0] != 0.0 || normal[2] != 0.0 ) && fabs(normal[0]) < 0.00025 && fabs(normal[2]) < 0.00025){
+		normal[0] = normal[2] = 0.0;
+		adjusted = qtrue;
+	}
+	else if ( ( normal[2] != 0.0 || normal[1] != 0.0 ) && fabs(normal[2]) < 0.00025 && fabs(normal[1]) < 0.00025){
+		normal[2] = normal[1] = 0.0;
+		adjusted = qtrue;
+	}
+
+
+	/*
+	for ( i=0; i<30; i++ )
+	{
+		double x, y, z, length;
+		x=(double) 1.0;
+		y=(double) ( 0.00001 * i );
+		z=(double) 0.0;
+
+		Sys_Printf("(%6.18f %6.18f %6.18f)inNormal\n", x,y,z );
+
+		length = sqrt( ( x * x ) + ( y * y ) + ( z * z ) );
+		Sys_Printf("(%6.18f)length\n", length);
+		x = (vec_t) ( x / length );
+		y = (vec_t) ( y / length );
+		z = (vec_t) ( z / length );
+		Sys_Printf("(%6.18f %6.18f %6.18f)outNormal\n\n", x,y,z );
+	}
+	Error("vectorNormalize test completed");
+	*/
+
 	for ( i = 0; i < 3; i++ )
 	{
 		if ( normal[i] != 0.0 && -normalEpsilon < normal[i] && normal[i] < normalEpsilon ) {
@@ -237,7 +275,7 @@ qboolean SnapNormal( vec3_t normal ){
    snaps a plane to normal/distance epsilons
  */
 
-void SnapPlane( vec3_t normal, vec_t *dist, vec3_t center ){
+void SnapPlane( vec3_t normal, vec_t *dist ){
 // SnapPlane disabled by LordHavoc because it often messes up collision
 // brushes made from triangles of embedded models, and it has little effect
 // on anything else (axial planes are usually derived from snapped points)
@@ -490,7 +528,8 @@ void SetBrushContents( brush_t *b ){
 	//%	mixed = qfalse;
 
 	/* get the content/compile flags for every side in the brush */
-	for ( i = 1; i < b->numsides; i++, s++ )
+	//for ( i = 1; i < b->numsides; i++, s++ )
+	for ( i = 1; i < b->numsides; i++ )
 	{
 		s = &b->sides[ i ];
 		if ( s->shaderInfo == NULL ) {
@@ -501,6 +540,33 @@ void SetBrushContents( brush_t *b ){
 
 		contentFlags |= s->contentFlags;
 		compileFlags |= s->compileFlags;
+
+		/* resolve inconsistency, when brush content was determined by 1st face */
+		if ( b->contentShader->compileFlags & C_LIQUID ){
+			continue;
+		}
+		else if ( s->compileFlags & C_LIQUID ){
+			b->contentShader = s->shaderInfo;
+		}
+		else if ( b->contentShader->compileFlags & C_FOG ){
+			continue;
+		}
+		else if ( s->compileFlags & C_FOG ){
+			b->contentShader = s->shaderInfo;
+		}
+		//playerclip
+		else if ( b->contentShader->contentFlags & 0x10000 ){
+			continue;
+		}
+		else if ( s->contentFlags & 0x10000 ){
+			b->contentShader = s->shaderInfo;
+		}
+		else if (!( b->contentShader->compileFlags & C_SOLID )){
+			continue;
+		}
+		else if (!( s->compileFlags & C_SOLID )){
+			b->contentShader = s->shaderInfo;
+		}
 	}
 
 	/* ydnar: getting rid of this stupid warning */
@@ -1768,6 +1834,9 @@ static qboolean ParseMapEntity( qboolean onlyLights, qboolean noCollapseGroups )
 	else if ( strcmp( "", ValueForKey( mapEnt, "_sn" ) ) ) {
 		shadeAngle = FloatForKey( mapEnt, "_sn" );
 	}
+	else if ( strcmp( "", ValueForKey( mapEnt, "_sa" ) ) ) {
+		shadeAngle = FloatForKey( mapEnt, "_sa" );
+	}
 	else if ( strcmp( "", ValueForKey( mapEnt, "_smooth" ) ) ) {
 		shadeAngle = FloatForKey( mapEnt, "_smooth" );
 	}
@@ -1787,6 +1856,9 @@ static qboolean ParseMapEntity( qboolean onlyLights, qboolean noCollapseGroups )
 	}
 	else if ( strcmp( "", ValueForKey( mapEnt, "_samplesize" ) ) ) {
 		lightmapSampleSize = IntForKey( mapEnt, "_samplesize" );
+	}
+	else if ( strcmp( "", ValueForKey( mapEnt, "_ss" ) ) ) {
+		lightmapSampleSize = IntForKey( mapEnt, "_ss" );
 	}
 
 	if ( lightmapSampleSize < 0 ) {

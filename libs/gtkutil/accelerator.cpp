@@ -329,14 +329,14 @@ AcceleratorMap g_keydown_accelerators;
 AcceleratorMap g_keyup_accelerators;
 
 bool Keys_press( PressedKeys::Keys& keys, guint keyval ){
-	if ( keys.insert( keyval ).second ) {
+	if ( keys.insert( gdk_keyval_to_upper( keyval ) ).second ) {
 		return AcceleratorMap_activate( g_keydown_accelerators, accelerator_for_event_key( keyval, 0 ) );
 	}
 	return g_keydown_accelerators.find( accelerator_for_event_key( keyval, 0 ) ) != g_keydown_accelerators.end();
 }
 
 bool Keys_release( PressedKeys::Keys& keys, guint keyval ){
-	if ( keys.erase( keyval ) != 0 ) {
+	if ( keys.erase( gdk_keyval_to_upper( keyval ) ) != 0 ) {
 		return AcceleratorMap_activate( g_keyup_accelerators, accelerator_for_event_key( keyval, 0 ) );
 	}
 	return g_keyup_accelerators.find( accelerator_for_event_key( keyval, 0 ) ) != g_keyup_accelerators.end();
@@ -352,7 +352,9 @@ void Keys_releaseAll( PressedKeys::Keys& keys, guint state ){
 
 gboolean PressedKeys_key_press(ui::Widget widget, GdkEventKey* event, PressedKeys* pressedKeys ){
 	//globalOutputStream() << "pressed: " << event->keyval << "\n";
-	return event->state == 0 && Keys_press( pressedKeys->keys, event->keyval );
+	//return event->state == 0 && Keys_press( pressedKeys->keys, event->keyval );
+	//NumLock perspective window fix
+	return ( event->state & ALLOWED_MODIFIERS ) == 0 && Keys_press( pressedKeys->keys, event->keyval );
 }
 
 gboolean PressedKeys_key_release(ui::Widget widget, GdkEventKey* event, PressedKeys* pressedKeys ){
@@ -499,10 +501,10 @@ void global_accel_connect_window( ui::Window window ){
 	unsigned int override_handler = window.connect( "key_press_event", G_CALLBACK( override_global_accelerators ), 0 );
 	g_object_set_data( G_OBJECT( window ), "override_handler", gint_to_pointer( override_handler ) );
 
+	GlobalPressedKeys_connect( window );
+
 	unsigned int special_key_press_handler = window.connect( "key_press_event", G_CALLBACK( accelerator_key_event ), &g_special_accelerators );
 	g_object_set_data( G_OBJECT( window ), "special_key_press_handler", gint_to_pointer( special_key_press_handler ) );
-
-	GlobalPressedKeys_connect( window );
 #else
 	unsigned int key_press_handler = window.connect( "key_press_event", G_CALLBACK( accelerator_key_event ), &g_keydown_accelerators );
 	unsigned int key_release_handler = window.connect( "key_release_event", G_CALLBACK( accelerator_key_event ), &g_keyup_accelerators );

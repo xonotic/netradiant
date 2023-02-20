@@ -111,7 +111,7 @@ void LokiInitPaths( char *argv0 ){
 		/* set home path */
 		homePath = home;
 	}
-	else {
+	else{
 		home = homePath;
 	}
 
@@ -187,6 +187,7 @@ void LokiInitPaths( char *argv0 ){
 				Q_strncpyz( temp, home, sizeof( temp ) );
 				path++;
 			}
+
 
 			/* concatenate */
 			if ( last > ( path + 1 ) ) {
@@ -295,6 +296,7 @@ void AddBasePath( char *path ){
 	basePaths[ numBasePaths ] = safe_malloc( strlen( path ) + 1 );
 	strcpy( basePaths[ numBasePaths ], path );
 	CleanPath( basePaths[ numBasePaths ] );
+	if ( EnginePath[0] == '\0' ) strcpy( EnginePath, basePaths[ numBasePaths ] );
 	numBasePaths++;
 }
 
@@ -360,7 +362,7 @@ void AddHomeBasePath( char *path ){
 		if ( access( temp, X_OK ) == 0 ) {
 			if ( customHomePath == qfalse ) {
 				tempHomePath = xdgDataHomePath;
-			}
+	}
 			path = path + 1;
 		}
 		#endif // GDEF_OS_XDG
@@ -459,6 +461,8 @@ void InitPaths( int *argc, char **argv ){
 	game = &games[ 0 ];
 	numBasePaths = 0;
 	numGamePaths = 0;
+
+	EnginePath[0] = '\0';
 
 	/* parse through the arguments and extract those relevant to paths */
 	for ( i = 0; i < *argc; i++ )

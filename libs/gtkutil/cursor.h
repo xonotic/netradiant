@@ -22,6 +22,7 @@
 #if !defined( INCLUDED_GTKUTIL_CURSOR_H )
 #define INCLUDED_GTKUTIL_CURSOR_H
 
+// This is probably removable if set_cursor is not used.
 #include <gdk/gdk.h>
 #include <uilib/uilib.h>
 
@@ -30,10 +31,13 @@
 typedef struct _GdkCursor GdkCursor;
 typedef struct _GdkEventMotion GdkEventMotion;
 
+// NetRadiantCustom disables them but we still make use of them.
+#if 1
 GdkCursor* create_blank_cursor();
 void set_cursor( ui::Widget widget, GdkCursorType cursor_type );
 void blank_cursor( ui::Widget widget );
 void default_cursor( ui::Widget widget );
+#endif
 void Sys_GetCursorPos( ui::Widget widget, int *x, int *y );
 void Sys_SetCursorPos( ui::Widget widget, int x, int y );
 
@@ -107,18 +111,25 @@ void motion_delta( int x, int y, unsigned int state ){
 class FreezePointer
 {
 unsigned int handle_motion;
-int recorded_x, recorded_y, last_x, last_y;
+int recorded_x, recorded_y, last_x, last_y, center_x, center_y;
+ui::Widget m_weedjet{ui::null};
 typedef void ( *MotionDeltaFunction )( int x, int y, unsigned int state, void* data );
 MotionDeltaFunction m_function;
 void* m_data;
 public:
 FreezePointer() : handle_motion( 0 ), m_function( 0 ), m_data( 0 ){
 }
+/* NetRadiantCustom does this instead:
+static gboolean motion_delta( ui::Window widget, GdkEventMotion *event, FreezePointer* self ); */
 static gboolean motion_delta( ui::Widget widget, GdkEventMotion *event, FreezePointer* self );
 
+/* NetRadiantCustom does this instead:
+void freeze_pointer( ui::Window window, ui::Widget widget, MotionDeltaFunction function, void* data ); */
 void freeze_pointer( ui::Widget widget, MotionDeltaFunction function, void* data );
 
-void unfreeze_pointer( ui::Widget widget );
+/* NetRadiantCustom does this instead:
+void unfreeze_pointer( ui::Window window, bool centerize ); */
+void unfreeze_pointer( ui::Widget widget, bool centerize );
 };
 
 #endif

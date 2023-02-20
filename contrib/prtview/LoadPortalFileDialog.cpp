@@ -59,6 +59,10 @@ static void change_clicked(ui::Widget widget, gpointer data ){
 											 GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 											 nullptr));
 
+	gtk_window_set_transient_for( GTK_WINDOW( file_sel ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_position( GTK_WINDOW( file_sel ),GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_modal( GTK_WINDOW( file_sel ), TRUE );
+
 	gtk_file_chooser_set_filename( GTK_FILE_CHOOSER(file_sel), portals.fn );
 
 	if (gtk_dialog_run (GTK_DIALOG (file_sel)) == GTK_RESPONSE_ACCEPT)
@@ -78,6 +82,11 @@ int DoLoadPortalFileDialog(){
 	int loop = 1, ret = IDCANCEL;
 
 	auto dlg = ui::Window( ui::window_type::TOP );
+
+	gtk_window_set_transient_for( GTK_WINDOW( dlg ), GTK_WINDOW( g_pRadiantWnd ) );
+	gtk_window_set_position( GTK_WINDOW( dlg ),GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_modal( GTK_WINDOW( dlg ), TRUE );
+
 	gtk_window_set_title( dlg, "Load .prt" );
 	dlg.connect( "delete_event",
 						G_CALLBACK( dialog_delete_callback ), NULL );

@@ -29,6 +29,8 @@
 #include "../lists.h"
 #include "../misc.h"
 
+#include "../bobToolz-GTK.h"
+
 
 /*--------------------------------
         Callback Functions
@@ -211,6 +213,7 @@ EMessageBoxReturn DoMessageBox( const char* lpText, const char* lpCaption, EMess
 	int loop = 1;
 
 	auto window = ui::Window( ui::window_type::TOP );
+	gtk_window_set_transient_for( GTK_WINDOW( window ), main_window );
 	window.connect( "delete_event", G_CALLBACK( custom_dialog_delete_callback ), NULL );
 	window.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
 	gtk_window_set_title( window, lpCaption );
@@ -294,7 +297,7 @@ EMessageBoxReturn DoMessageBox( const char* lpText, const char* lpCaption, EMess
 		ret = eIDNO;
 	}
 
-	gtk_window_set_position( window, GTK_WIN_POS_CENTER );
+	gtk_window_set_position( GTK_WINDOW( window ),GTK_WIN_POS_CENTER_ON_PARENT );
 	window.show();
 	gtk_grab_add( window );
 
@@ -405,6 +408,7 @@ EMessageBoxReturn DoPolygonBox( PolygonRS* rs ){
 	int loop = 1;
 
 	auto window = ui::Window( ui::window_type::TOP );
+	gtk_window_set_transient_for( GTK_WINDOW( window ), main_window );
 
 	window.connect( "delete_event", G_CALLBACK( custom_dialog_delete_callback ), NULL );
 	window.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
@@ -526,7 +530,8 @@ EMessageBoxReturn DoPolygonBox( PolygonRS* rs ){
 
 	// ---- /vbox ----
 
-	gtk_window_set_position( window, GTK_WIN_POS_CENTER );
+	gtk_window_set_position( GTK_WINDOW( window ),GTK_WIN_POS_CENTER_ON_PARENT );
+	gtk_window_set_modal( GTK_WINDOW( window ), TRUE );
 	window.show();
 	gtk_grab_add( window );
 
@@ -1273,6 +1278,8 @@ EMessageBoxReturn DoResetTextureBox( ResetTextureRS* rs, ui::Window main_window 
 	int loop = 1;
 
 	auto window = main_window.create_dialog_window( "Texture Reset", G_CALLBACK( custom_dialog_delete_callback ), &dialog );
+	gtk_window_set_transient_for( GTK_WINDOW( window ), main_window );
+	gtk_window_set_modal( GTK_WINDOW( window ), TRUE );
 
 	window.connect( "destroy", G_CALLBACK( gtk_widget_destroy ), NULL );
 
@@ -1488,6 +1495,7 @@ EMessageBoxReturn DoResetTextureBox( ResetTextureRS* rs, ui::Window main_window 
 
 	// ---- /vbox ----
 
+	gtk_window_set_position( GTK_WINDOW( window ),GTK_WIN_POS_CENTER_ON_PARENT );
 	window.show();
 	gtk_grab_add( window );
 

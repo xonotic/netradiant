@@ -55,6 +55,8 @@ void ColorToBytes( const float *color, byte *colorBytes, float scale ){
 	if ( scale <= 0.0f ) {
 		scale = 1.0f;
 	}
+	/* globally */
+	scale *= lightmapBrightness;
 
 	/* make a local copy */
 	VectorScale( color, scale, sample );
@@ -118,6 +120,23 @@ void ColorToBytes( const float *color, byte *colorBytes, float scale ){
 
 	/* compensate for ingame overbrighting/bitshifting */
 	VectorScale( sample, ( 1.0f / lightmapCompensate ), sample );
+
+	/* contrast */
+	if ( lightmapContrast != 1.0f ){
+		for ( i = 0; i < 3; i++ ){
+			sample[i] = lightmapContrast * ( sample[i] - 128 ) + 128;
+			if ( sample[i] < 0 ){
+				sample[i] = 0;
+			}
+		}
+		if ( ( sample[0] > 255 ) || ( sample[1] > 255 ) || ( sample[2] > 255 ) ) {
+			max = sample[0] > sample[1] ? sample[0] : sample[1];
+			max = max > sample[2] ? max : sample[2];
+			sample[0] = sample[0] * 255 / max;
+			sample[1] = sample[1] * 255 / max;
+			sample[2] = sample[2] * 255 / max;
+		}
+	}
 
 	/* sRGB lightmaps */
 	if ( lightmapsRGB ) {
@@ -1775,7 +1794,7 @@ static qboolean SubmapRawLuxel( rawLightmap_t *lm, int x, int y, float bx, float
 		origin2 = SUPER_ORIGIN( x, y );
 		//%	normal2 = SUPER_NORMAL( x, y );
 	}
-	else {
+	else{
 		Sys_FPrintf( SYS_WRN, "WARNING: Spurious lightmap T vector\n" );
 	}
 
@@ -1809,7 +1828,7 @@ static void SubsampleRawLuxel_r( rawLightmap_t *lm, trace_t *trace, vec3_t sampl
 	int b, samples, mapped, lighted;
 	int cluster[ 4 ];
 	vec4_t luxel[ 4 ];
-	vec3_t deluxel[ 3 ];
+	vec3_t deluxel[ 4 ];
 	vec3_t origin[ 4 ], normal[ 4 ];
 	float biasDirs[ 4 ][ 2 ] = { { -1.0f, -1.0f }, { 1.0f, -1.0f }, { -1.0f, 1.0f }, { 1.0f, 1.0f } };
 	vec3_t color, direction = { 0, 0, 0 }, total;
@@ -2225,7 +2244,7 @@ void IlluminateRawLightmap( int rawLightmapNum ){
 			}
 
 			/* allocate sampling flags storage */
-			if ( ( lightSamples > 1 || lightRandomSamples ) && luxelFilterRadius == 0 ) {
+			if ( lightSamples > 1 || lightRandomSamples ) {
 				size = lm->sw * lm->sh * SUPER_LUXEL_SIZE * sizeof( unsigned char );
 				if ( lm->superFlags == NULL ) {
 					lm->superFlags = safe_malloc( size );
@@ -2269,8 +2288,8 @@ void IlluminateRawLightmap( int rawLightmapNum ){
 					}
 
 					/* check for evilness */
-					if ( trace.forceSubsampling > 1.0f && ( lightSamples > 1 || lightRandomSamples ) && luxelFilterRadius == 0 ) {
-							totalLighted++;
+					if ( trace.forceSubsampling > 1.0f && ( lightSamples > 1 || lightRandomSamples ) ) {
+						totalLighted++;
 						*flag |= FLAG_FORCE_SUBSAMPLING; /* force */
 					}
 					/* add to count */
@@ -2287,7 +2306,7 @@ void IlluminateRawLightmap( int rawLightmapNum ){
 
 			/* secondary pass, adaptive supersampling (fixme: use a contrast function to determine if subsampling is necessary) */
 			/* 2003-09-27: changed it so filtering disamples supersampling, as it would waste time */
-			if ( ( lightSamples > 1 || lightRandomSamples ) && luxelFilterRadius == 0 ) {
+			if ( lightSamples > 1 || lightRandomSamples ) {
 				/* walk luxels */
 				for ( y = 0; y < ( lm->sh - 1 ); y++ )
 				{
@@ -2808,6 +2827,14 @@ void IlluminateVertexes( int num ){
 				radVertLuxel[ 2 ] = ( verts[ i ].normal[ 2 ] + 1.0f ) * 127.5f;
 			}
 
+			else if ( info->si->noVertexLight ) {
+				VectorSet( radVertLuxel, 127.5f, 127.5f, 127.5f );
+			}
+
+			else if ( noVertexLighting > 0 ) {
+				VectorSet( radVertLuxel, 127.5f * noVertexLighting, 127.5f * noVertexLighting, 127.5f * noVertexLighting );
+			}
+
 			/* illuminate the vertex */
 			else
 			{
@@ -3057,6 +3084,14 @@ void IlluminateVertexes( int num ){
 				VectorCopy( debugColors[ num % 12 ], radVertLuxel );
 			}
 
+			else if ( info->si->noVertexLight ) {
+				VectorSet( radVertLuxel, 127.5f, 127.5f, 127.5f );
+			}
+
+			else if ( noVertexLighting > 0 ) {
+				VectorSet( radVertLuxel, 127.5f * noVertexLighting, 127.5f * noVertexLighting, 127.5f * noVertexLighting );
+			}
+
 			/* divine color from the superluxels */
 			else
 			{
@@ -3137,7 +3172,6 @@ void IlluminateVertexes( int num ){
 void SetupBrushesFlags( unsigned int mask_any, unsigned int test_any, unsigned int mask_all, unsigned int test_all ){
 	int i, j, b;
 	unsigned int compileFlags, allCompileFlags;
-	qboolean inside;
 	bspBrush_t      *brush;
 	bspBrushSide_t  *side;
 	bspShader_t     *shader;
@@ -3164,10 +3198,9 @@ void SetupBrushesFlags( unsigned int mask_any, unsigned int test_any, unsigned i
 		brush = &bspBrushes[ b ];
 
 		/* check all sides */
-		inside = qtrue;
 		compileFlags = 0;
 		allCompileFlags = ~( 0u );
-		for ( j = 0; j < brush->numSides && inside; j++ )
+		for ( j = 0; j < brush->numSides; j++ )
 		{
 			/* do bsp shader calculations */
 			side = &bspBrushSides[ brush->firstSide + j ];

@@ -211,6 +211,7 @@ void BuildMonitor_Construct(){
 
 void BuildMonitor_Destroy(){
 	delete g_pWatchBSP;
+	g_pWatchBSP = NULL;
 }
 
 CWatchBSP *GetWatchBSP(){
@@ -469,7 +470,7 @@ static xmlSAXHandler saxParser = {
 // ------------------------------------------------------------------------------------------------
 
 
-guint s_routine_id;
+guint s_routine_id = 0;
 static gint watchbsp_routine( gpointer data ){
 	reinterpret_cast<CWatchBSP*>( data )->RoutineProcessing();
 	return TRUE;
@@ -489,8 +490,9 @@ void CWatchBSP::Reset(){
 		m_xmlInputBuffer = NULL;
 	}
 	m_eState = EIdle;
-	if ( s_routine_id ) {
+	if ( s_routine_id != 0 ) {
 		g_source_remove( s_routine_id );
+		s_routine_id = 0;
 	}
 }
 

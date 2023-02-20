@@ -82,7 +82,7 @@ void FinishSurface( mapDrawSurface_t *ds ){
 
 
 	/* dummy check */
-	if ( ds->type <= SURFACE_BAD || ds->type >= NUM_SURFACE_TYPES || ds == NULL || ds->shaderInfo == NULL ) {
+	if ( ds == NULL || ds->shaderInfo == NULL || ds->type <= SURFACE_BAD || ds->type >= NUM_SURFACE_TYPES ) {
 		return;
 	}
 
@@ -598,7 +598,7 @@ void ClassifySurfaces( int numSurfs, mapDrawSurface_t *ds ){
 		   ----------------------------------------------------------------- */
 
 		/* vertex lit surfaces don't need this information */
-		if ( si->compileFlags & C_VERTEXLIT || ds->type == SURFACE_TRIANGLES ) {
+		if ( si->compileFlags & C_VERTEXLIT || ds->type == SURFACE_TRIANGLES || nolm == qtrue ) {
 			VectorClear( ds->lightmapAxis );
 			//%	VectorClear( ds->lightmapVecs[ 2 ] );
 			ds->sampleSize = 0;
@@ -2114,8 +2114,8 @@ int FilterPointConvexHullIntoTree_r( vec3_t **points, int npoints, mapDrawSurfac
 
 int FilterWindingIntoTree_r( winding_t *w, mapDrawSurface_t *ds, node_t *node ){
 	int i, refs = 0;
-	plane_t         *p1, *p2;
-	vec4_t plane1, plane2;
+	plane_t         *p1;
+	vec4_t plane1;
 	winding_t       *fat, *front, *back;
 	shaderInfo_t    *si;
 
@@ -2169,12 +2169,15 @@ int FilterWindingIntoTree_r( winding_t *w, mapDrawSurface_t *ds, node_t *node ){
 
 		/* check if surface is planar */
 		if ( ds->planeNum >= 0 ) {
+			#if 0
+			plane_t *p2;
+			vec4_t plane2;
+
 			/* get surface plane */
 			p2 = &mapplanes[ ds->planeNum ];
 			VectorCopy( p2->normal, plane2 );
 			plane2[ 3 ] = p2->dist;
 
-			#if 0
 			/* div0: this is the plague (inaccurate) */
 			vec4_t reverse;
 
@@ -2190,7 +2193,6 @@ int FilterWindingIntoTree_r( winding_t *w, mapDrawSurface_t *ds, node_t *node ){
 				return FilterWindingIntoTree_r( w, ds, node->children[ 1 ] );
 			}
 			#else
-			(void) plane2;
 			/* div0: this is the cholera (doesn't hit enough) */
 
 			/* the drawsurf might have an associated plane, if so, force a filter here */
@@ -3287,7 +3289,7 @@ int AddSurfaceModelsToTriangle_r( mapDrawSurface_t *ds, surfaceModel_t *model, b
 			}
 
 			/* insert the model */
-			InsertModel( (char *) model->model, 0, 0, transform, NULL, ds->celShader, ds->entityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, 0, 0 );
+			InsertModel( (char *) model->model, 0, 0, transform, NULL, ds->celShader, ds->entityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, 0, 0, clipDepthGlobal );
 
 			/* return to sender */
 			return 1;
@@ -3377,7 +3379,7 @@ int AddSurfaceModels( mapDrawSurface_t *ds ){
 			alpha /= ds->numVerts;
 			centroid.color[ 0 ][ 0 ] = 0xFF;
 			centroid.color[ 0 ][ 1 ] = 0xFF;
-			centroid.color[ 0 ][ 2 ] = 0xFF;
+			//centroid.color[ 0 ][ 2 ] = 0xFF;
 			centroid.color[ 0 ][ 2 ] = ( alpha > 255.0f ? 0xFF : alpha );
 
 			/* head vert is centroid */
@@ -3657,10 +3659,10 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 		}
 
 		/* ydnar: remap shader */
-		if ( ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] ) {
+/*		if ( ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] ) {
 			ds->shaderInfo = ShaderInfoForShader( ds->shaderInfo->remapShader );
 		}
-
+*/
 		/* ydnar: gs mods: handle the various types of surfaces */
 		switch ( ds->type )
 		{

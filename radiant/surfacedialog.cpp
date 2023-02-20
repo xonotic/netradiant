@@ -412,7 +412,7 @@ void DoSurface( void ){
 
 	}
 	getSurfaceInspector().Update();
-	getSurfaceInspector().importData();
+	//getSurfaceInspector().importData(); //happens in .ShowDlg() anyway
 	getSurfaceInspector().ShowDlg();
 }
 
@@ -429,6 +429,16 @@ void SurfaceInspector_toggleShown(){
 void SurfaceInspector_FitTexture(){
 	UndoableCommand undo( "textureAutoFit" );
 	Select_FitTexture( getSurfaceInspector().m_fitHorizontal, getSurfaceInspector().m_fitVertical );
+}
+
+void SurfaceInspector_FitTextureW(){
+	UndoableCommand undo( "textureAutoFitW" );
+	Select_FitTexture( getSurfaceInspector().m_fitHorizontal, 0 );
+}
+
+void SurfaceInspector_FitTextureH(){
+	UndoableCommand undo( "textureAutoFitH" );
+	Select_FitTexture( 0, getSurfaceInspector().m_fitVertical );
 }
 
 static void OnBtnPatchdetails( ui::Widget widget, gpointer data ){
@@ -480,6 +490,18 @@ static void OnBtnFaceFit( ui::Widget widget, gpointer data ){
 	getSurfaceInspector().exportData();
 	SurfaceInspector_FitTexture();
 }
+
+static void OnBtnFaceFitW( GtkWidget *widget, gpointer data ){
+	getSurfaceInspector().exportData();
+	SurfaceInspector_FitTextureW();
+}
+
+static void OnBtnFaceFitH( GtkWidget *widget, gpointer data ){
+	getSurfaceInspector().exportData();
+	SurfaceInspector_FitTextureH();
+}
+
+
 
 typedef const char* FlagName;
 
@@ -1283,6 +1305,9 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 				}
 			}
 		}
+	}
+	else{
+		return false;
 	}
 	return true;
 }

@@ -283,6 +283,8 @@ void PatchInspector_queueDraw(){
 void DoPatchInspector(){
 	g_PatchInspector.GetPatchInfo();
 	if ( !g_PatchInspector.visible() ) {
+		// workaround for strange gtk behaviour - modifying the contents of a window while it is not visible causes the window position to change without sending a configure_event
+		g_PatchInspector.m_position_tracker.sync( g_PatchInspector.GetWidget() );
 		g_PatchInspector.ShowDlg();
 	}
 }
@@ -800,7 +802,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 0, 1}, {0, 0});
-							spin.dimensions(10, -1);
+							spin.dimensions(16, -2);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -817,7 +819,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 1, 2}, {0, 0});
-							spin.dimensions(10, -1);
+							spin.dimensions(16, -2);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -834,7 +836,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 2, 3}, {0, 0});
-							spin.dimensions(10, -1);
+							spin.dimensions(16, -2);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -851,7 +853,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 3, 4}, {0, 0});
-							spin.dimensions(10, -1);
+							spin.dimensions(16, -2);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -868,7 +870,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 4, 5}, {0, 0});
-							spin.dimensions(10, -1);
+							spin.dimensions(16, -2);
 							gtk_widget_set_can_focus( spin, false );
 						}
 					}

@@ -86,6 +86,7 @@ MapModules& ReferenceAPI_getMapModules();
 #include "autosave.h"
 #include "brushmodule.h"
 #include "brush.h"
+#include "patch.h"
 
 bool g_writeMapComments = true;
 
@@ -764,6 +765,50 @@ scene::Node& Node_Clone( scene::Node& node ){
 	return clone;
 }
 
+bool Node_instanceSelected( scene::Node& node );
+
+class CloneAllSelected : public scene::Traversable::Walker
+{
+mutable scene::Path m_path;
+public:
+CloneAllSelected( scene::Node& root )
+	: m_path( makeReference( root ) ){
+}
+bool pre( scene::Node& node ) const {
+	if ( node.isRoot() ) {
+		return false;
+	}
+
+	if( Node_instanceSelected( node ) ){
+		m_path.push( makeReference( node_clone( node ) ) );
+		m_path.top().get().IncRef();
+	}
+
+	return true;
+}
+void post( scene::Node& node ) const {
+	if ( node.isRoot() ) {
+		return;
+	}
+
+	if( Node_instanceSelected( node ) ){
+		Node_getTraversable( m_path.parent() )->insert( m_path.top() );
+
+		m_path.top().get().DecRef();
+		m_path.pop();
+	}
+}
+};
+
+scene::Node& Node_Clone_Selected( scene::Node& node ){
+	scene::Node& clone = node_clone( node );
+	scene::Traversable* traversable = Node_getTraversable( node );
+	if ( traversable != 0 ) {
+		traversable->traverse( CloneAllSelected( clone ) );
+	}
+	return clone;
+}
+
 
 typedef std::map<CopiedString, std::size_t> EntityBreakdown;
 
@@ -794,13 +839,56 @@ void Scene_EntityBreakdown( EntityBreakdown& entitymap ){
 	GlobalSceneGraph().traverse( EntityBreakdownWalker( entitymap ) );
 }
 
+class CountStuffWalker : public scene::Graph::Walker
+{
+int& m_patches;
+int& m_ents_ingame;
+int& m_groupents;
+int& m_groupents_ingame;
+public:
+CountStuffWalker( int& patches, int& ents_ingame, int& groupents, int& groupents_ingame )
+	: m_patches( patches ), m_ents_ingame( ents_ingame ), m_groupents( groupents ), m_groupents_ingame( groupents_ingame ){
+}
+bool pre( const scene::Path& path, scene::Instance& instance ) const {
+	Patch* patch = Node_getPatch( path.top() );
+	if( patch != 0 ){
+		++m_patches;
+	}
+	Entity* entity = Node_getEntity( path.top() );
+	if ( entity != 0 ){
+		if( entity->isContainer() ){
+			++m_groupents;
+			if( !string_equal_nocase( "func_group", entity->getKeyValue( "classname" ) ) &&
+				!string_equal_nocase( "_decal", entity->getKeyValue( "classname" ) ) ){
+				++m_groupents_ingame;
+				++m_ents_ingame;
+			}
+			return true;
+		}
+		if( !string_equal_nocase_n( "light", entity->getKeyValue( "classname" ), 5 ) &&
+			!string_equal_nocase( "misc_model", entity->getKeyValue( "classname" ) ) ){
+			++m_ents_ingame;
+		}
+	}
+	return true;
+}
+};
+
+void Scene_CountStuff( int& patches, int& ents_ingame, int& groupents, int& groupents_ingame ){
+	GlobalSceneGraph().traverse( CountStuffWalker( patches, ents_ingame, groupents, groupents_ingame ) );
+}
 
 WindowPosition g_posMapInfoWnd( c_default_window_pos );
 
 void DoMapInfo(){
 	ModalDialog dialog;
-	ui::Entry brushes_entry{ui::null};
-	ui::Entry entities_entry{ui::null};
+	ui::Widget w_brushes{ui::null};
+	ui::Widget w_patches{ui::null};
+	ui::Widget w_ents{ui::null};
+	ui::Widget w_ents_ingame{ui::null};
+	ui::Widget w_groupents{ui::null};
+	ui::Widget w_groupents_ingame{ui::null};
+
 	ui::ListStore EntityBreakdownWalker{ui::null};
 
 	ui::Window window = MainFrame_getWindow().create_dialog_window("Map Info", G_CALLBACK(dialog_delete_callback ), &dialog );
@@ -813,40 +901,90 @@ void DoMapInfo(){
 
 		{
 			auto hbox = create_dialog_hbox( 4 );
-			vbox.pack_start( hbox, FALSE, TRUE, 0 );
+			vbox.pack_start( hbox, FALSE, FALSE, 0 );
 
 			{
-				auto table = create_dialog_table( 2, 2, 4, 4 );
+				auto table = create_dialog_table( 3, 4, 4, 4 );
 				hbox.pack_start( table, TRUE, TRUE, 0 );
 
 				{
-					auto entry = ui::Entry(ui::New);
-					entry.show();
-                    table.attach(entry, {1, 2, 0, 1}, {GTK_EXPAND | GTK_FILL, 0});
-					gtk_editable_set_editable( GTK_EDITABLE(entry), FALSE );
-
-					brushes_entry = entry;
-				}
-				{
-					auto entry = ui::Entry(ui::New);
-					entry.show();
-                    table.attach(entry, {1, 2, 1, 2}, {GTK_EXPAND | GTK_FILL, 0});
-					gtk_editable_set_editable( GTK_EDITABLE(entry), FALSE );
-
-					entities_entry = entry;
-				}
-				{
-					ui::Widget label = ui::Label( "Total Brushes" );
+					auto label = ui::Label( "Total Brushes:" );
 					label.show();
                     table.attach(label, {0, 1, 0, 1}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+                    table.attach(label, {1, 2, 0, 1}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					w_brushes = label;
+				}
+				{
+					auto label = ui::Label( "Total Patches" );
+					label.show();
+                    table.attach(label, {2, 3, 0, 1}, {GTK_FILL, 0});
 					gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
 				}
 				{
-					ui::Widget label = ui::Label( "Total Entities" );
+					auto label = ui::Label( "" );
 					label.show();
-                    table.attach(label, {0, 1, 1, 2}, {GTK_FILL, 0});
+                    table.attach(label, {3, 4, 0, 1}, {GTK_FILL, 0}, {3, 0});
 					gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
+					w_patches = label;
 				}
+				{
+					auto label = ui::Label( "Total Entities:" );
+					label.show();
+					table.attach(label, {0, 1, 1, 2}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {1, 2, 1, 2}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_ents = label;
+				}
+				{
+					auto label = ui::Label( "Ingame Entities:" );
+					label.show();
+					table.attach(label, {2, 3, 1, 2}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {3, 4, 1, 2}, {GTK_FILL | GTK_EXPAND, 0 }, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_ents_ingame = label;
+				}
+				{
+					auto label = ui::Label( "Group Entities:" );
+					label.show();
+					table.attach(label, {0, 1, 2, 3}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {1, 2, 2, 3}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_groupents = label;
+				}
+				{
+					auto label = ui::Label( "Ingame Group Entities:" );
+					label.show();
+					table.attach(label, {2, 3, 2, 3}, {GTK_FILL, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+				}
+				{
+					auto label = ui::Label( "" );
+					label.show();
+					table.attach(label, {3, 4, 2, 3}, {GTK_FILL | GTK_EXPAND, 0}, {3, 0});
+					gtk_misc_set_alignment( GTK_MISC( label ), 0.0, 0.5 );
+					w_groupents_ingame = label;
+				}
+
 			}
 			{
 				auto vbox2 = create_dialog_vbox( 4 );
@@ -859,7 +997,7 @@ void DoMapInfo(){
 			}
 		}
 		{
-			ui::Widget label = ui::Label( "Entity breakdown" );
+			ui::Widget label = ui::Label( "*** Entity breakdown ***" );
 			label.show();
 			vbox.pack_start( label, FALSE, TRUE, 0 );
 			gtk_misc_set_alignment( GTK_MISC( label ), 0, 0.5 );
@@ -869,7 +1007,7 @@ void DoMapInfo(){
 			vbox.pack_start( scr, TRUE, TRUE, 0 );
 
 			{
-				auto store = ui::ListStore::from(gtk_list_store_new( 2, G_TYPE_STRING, G_TYPE_STRING ));
+				auto store = ui::ListStore::from(gtk_list_store_new( 2, G_TYPE_STRING, G_TYPE_UINT ));
 
 				auto view = ui::TreeView(ui::TreeModel::from(store._handle));
 				gtk_tree_view_set_headers_clickable(view, TRUE );
@@ -913,11 +1051,39 @@ void DoMapInfo(){
 
 	EntityBreakdownWalker.unref();
 
-	char tmp[16];
-	sprintf( tmp, "%u", Unsigned( g_brushCount.get() ) );
-	brushes_entry.text(tmp);
-	sprintf( tmp, "%u", Unsigned( g_entityCount.get() ) );
-	entities_entry.text(tmp);
+	int n_patches = 0;
+	int n_ents_ingame = 0;
+	int n_groupents = 0;
+	int n_groupents_ingame = 0;
+	Scene_CountStuff( n_patches, n_ents_ingame, n_groupents, n_groupents_ingame );
+	//globalOutputStream() << n_patches << n_ents_ingame << n_groupents << n_groupents_ingame << "\n";
+
+	char *markup;
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%u</b></span>  ", Unsigned( g_brushCount.get() ) );
+	gtk_label_set_markup( GTK_LABEL( w_brushes ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_patches );
+	gtk_label_set_markup( GTK_LABEL( w_patches ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%u</b></span>  ", Unsigned( g_entityCount.get() ) );
+	gtk_label_set_markup( GTK_LABEL( w_ents ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_ents_ingame );
+	gtk_label_set_markup( GTK_LABEL( w_ents_ingame ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_groupents );
+	gtk_label_set_markup( GTK_LABEL( w_groupents ), markup );
+	g_free( markup );
+
+	markup = g_markup_printf_escaped( "<span style=\"italic\"><b>%i</b></span>  ", n_groupents_ingame );
+	gtk_label_set_markup( GTK_LABEL( w_groupents_ingame ), markup );
+	g_free( markup );
+
 
 	modal_dialog_show( window, dialog );
 
@@ -1321,7 +1487,17 @@ void ConstructRegionStartpoint( scene::Node* startpoint, const Vector3& region_m
 
    ===========================================================
  */
-bool region_active;
+bool region_active = false;
+
+ConstReferenceCaller<bool, void(const Callback<void(bool)> &), PropertyImpl<bool>::Export> g_region_caller( region_active );
+
+ToggleItem g_region_item( g_region_caller );
+
+/*void Map_ToggleRegion(){
+	region_active = !region_active;
+	g_region_item.update();
+}*/
+
 Vector3 region_mins( g_MinWorldCoord, g_MinWorldCoord, g_MinWorldCoord );
 Vector3 region_maxs( g_MaxWorldCoord, g_MaxWorldCoord, g_MaxWorldCoord );
 
@@ -1448,6 +1624,7 @@ void Scene_Exclude_Region( bool exclude ){
  */
 void Map_RegionOff(){
 	region_active = false;
+	g_region_item.update();
 
 	region_maxs[0] = g_MaxWorldCoord - 64;
 	region_mins[0] = g_MinWorldCoord + 64;
@@ -1461,6 +1638,7 @@ void Map_RegionOff(){
 
 void Map_ApplyRegion( void ){
 	region_active = true;
+	g_region_item.update();
 
 	Scene_Exclude_Region( false );
 }
@@ -1477,6 +1655,7 @@ void Map_RegionSelectedBrushes( void ){
 	if ( GlobalSelectionSystem().countSelected() != 0
 		 && GlobalSelectionSystem().Mode() == SelectionSystem::ePrimitive ) {
 		region_active = true;
+		g_region_item.update();
 		Select_GetBounds( region_mins, region_maxs );
 
 		Scene_Exclude_Selected( false );
@@ -1681,21 +1860,19 @@ bool Map_SaveSelected( const char* filename ){
 	return MapResource_saveFile( MapFormat_forFile( filename ), GlobalSceneGraph().root(), Map_Traverse_Selected, filename );
 }
 
-
 class ParentSelectedBrushesToEntityWalker : public scene::Graph::Walker
 {
-scene::Node& m_parent;
+	scene::Node& m_parent;
+	mutable bool m_emptyOldParent;
+
 public:
-ParentSelectedBrushesToEntityWalker( scene::Node& parent ) : m_parent( parent ){
+ParentSelectedBrushesToEntityWalker( scene::Node& parent ) : m_parent( parent ), m_emptyOldParent( false ){
 }
 
 bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	if ( path.top().get_pointer() != &m_parent
-		 && Node_isPrimitive( path.top() ) ) {
+	if ( path.top().get_pointer() != &m_parent && ( Node_isPrimitive( path.top() ) || m_emptyOldParent ) ) {
 		Selectable* selectable = Instance_getSelectable( instance );
-		if ( selectable != 0
-			 && selectable->isSelected()
-			 && path.size() > 1 ) {
+		if ( selectable && selectable->isSelected() && path.size() > 1 ) {
 			return false;
 		}
 	}
@@ -1703,18 +1880,31 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 }
 
 void post( const scene::Path& path, scene::Instance& instance ) const {
-	if ( path.top().get_pointer() != &m_parent
-		 && Node_isPrimitive( path.top() ) ) {
+	if ( path.top().get_pointer() == &m_parent )
+		return;
+
+	if ( Node_isPrimitive( path.top() ) ){
+		m_emptyOldParent = false;
 		Selectable* selectable = Instance_getSelectable( instance );
-		if ( selectable != 0
-			 && selectable->isSelected()
-			 && path.size() > 1 ) {
+
+		if ( selectable && selectable->isSelected() && path.size() > 1 ){
 			scene::Node& parent = path.parent();
-			if ( &parent != &m_parent ) {
+			if ( &parent != &m_parent ){
 				NodeSmartReference node( path.top().get() );
-				Node_getTraversable( parent )->erase( node );
+				scene::Traversable* traversable_parent = Node_getTraversable( parent );
+				traversable_parent->erase( node );
 				Node_getTraversable( m_parent )->insert( node );
+				if ( traversable_parent->empty() )
+					m_emptyOldParent = true;
 			}
+		}
+	}
+	else if ( m_emptyOldParent ){
+		m_emptyOldParent = false;
+		// delete empty entities
+		Entity* entity = Node_getEntity( path.top() );
+		if ( entity != 0 && path.top().get_pointer() != Map_FindWorldspawn( g_map )	&& Node_getTraversable( path.top() )->empty() ) {
+			Path_deleteTop( path );
 		}
 	}
 }
@@ -1938,6 +2128,7 @@ void SaveMap(){
 	}
 	else if ( Map_Modified( g_map ) ) {
 		Map_Save();
+		MRU_AddFile( g_map.m_name.c_str() );	//add on saving, but not opening via cmd line: spoils the list
 	}
 }
 
@@ -2055,7 +2246,7 @@ void SelectBrush( int entitynum, int brushnum ){
 }
 
 
-class BrushFindIndexWalker : public scene::Graph::Walker
+class BrushFindIndexWalker : public scene::Traversable::Walker
 {
 mutable const scene::Node* m_node;
 std::size_t& m_count;
@@ -2064,9 +2255,9 @@ BrushFindIndexWalker( const scene::Node& node, std::size_t& count )
 	: m_node( &node ), m_count( count ){
 }
 
-bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	if ( Node_isPrimitive( path.top() ) ) {
-		if ( m_node == path.top().get_pointer() ) {
+bool pre( scene::Node& node ) const {
+	if ( Node_isPrimitive( node ) ) {
+		if ( m_node == &node ) {
 			m_node = 0;
 		}
 		if ( m_node ) {
@@ -2077,7 +2268,7 @@ bool pre( const scene::Path& path, scene::Instance& instance ) const {
 }
 };
 
-class EntityFindIndexWalker : public scene::Graph::Walker
+class EntityFindIndexWalker : public scene::Traversable::Walker
 {
 mutable const scene::Node* m_node;
 std::size_t& m_count;
@@ -2086,9 +2277,9 @@ EntityFindIndexWalker( const scene::Node& node, std::size_t& count )
 	: m_node( &node ), m_count( count ){
 }
 
-bool pre( const scene::Path& path, scene::Instance& instance ) const {
-	if ( Node_isEntity( path.top() ) ) {
-		if ( m_node == path.top().get_pointer() ) {
+bool pre( scene::Node& node ) const {
+	if ( Node_isEntity( node ) ) {
+		if ( m_node == &node ) {
 			m_node = 0;
 		}
 		if ( m_node ) {
@@ -2105,8 +2296,24 @@ static void GetSelectionIndex( int *ent, int *brush ){
 	if ( GlobalSelectionSystem().countSelected() != 0 ) {
 		const scene::Path& path = GlobalSelectionSystem().ultimateSelected().path();
 
-		GlobalSceneGraph().traverse( BrushFindIndexWalker( path.top(), count_brush ) );
-		GlobalSceneGraph().traverse( EntityFindIndexWalker( path.parent(), count_entity ) );
+		{
+			scene::Traversable* traversable = Node_getTraversable( path.parent() );
+			if ( traversable != 0 && path.size() == 3 ) {
+				traversable->traverse( BrushFindIndexWalker( path.top(), count_brush ) );
+			}
+		}
+
+		{
+			scene::Traversable* traversable = Node_getTraversable( GlobalSceneGraph().root() );
+			if ( traversable != 0 ) {
+				if( path.size() == 3 ){
+					traversable->traverse( EntityFindIndexWalker( path.parent(), count_entity ) );
+				}
+				else if ( path.size() == 2 ){
+					traversable->traverse( EntityFindIndexWalker( path.top(), count_entity ) );
+				}
+			}
+		}
 	}
 	*brush = int(count_brush);
 	*ent = int(count_entity);
@@ -2257,7 +2464,8 @@ void Map_Construct(){
 	GlobalCommands_insert( "RegionOff", makeCallbackF(RegionOff) );
 	GlobalCommands_insert( "RegionSetXY", makeCallbackF(RegionXY) );
 	GlobalCommands_insert( "RegionSetBrush", makeCallbackF(RegionBrush) );
-	GlobalCommands_insert( "RegionSetSelection", makeCallbackF(RegionSelected), Accelerator( 'R', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	//GlobalCommands_insert( "RegionSetSelection", makeCallbackF(RegionSelected), Accelerator( 'R', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
+	GlobalToggles_insert( "RegionSetSelection", makeCallbackF(RegionSelected), ToggleItem::AddCallbackCaller( g_region_item ), Accelerator( 'R', (GdkModifierType)( GDK_SHIFT_MASK | GDK_CONTROL_MASK ) ) );
 
 	GlobalPreferenceSystem().registerPreference( "LastMap", make_property_string( g_strLastMap ) );
 	GlobalPreferenceSystem().registerPreference( "LoadLastMap", make_property_string( g_bLoadLastMap ) );

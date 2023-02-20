@@ -717,7 +717,7 @@ float PointToPolygonFormFactor( const vec3_t point, const vec3_t normal, const w
 	for ( i = 0; i < w->numpoints; i++ )
 	{
 		VectorSubtract( w->p[ i ], point, dirs[ i ] );
-		VectorNormalize( dirs[ i ], dirs[ i ] );
+		VectorFastNormalize( dirs[ i ], dirs[ i ] );
 	}
 
 	/* duplicate first vertex to avoid mod operation */
@@ -743,7 +743,7 @@ float PointToPolygonFormFactor( const vec3_t point, const vec3_t normal, const w
 		angle = acos( dot );
 
 		CrossProduct( dirs[ i ], dirs[ j ], triVector );
-		if ( VectorNormalize( triVector, triNormal ) < 0.0001f ) {
+		if ( VectorFastNormalize( triVector, triNormal ) < 0.0001f ) {
 			continue;
 		}
 
@@ -1780,7 +1780,7 @@ void TraceGrid( int num ){
 			 */
 			ColorToBytesNonZero(color, bgp->ambient[i], gridScale * gridAmbientScale);
 		} else {
-			ColorToBytes(color, bgp->ambient[i], gridScale * gridAmbientScale);
+		ColorToBytes( color, bgp->ambient[ i ], gridScale * gridAmbientScale );
 		}
 		ColorToBytes( gp->directed[ i ], bgp->directed[ i ], gridScale );
 	}
@@ -2045,8 +2045,8 @@ void LightWorld( const char *BSPFilePath, qboolean fastAllocate, qboolean noBoun
 		UnparseEntities();
 
 		if ( storeForReal ) {
-			Sys_Printf( "Writing %s\n", BSPFilePath );
-			WriteBSPFile( BSPFilePath );
+		Sys_Printf( "Writing %s\n", BSPFilePath );
+		WriteBSPFile( BSPFilePath );
 		}
 
 		/* note it */
@@ -2153,7 +2153,7 @@ int LightMain( int argc, char **argv ){
 	const char  *value;
 	int lightmapMergeSize = 0;
 	qboolean lightSamplesInsist = qfalse;
-	qboolean fastAllocate = qfalse;
+	qboolean fastAllocate = qtrue;
 	qboolean noBounceStore = qfalse;
 
 	/* note it */
@@ -2289,6 +2289,43 @@ int LightMain( int argc, char **argv ){
 			i++;
 		}
 
+		else if ( !strcmp( argv[ i ], "-vertexscale" ) ) {
+			f = atof( argv[ i + 1 ] );
+			vertexglobalscale *= f;
+			Sys_Printf( "Vertexlight scaled by %f to %f\n", f, vertexglobalscale );
+			i++;
+		}
+
+		else if ( !strcmp( argv[ i ], "-backsplash" ) && i < ( argc - 3 ) ) {
+			f = atof( argv[ i + 1 ] );
+			g_backsplashFractionScale = f;
+			Sys_Printf( "Area lights backsplash fraction scaled by %f\n", f, g_backsplashFractionScale );
+			f = atof( argv[ i + 2 ] );
+			if ( f >= -900.0f ){
+				g_backsplashDistance = f;
+				Sys_Printf( "Area lights backsplash distance set globally to %f\n", f, g_backsplashDistance );
+			}
+			i+=2;
+		}
+
+		else if ( !strcmp( argv[ i ], "-nolm" ) ) {
+			nolm = qtrue;
+			Sys_Printf( "No lightmaps yo\n" );
+		}
+
+		else if ( !strcmp( argv[ i ], "-bouncecolorratio" ) ) {
+			f = atof( argv[ i + 1 ] );
+			bounceColorRatio *= f;
+			if ( bounceColorRatio > 1 ) {
+				bounceColorRatio = 1;
+			}
+			if ( bounceColorRatio < 0 ) {
+				bounceColorRatio = 0;
+			}
+			Sys_Printf( "Bounce color ratio set to %f\n", bounceColorRatio );
+			i++;
+		}
+
 		else if ( !strcmp( argv[ i ], "-bouncescale" ) ) {
 			f = atof( argv[ i + 1 ] );
 			bounceScale *= f;
@@ -2417,6 +2454,30 @@ int LightMain( int argc, char **argv ){
 			lightmapCompensate = f;
 			Sys_Printf( "Lighting compensation set to 1/%f\n", lightmapCompensate );
 			i++;
+		}
+
+		/* Lighting brightness */
+		else if( !strcmp( argv[ i ], "-brightness" ) ){
+			f = atof( argv[ i + 1 ] );
+			lightmapBrightness = f;
+			Sys_Printf( "Lighting brightness set to %f\n", lightmapBrightness );
+			i++;
+		}
+
+		/* Lighting contrast */
+		else if( !strcmp( argv[ i ], "-contrast" ) ){
+			f = atof( argv[ i + 1 ] );
+			lightmapContrast = f;
+			if( lightmapContrast > 255 ){
+				lightmapContrast = 255;
+			}
+			else if( lightmapContrast < -255 ){
+				lightmapContrast = -255;
+			}
+			Sys_Printf( "Lighting contrast set to %f\n", lightmapContrast );
+			i++;
+			/* change to factor in range of 0 to 129.5 */
+			lightmapContrast = ( 259 * ( lightmapContrast + 255 ) ) / ( 255 * ( 259 - lightmapContrast ) );
 		}
 
 		/* ydnar switches */
@@ -2704,6 +2765,11 @@ int LightMain( int argc, char **argv ){
 			Sys_Printf( "Slow lightmap allocation mode enabled (default)\n" );
 		}
 
+		else if ( !strcmp( argv[ i ], "-slowallocate" ) ) {
+			fastAllocate = qfalse;
+			Sys_Printf( "Slow allocation mode enabled\n" );
+		}
+
 		else if ( !strcmp( argv[ i ], "-fastgrid" ) ) {
 			fastgrid = qtrue;
 			Sys_Printf( "Fast grid lighting enabled\n" );
@@ -2814,9 +2880,20 @@ int LightMain( int argc, char **argv ){
 			i++;
 			Sys_Printf( "Lightmaps sample scale set to %d\n", sampleScale );
 		}
+		else if ( !strcmp( argv[ i ],  "-debugsamplesize" ) ) {
+			debugSampleSize = 1;
+			Sys_Printf( "debugging Lightmaps SampleSize\n" );
+		}
 		else if ( !strcmp( argv[ i ], "-novertex" ) ) {
-			noVertexLighting = qtrue;
-			Sys_Printf( "Disabling vertex lighting\n" );
+			noVertexLighting = 1;
+			if ( ( atof( argv[ i + 1 ] ) != 0 ) && ( atof( argv[ i + 1 ] )) < 1 ) {
+				noVertexLighting = ( atof( argv[ i + 1 ] ) );
+				i++;
+				Sys_Printf( "Setting vertex lighting globally to %f\n", noVertexLighting );
+			}
+			else{
+				Sys_Printf( "Disabling vertex lighting\n" );
+			}
 		}
 		else if ( !strcmp( argv[ i ], "-nogrid" ) ) {
 			noGridLighting = qtrue;
@@ -2855,8 +2932,8 @@ int LightMain( int argc, char **argv ){
 				else{
 					Sys_Printf( "Disabling half lambert light angle attenuation\n" );
 				}
+				i++;
 			}
-			i++;
 		}
 		else if ( !strcmp( argv[ i ], "-nostyle" ) || !strcmp( argv[ i ], "-nostyles" ) ) {
 			noStyles = qtrue;
@@ -2901,7 +2978,7 @@ int LightMain( int argc, char **argv ){
 				Sys_Printf( "Enabling randomized dirtmapping\n" );
 			}
 			else{
-				Sys_Printf( "Enabling ordered dir mapping\n" );
+				Sys_Printf( "Enabling ordered dirtmapping\n" );
 			}
 			i++;
 		}
