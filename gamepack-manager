@@ -93,7 +93,7 @@ Warfork         yes  GPL          git     https://gitlab.com/netradiant/gamepack
 Warsow          yes  GPL          git     https://github.com/Warsow/NetRadiantPack.git
 Wolf            yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/WolfPack/branches/1.5/
 WoP             yes  proprietary  git     https://github.com/PadWorld-Entertainment/wop-mapeditor-support.git
-Wrath           yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/wrath-mapeditor-support.git
+Wrath           yes  GPL          git     https://gitlab.com/netradiant/gamepacks/wrath-mapeditor-support.git
 Xonotic         yes  GPL          git     https://gitlab.com/xonotic/netradiant-xonoticpack.git
 ZEQ2Lite        yes  unknown      git     https://gitlab.com/netradiant/gamepacks/zeq2lite-mapeditor-support.git
 EOF
