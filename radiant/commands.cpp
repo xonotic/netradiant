@@ -427,31 +427,19 @@ void DoCommandListDlg(){
 
 			{
 				// Initialize dialog
-				StringOutputStream path( 256 );
-				path << SettingsPath_get() << "commandlist.txt";
-				globalOutputStream() << "Writing the command list to " << path.c_str() << "\n";
 				class BuildCommandList : public CommandVisitor
 				{
-				TextFileOutputStream m_commandList;
 				ui::ListStore m_store;
 public:
-				BuildCommandList( const char* filename, ui::ListStore store ) : m_commandList( filename ), m_store( store ){
+				BuildCommandList( ui::ListStore store ) : m_store( store ){
 				}
 				void visit( const char* name, Accelerator& accelerator ){
 					StringOutputStream modifiers;
 					modifiers << accelerator;
 
 					m_store.append(0, name, 1, modifiers.c_str(), 2, false, 3, 800);
-
-					if ( !m_commandList.failed() ) {
-						int l = strlen( name );
-						m_commandList << name;
-						while ( l++ < 25 )
-							m_commandList << ' ';
-						m_commandList << modifiers.c_str() << '\n';
-					}
 				}
-				} visitor( path.c_str(), store );
+				} visitor( store );
 
 				GlobalShortcuts_foreach( visitor );
 			}
