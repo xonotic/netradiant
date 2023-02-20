@@ -31,6 +31,13 @@
 #include "gtkutil/messagebox.h"
 #include "gtkmisc.h"
 
+#define NETRADIANT_CUSTOM_FULLY_MERGED 0
+#if NETRADIANT_CUSTOM_FULLY_MERGED
+// For deleting old shortcuts.ini file
+#include "preferences.h"
+#include "unistd.h"
+#endif // NETRADIANT_CUSTOM_FULLY_MERGED
+
 typedef std::pair<Accelerator, int> ShortcutValue; // accelerator, isRegistered
 typedef std::map<CopiedString, ShortcutValue> Shortcuts;
 
@@ -477,9 +484,19 @@ public:
 
 const char* const COMMANDS_VERSION = "1.0-gtk-accelnames";
 
-void SaveCommandMap( const char* path ){
+void DeleteOldCommandMap(){
+#if NETRADIANT_CUSTOM_FULLY_MERGED
+// To enable when NetRadiant and NetRadiant-custom are fully merged together.
+	StringOutputStream path( 256 );
+	path << SettingsPath_get() << g_pGameDescription->mGameFile.c_str() << '/';
+	path << "shortcuts.ini";
+	unlink( path.c_str() );
+#endif
+}
+
+void SaveCommandMap(){
 	StringOutputStream strINI( 256 );
-	strINI << path << "shortcuts.ini";
+	strINI << SettingsPath_get() << "shortcuts.ini";
 
 	TextFileOutputStream file( strINI.c_str() );
 	if ( !file.failed() ) {
@@ -503,6 +520,8 @@ public:
 		} visitor( file );
 		GlobalShortcuts_foreach( visitor );
 	}
+	
+	DeleteOldCommandMap();
 }
 
 const char* stringrange_find( const char* first, const char* last, char c ){
@@ -546,9 +565,9 @@ std::size_t count() const {
 }
 };
 
-void LoadCommandMap( const char* path ){
+void LoadCommandMap(){
 	StringOutputStream strINI( 256 );
-	strINI << path << "shortcuts.ini";
+	strINI << SettingsPath_get() << "shortcuts.ini";
 
 	FILE* f = fopen( strINI.c_str(), "r" );
 	if ( f != 0 ) {

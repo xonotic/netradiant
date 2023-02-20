@@ -47,8 +47,8 @@ const KeyEvent& GlobalKeyEvents_find( const char* name );
 
 void DoCommandListDlg();
 
-void LoadCommandMap( const char* path );
-void SaveCommandMap( const char* path );
+void LoadCommandMap();
+void SaveCommandMap();
 
 
 #endif

@@ -490,16 +490,12 @@ void remove_local_pid(){
 }
 
 void user_shortcuts_init(){
-	StringOutputStream path( 256 );
-	path << SettingsPath_get() << g_pGameDescription->mGameFile.c_str() << '/';
-	LoadCommandMap( path.c_str() );
-	SaveCommandMap( path.c_str() );
+	LoadCommandMap();
+	SaveCommandMap();
 }
 
 void user_shortcuts_save(){
-	StringOutputStream path( 256 );
-	path << SettingsPath_get() << g_pGameDescription->mGameFile.c_str() << '/';
-	SaveCommandMap( path.c_str() );
+	SaveCommandMap();
 }
 
 /* HACK: If ui::main is not called yet,
