@@ -31,6 +31,13 @@
 #include "gtkutil/messagebox.h"
 #include "gtkmisc.h"
 
+#define NETRADIANT_CUSTOM_FULLY_MERGED 0
+#if NETRADIANT_CUSTOM_FULLY_MERGED
+// For deleting old shortcuts.ini file
+#include "preferences.h"
+#include "unistd.h"
+#endif // NETRADIANT_CUSTOM_FULLY_MERGED
+
 typedef std::pair<Accelerator, int> ShortcutValue; // accelerator, isRegistered
 typedef std::map<CopiedString, ShortcutValue> Shortcuts;
 
@@ -442,31 +449,19 @@ void DoCommandListDlg(){
 
 			{
 				// Initialize dialog
-				StringOutputStream path( 256 );
-				path << SettingsPath_get() << "commandlist.txt";
-				globalOutputStream() << "Writing the command list to " << path.c_str() << "\n";
 				class BuildCommandList : public CommandVisitor
 				{
-				TextFileOutputStream m_commandList;
 				ui::ListStore m_store;
 public:
-				BuildCommandList( const char* filename, ui::ListStore store ) : m_commandList( filename ), m_store( store ){
+				BuildCommandList( ui::ListStore store ) : m_store( store ){
 				}
 				void visit( const char* name, Accelerator& accelerator ){
 					StringOutputStream modifiers;
 					modifiers << accelerator;
 
 					m_store.append(0, name, 1, modifiers.c_str(), 2, false, 3, 800);
-
-					if ( !m_commandList.failed() ) {
-						int l = strlen( name );
-						m_commandList << name;
-						while ( l++ < 25 )
-							m_commandList << ' ';
-						m_commandList << modifiers.c_str() << '\n';
-					}
 				}
-				} visitor( path.c_str(), store );
+				} visitor( store );
 
 				GlobalShortcuts_foreach( visitor );
 			}
@@ -504,9 +499,19 @@ public:
 
 const char* const COMMANDS_VERSION = "1.0-gtk-accelnames";
 
-void SaveCommandMap( const char* path ){
+void DeleteOldCommandMap(){
+#if NETRADIANT_CUSTOM_FULLY_MERGED
+// To enable when NetRadiant and NetRadiant-custom are fully merged together.
+	StringOutputStream path( 256 );
+	path << SettingsPath_get() << g_pGameDescription->mGameFile.c_str() << '/';
+	path << "shortcuts.ini";
+	unlink( path.c_str() );
+#endif
+}
+
+void SaveCommandMap(){
 	StringOutputStream strINI( 256 );
-	strINI << path << "shortcuts.ini";
+	strINI << SettingsPath_get() << "shortcuts.ini";
 
 	TextFileOutputStream file( strINI.c_str() );
 	if ( !file.failed() ) {
@@ -530,6 +535,8 @@ public:
 		} visitor( file );
 		GlobalShortcuts_foreach( visitor );
 	}
+	
+	DeleteOldCommandMap();
 }
 
 const char* stringrange_find( const char* first, const char* last, char c ){
@@ -573,9 +580,9 @@ std::size_t count() const {
 }
 };
 
-void LoadCommandMap( const char* path ){
+void LoadCommandMap(){
 	StringOutputStream strINI( 256 );
-	strINI << path << "shortcuts.ini";
+	strINI << SettingsPath_get() << "shortcuts.ini";
 
 	FILE* f = fopen( strINI.c_str(), "r" );
 	if ( f != 0 ) {
