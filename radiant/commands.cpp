@@ -497,7 +497,7 @@ public:
 
 #include "profile/profile.h"
 
-const char* const COMMANDS_VERSION = "1.0-gtk-accelnames";
+const char* const COMMANDS_VERSION = "1.1-gtk-accelnames";
 
 void DeleteOldCommandMap(){
 #if NETRADIANT_CUSTOM_FULLY_MERGED
