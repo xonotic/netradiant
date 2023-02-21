@@ -45,7 +45,7 @@ cat <<\EOF
 # Other gamepacks have better version available.
 
 # JediAcademy   no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JAPack/branches/1.5/
-# JediOutcast   no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JK2Pack/branches/1.5/
+# JediOutcast   no   proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JK2Pack/trunk/
 # Kingpin       no   unknown      zip     http://download.kingpin.info/kingpin/editing/maps/map_editors/NetRadiant/addon/Kingpinpack.zip
 # Neverball     no   proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/NeverballPack.zip
 # OpenArena     no   unknown      zip     http://ingar.intranifty.net/files/netradiant/gamepacks/OpenArenaPack.zip
@@ -68,12 +68,14 @@ DarkPlaces      yes  GPL          svn     svn://svn.icculus.org/gtkradiant-gamep
 Doom3           yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Doom3Pack/branches/1.5/
 ET              yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/ETPack/branches/1.5/
 Heretic2        yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Her2Pack/branches/1.5/
+JediAcademy     yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/jediacademy-mapeditor-support.git
+JediOutcast     yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/jedioutcast-mapeditor-support.git
 Kingpin         yes  unknown      git     https://gitlab.com/netradiant/gamepacks/kingpin-mapeditor-support.git
 Neverball       yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/neverball-mapeditor-support.git
 Nexuiz          yes  GPL          gitdir  git://git.icculus.org/divverent/nexuiz.git misc/netradiant-NexuizPack master
 OpenArena       yes  GPL          git     https://github.com/NeonKnightOA/oagamepack.git
 Osirion         yes  GPL          zip     http://ingar.intranifty.net/files/netradiant/gamepacks/OsirionPack.zip
-Prey            yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/PreyPack/trunk/
+Prey            yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/prey-mapeditor-support.git
 Q3Rally         yes  proprietary  svn     https://svn.code.sf.net/p/q3rallysa/code/tools/radiant-config/radiant15-netradiant/
 Quake2          yes  proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Q2Pack/branches/1.5/
 Quake3          yes  proprietary  git     https://gitlab.com/netradiant/gamepacks/quake3-mapeditor-support.git
@@ -454,24 +456,18 @@ installPack () {
 
 	# Some per-game workaround for malformed gamepack
 	case "${name}" in
-		'JediAcademy')
-			pack="${pack}/Tools"
-			;;
-		'Prey'|'Q3')
-			pack="${pack}/tools"
-			;;
 		'Wolf')
 			pack="${pack}/bin"
 			;;
 	esac
 
+	# Game packs built with mkeditorpacks
 	if [ -d "${download_dir}/${pack}/build/netradiant" ]
 	then
-		# mkeditorpacks-based gamepack
 		pack="${pack}/build/netradiant"
 	elif [ -d "${download_dir}/${pack}/netradiant" ]
+	# Other known layout
 	then
-		# other layout
 		pack="${pack}/netradiant"
 	fi
 
