@@ -1,6 +1,7 @@
 #ifndef INCLUDED_UILIB_H
 #define INCLUDED_UILIB_H
 
+#include <cstdint>
 #include <string>
 #include <glib-object.h>
 
