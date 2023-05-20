@@ -384,8 +384,15 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 							textureColor[ 3 ] = 255;
 						}
 						avgcolor = ( textureColor[ 0 ] + textureColor[ 1 ] + textureColor[ 2 ] ) / 3;
-						for ( l = 0; l < 3; l++ ){
+						for ( i = 0; i < 3; i++ ){
+							color[ i ] = ( ( textureColor[ i ] * bounceColorRatio + ( avgcolor * ( 1 - bounceColorRatio ) ) ) / 255 ) * ( radLuxel[ i ] / 255 );
+						/*
+						   Workaround for https://gitlab.com/xonotic/netradiant/-/issues/182
+						   This loop normally uses the l iterator instead of i:
+						   for ( l = 0; l < 3; l++ ){
 							color[ l ] = ( ( textureColor[ l ] * bounceColorRatio + ( avgcolor * ( 1 - bounceColorRatio ) ) ) / 255 ) * ( radLuxel[ l ] / 255 );
+							}
+						*/
 						//Sys_Printf( "%i %i %i %i %i \n", (int) textureColor[ 0 ], (int) textureColor[ 1 ], (int) textureColor[ 2 ], (int) avgcolor, (int) color[ i ] );
 						}
 						AddPointToBounds( color, mins, maxs );
