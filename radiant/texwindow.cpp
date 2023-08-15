@@ -1898,6 +1898,8 @@ ui::MenuItem TextureBrowser_constructViewMenu( ui::Menu menu ){
 	}
 
 	create_check_menu_item_with_mnemonic( menu, "Hide _Unused", "ShowInUse" );
+	create_menu_item_with_mnemonic( menu, "Show All", "ShowAllTextures" );
+
 	if ( string_empty( g_pGameDescription->getKeyValue( "show_wads" ) ) ) {
 		create_check_menu_item_with_mnemonic( menu, "Hide Image Missing", "FilterMissing" );
 	}
