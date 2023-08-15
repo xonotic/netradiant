@@ -26,10 +26,17 @@ add_subdirectory(imagehl)
 add_subdirectory(imagepng)
 add_subdirectory(imageq2)
 add_subdirectory(imagewebp)
-add_subdirectory(iqmmodel)
+
+if("${RADIANT_IQM_PLUGIN}" STREQUAL "iqmmodel")
+    add_subdirectory(iqmmodel)
+endif()
+
 add_subdirectory(mapq3)
 add_subdirectory(mapxml)
 add_subdirectory(md3model)
+
+# picomodel: md3, obj, ase, (optional) iqm
 add_subdirectory(model)
+
 add_subdirectory(shaders)
 add_subdirectory(vfspk3)

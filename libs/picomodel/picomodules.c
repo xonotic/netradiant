@@ -48,7 +48,9 @@ extern const picoModule_t picoModuleMD2;
 extern const picoModule_t picoModuleFM;
 extern const picoModule_t picoModuleLWO;
 extern const picoModule_t picoModuleTerrain;
+#if defined(RADIANT_IQM_PLUGIN_picomodel)
 extern const picoModule_t picoModuleIQM;
+#endif // defined(RADIANT_IQM_PLUGIN_picomodel)
 
 
 
@@ -65,7 +67,9 @@ const picoModule_t *picoModules[] =
 	&picoModuleLWO,     /* lightwave object */
 	&picoModuleTerrain, /* picoterrain object */
 	&picoModuleOBJ,     /* wavefront object */
+#if defined(RADIANT_IQM_PLUGIN_picomodel)
 	&picoModuleIQM,     /* interquake model */
+#endif // defined(RADIANT_IQM_PLUGIN_picomodel)
 	NULL                /* arnold */
 };
 

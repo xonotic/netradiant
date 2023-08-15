@@ -72,6 +72,7 @@ void Sys_EnableLogFile( bool enable ){
 			time( &localtime );
 			globalOutputStream() << "Today is: " << ctime( &localtime )
 								 << "This is " RADIANT_NAME " " RADIANT_VERSION " compiled " __DATE__ "\n" RADIANT_ABOUTMSG "\n";
+			globalOutputStream() << "IQM plugin: " RADIANT_IQM_PLUGIN "\n";
 		}
 		else{
 			ui::alert( ui::root, "Failed to create log file, check write permissions in " RADIANT_NAME " directory.\n",

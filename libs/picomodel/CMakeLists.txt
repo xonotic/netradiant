@@ -1,3 +1,7 @@
+if("${RADIANT_IQM_PLUGIN}" STREQUAL "picomodel")
+        set(PICO_IQM_FILE "pm_iqm.c")
+endif()
+
 add_library(picomodel STATIC
         lwo/clip.c
         lwo/envelope.c
@@ -16,7 +20,7 @@ add_library(picomodel STATIC
         pm_3ds.c
         pm_ase.c
         pm_fm.c pm_fm.h
-        pm_iqm.c
+        ${PICO_IQM_FILE}
         pm_lwo.c
         pm_md2.c
         pm_md3.c

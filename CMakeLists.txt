@@ -267,6 +267,22 @@ if (BUILD_RADIANT)
             add_definitions(-DWORKAROUND_MACOS_GTK2_LAGGYPOINTER=1)
         endif ()
     endif()
+
+    # Should be set here because the define is used in libs/
+    set(RADIANT_IQM_PLUGIN_HELP "IQM Plugin used by NetRadiant (iqmmodel, picomodel)")
+    set(RADIANT_IQM_PLUGIN "" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}")
+    if("${RADIANT_IQM_PLUGIN}" STREQUAL "iqmmodel")
+    elseif("${RADIANT_IQM_PLUGIN}" STREQUAL "picomodel")
+    else()
+        if(APPLE)
+            # The picomodel iqm library is buggy on recent macOS
+            set(RADIANT_IQM_PLUGIN "iqmmodel" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}" FORCE)
+        else()
+            set(RADIANT_IQM_PLUGIN "picomodel" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}" FORCE)
+        endif()
+    endif()
+    add_definitions(-DRADIANT_IQM_PLUGIN_${RADIANT_IQM_PLUGIN}=1)
+    add_definitions(-DRADIANT_IQM_PLUGIN="${RADIANT_IQM_PLUGIN}")
 endif ()
 
 #-----------------------------------------------------------------------
