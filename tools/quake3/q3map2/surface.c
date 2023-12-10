@@ -2315,10 +2315,6 @@ static int FilterTrianglesIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 		refs += FilterWindingIntoTree_r( w, ds, tree->headnode );
 	}
 
-	/* use point filtering as well */
-	for ( i = 0; i < ds->numVerts; i++ )
-		refs += FilterPointIntoTree_r( ds->verts[ i ].xyz, ds, tree->headnode );
-
 	return refs;
 }
 
@@ -2360,13 +2356,6 @@ static int FilterFoliageIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 			VectorAdd( instance->xyz, ds->verts[ ds->indexes[ i + 1 ] ].xyz, w->p[ 1 ] );
 			VectorAdd( instance->xyz, ds->verts[ ds->indexes[ i + 2 ] ].xyz, w->p[ 2 ] );
 			refs += FilterWindingIntoTree_r( w, ds, tree->headnode );
-		}
-
-		/* use point filtering as well */
-		for ( i = 0; i < ( ds->numVerts - ds->numFoliageInstances ); i++ )
-		{
-			VectorAdd( instance->xyz, ds->verts[ i ].xyz, xyz );
-			refs += FilterPointIntoTree_r( xyz, ds, tree->headnode );
 		}
 	}
 
