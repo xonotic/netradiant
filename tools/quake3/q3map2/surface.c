@@ -2062,10 +2062,11 @@ int FilterPointIntoTree_r( vec3_t point, mapDrawSurface_t *ds, node_t *node ){
  */
 
 int FilterPointConvexHullIntoTree_r( vec3_t **points, int npoints, mapDrawSurface_t *ds, node_t *node ){
-	float d, dmin, dmax;
 	plane_t         *plane;
+	float d, dmin, dmax;
 	int refs = 0;
 	int i;
+	qboolean infront, behind;
 
 	if ( !points ) {
 		return 0;
@@ -2090,11 +2091,17 @@ int FilterPointConvexHullIntoTree_r( vec3_t **points, int npoints, mapDrawSurfac
 
 		/* filter by this plane */
 		refs = 0;
-		if ( dmax >= -ON_EPSILON ) {
+		infront = dmax > ON_EPSILON,
+			behind = dmin < -ON_EPSILON;
+		if ( !infront && !behind ) {
+			/* coplanar patch */
 			refs += FilterPointConvexHullIntoTree_r( points, npoints, ds, node->children[ 0 ] );
-		}
-		if ( dmin <= ON_EPSILON ) {
 			refs += FilterPointConvexHullIntoTree_r( points, npoints, ds, node->children[ 1 ] );
+		} else {
+			if ( infront ) /* > PLANESIDE_EPSILON? */
+				refs += FilterPointConvexHullIntoTree_r( points, npoints, ds, node->children[ 0 ] );
+			if ( behind ) /* < -PLANESIDE_EPSILON? */
+				refs += FilterPointConvexHullIntoTree_r( points, npoints, ds, node->children[ 1 ] );
 		}
 
 		/* return */
