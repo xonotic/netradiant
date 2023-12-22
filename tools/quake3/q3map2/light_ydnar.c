@@ -1258,6 +1258,7 @@ void MapRawLightmap( int rawLightmapNum ){
 	   ----------------------------------------------------------------- */
 
 	/* walk the luxels */
+	/* FIXME: superSample is int, no need in floor() */
 	radius = floor( superSample / 2 );
 	radius = radius > 0 ? radius : 1.0f;
 	radius += 1.0f;

@@ -263,7 +263,7 @@ qboolean RadSampleImage( byte *pixels, int width, int height, float st[ 2 ], flo
 #define SAMPLE_GRANULARITY  6
 
 static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm, shaderInfo_t *si, radWinding_t *rw, vec3_t average, vec3_t gradient, int *style ){
-	int i, j, k, l, v, x, y, samples, avgcolor;
+	int i, j, k, l, v, x, y, samples, avgcolor, f_superSample;
 	vec3_t color, mins, maxs;
 	vec4_t textureColor;
 	float alpha, alphaI, bf;
@@ -316,6 +316,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 	/* sample lightmap */
 	else
 	{
+		f_superSample = (float)superSample;
 		/* fracture the winding into a fan (including degenerate tris) */
 		for ( v = 1; v < ( rw->numVerts - 1 ) && samples < MAX_SAMPLES; v++ )
 		{
@@ -335,7 +336,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						blend[ 0 ] = i;
 						blend[ 1 ] = j;
 						blend[ 2 ] = k;
-						bf = ( 1.0 / ( blend[ 0 ] + blend[ 1 ] + blend[ 2 ] ) );
+						bf = ( 1.0f / ( blend[ 0 ] + blend[ 1 ] + blend[ 2 ] ) );
 						VectorScale( blend, bf, blend );
 
 						/* create a blended sample */
@@ -352,8 +353,10 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						}
 
 						/* get lightmap xy coords */
-						x = lightmap[ 0 ] / (float) superSample;
-						y = lightmap[ 1 ] / (float) superSample;
+						/* xy = clamp(lightmap/superSample, 0, lm - 1)*/
+						x = lightmap[ 0 ] / f_superSample;
+						y = lightmap[ 1 ] / f_superSample;
+
 						if ( x < 0 ) {
 							x = 0;
 						}
