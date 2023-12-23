@@ -149,7 +149,7 @@ static int _md3_canload( PM_PARAMS_CANLOAD ){
 	md3 = (const md3_t*) buffer;
 
 	/* check md3 magic */
-	if ( *( (const int*) md3->magic ) != *( (const int*) MD3_MAGIC ) ) {
+	if ( memcmp( md3->magic, MD3_MAGIC, 4 ) != 0 ) {
 		return PICO_PMV_ERROR_IDENT;
 	}
 
@@ -199,7 +199,7 @@ static picoModel_t *_md3_load( PM_PARAMS_LOAD ){
 	md3 = (md3_t*) bb;
 
 	/* check ident and version */
-	if ( *( (int*) md3->magic ) != *( (int*) MD3_MAGIC ) || _pico_little_long( md3->version ) != MD3_VERSION ) {
+	if ( memcmp( md3->magic, MD3_MAGIC, 4 ) != 0 || _pico_little_long( md3->version ) != MD3_VERSION ) {
 		/* not an md3 file (todo: set error) */
 		_pico_free( bb0 );
 		return NULL;

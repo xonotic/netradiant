@@ -459,7 +459,7 @@ void LoadIBSPFile( const char *filename ){
 	SwapBlock( (int*) ( (byte*) header + sizeof( int ) ), sizeof( *header ) - sizeof( int ) );
 
 	/* make sure it matches the format we're trying to load */
-	if ( force == qfalse && *( (int*) header->ident ) != *( (int*) game->bspIdent ) ) {
+	if ( force == qfalse && memcmp( header->ident, game->bspIdent, 4 ) != 0 ) {
 		Error( "%s is not a %s file", filename, game->bspIdent );
 	}
 	if ( force == qfalse && header->version != game->bspVersion ) {
@@ -568,7 +568,7 @@ void WriteIBSPFile( const char *filename ){
 	//%	Swapfile();
 
 	/* set up header */
-	*( (int*) (bspHeader_t*) header->ident ) = *( (int*) game->bspIdent );
+	memcpy(header->ident, game->bspIdent, 4);
 	header->version = LittleLong( game->bspVersion );
 
 	/* write initial header */
@@ -577,7 +577,7 @@ void WriteIBSPFile( const char *filename ){
 
 	/* add marker lump */
 	const char marker[] = "I LOVE MY Q3MAP2";
-	AddLump( file, header, 0, marker, strlen( marker ) + 1 );
+	AddLump( file, (bspHeader_t*) header, 0, marker, strlen( marker ) + 1 );
 
 	/* add lumps */
 	AddLump( file, (bspHeader_t*) header, LUMP_SHADERS, bspShaders, numBSPShaders * sizeof( bspShader_t ) );
