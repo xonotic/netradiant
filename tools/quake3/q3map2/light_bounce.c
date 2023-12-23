@@ -268,7 +268,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 	vec4_t textureColor;
 	float alpha, alphaI, bf;
 	vec3_t blend;
-	float st[ 2 ], lightmap[ 2 ], *radLuxel;
+	float st[ 2 ], lightmap[ 2 ];
+	const float *radLuxel;
 	radVert_t   *rv[ 3 ];
 
 	if (!bouncing)
@@ -336,12 +337,14 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						blend[ 0 ] = i;
 						blend[ 1 ] = j;
 						blend[ 2 ] = k;
+						/* Make blend inner sum = 1 */
 						bf = ( 1.0f / ( blend[ 0 ] + blend[ 1 ] + blend[ 2 ] ) );
 						VectorScale( blend, bf, blend );
 
 						/* create a blended sample */
 						st[ 0 ] = st[ 1 ] = 0.0f;
 						lightmap[ 0 ] = lightmap[ 1 ] = 0.0f;
+						/* alpha and alphaI don't seem to be used anywhere*/
 						alphaI = 0.0f;
 						for ( l = 0; l < 3; l++ )
 						{
@@ -374,7 +377,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						radLuxel = RAD_LUXEL( lightmapNum, x, y );
 
 						/* ignore unlit/unused luxels */
-						if ( radLuxel[ 0 ] < 0.0f ) {
+						if ( radLuxel[ 0 ] <= 0.0f || radLuxel[ 1 ] <= 0.0f || radLuxel[ 2 ] <= 0.0f ) {
+							/* FIXME: not really sure which element of radLuxel should be checked */
 							continue;
 						}
 
@@ -387,16 +391,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 							textureColor[ 3 ] = 255;
 						}
 						avgcolor = ( textureColor[ 0 ] + textureColor[ 1 ] + textureColor[ 2 ] ) / 3;
-						for ( i = 0; i < 3; i++ ){
-							color[ i ] = ( ( textureColor[ i ] * bounceColorRatio + ( avgcolor * ( 1 - bounceColorRatio ) ) ) / 255 ) * ( radLuxel[ i ] / 255 );
-						/*
-						   Workaround for https://gitlab.com/xonotic/netradiant/-/issues/182
-						   This loop normally uses the l iterator instead of i:
-						   for ( l = 0; l < 3; l++ ){
+						for ( l = 0; l < 3; l++ ){
 							color[ l ] = ( ( textureColor[ l ] * bounceColorRatio + ( avgcolor * ( 1 - bounceColorRatio ) ) ) / 255 ) * ( radLuxel[ l ] / 255 );
-							}
-						*/
-						//Sys_Printf( "%i %i %i %i %i \n", (int) textureColor[ 0 ], (int) textureColor[ 1 ], (int) textureColor[ 2 ], (int) avgcolor, (int) color[ i ] );
 						}
 						AddPointToBounds( color, mins, maxs );
 						VectorAdd( average, color, average );

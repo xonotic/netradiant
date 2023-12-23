@@ -829,6 +829,12 @@ static qboolean MapTriangle( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert
 		return qfalse;
 	}
 
+	/* prevent division by zero */
+	if ( plane[ lm->axisNum ] == 0 ) {
+		Sys_FPrintf( SYS_WRN, "WARNING: plane[lm->axisNum] == 0\n" );
+		return qfalse;
+	}
+
 	/* check to see if we need to calculate texture->world tangent vectors */
 	if ( info->si->normalImage != NULL && CalcTangentVectors( 3, dv, stvStatic, ttvStatic ) ) {
 		stv = stvStatic;
@@ -997,6 +1003,12 @@ static qboolean MapQuad( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert_t *
 
 	/* otherwise make one from the points */
 	else if ( PlaneFromPoints( plane, dv[ 0 ]->xyz, dv[ 1 ]->xyz, dv[ 2 ]->xyz ) == qfalse ) {
+		return qfalse;
+	}
+
+	/* prevent division by zero */
+	if ( plane[ lm->axisNum ] == 0 ) {
+		Sys_FPrintf( SYS_WRN, "WARNING: plane[lm->axisNum] == 0\n" );
 		return qfalse;
 	}
 
@@ -3670,6 +3682,7 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag ){
 				/* clear light envelope */
 				light->envelope = 0;
 
+				/* FIXME: radius may be undefined */
 				/* handle area lights */
 				if ( exactPointToPolygon && light->type == EMIT_AREA && light->w != NULL ) {
 					light->envelope = MAX_WORLD_COORD * 8.0f;
