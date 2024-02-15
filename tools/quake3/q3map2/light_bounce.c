@@ -263,12 +263,13 @@ qboolean RadSampleImage( byte *pixels, int width, int height, float st[ 2 ], flo
 #define SAMPLE_GRANULARITY  6
 
 static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm, shaderInfo_t *si, radWinding_t *rw, vec3_t average, vec3_t gradient, int *style ){
-	int i, j, k, l, v, x, y, samples, avgcolor;
+	int i, j, k, l, v, x, y, samples, avgcolor, f_superSample;
 	vec3_t color, mins, maxs;
 	vec4_t textureColor;
 	float alpha, alphaI, bf;
 	vec3_t blend;
-	float st[ 2 ], lightmap[ 2 ], *radLuxel;
+	float st[ 2 ], lightmap[ 2 ];
+	const float *radLuxel;
 	radVert_t   *rv[ 3 ];
 
 	if (!bouncing)
@@ -316,6 +317,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 	/* sample lightmap */
 	else
 	{
+		f_superSample = (float)superSample;
 		/* fracture the winding into a fan (including degenerate tris) */
 		for ( v = 1; v < ( rw->numVerts - 1 ) && samples < MAX_SAMPLES; v++ )
 		{
@@ -335,12 +337,14 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						blend[ 0 ] = i;
 						blend[ 1 ] = j;
 						blend[ 2 ] = k;
-						bf = ( 1.0 / ( blend[ 0 ] + blend[ 1 ] + blend[ 2 ] ) );
+						/* Make blend inner sum = 1 */
+						bf = ( 1.0f / ( blend[ 0 ] + blend[ 1 ] + blend[ 2 ] ) );
 						VectorScale( blend, bf, blend );
 
 						/* create a blended sample */
 						st[ 0 ] = st[ 1 ] = 0.0f;
 						lightmap[ 0 ] = lightmap[ 1 ] = 0.0f;
+						/* alpha and alphaI don't seem to be used anywhere*/
 						alphaI = 0.0f;
 						for ( l = 0; l < 3; l++ )
 						{
@@ -352,8 +356,10 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						}
 
 						/* get lightmap xy coords */
-						x = lightmap[ 0 ] / (float) superSample;
-						y = lightmap[ 1 ] / (float) superSample;
+						/* xy = clamp(lightmap/superSample, 0, lm - 1)*/
+						x = lightmap[ 0 ] / f_superSample;
+						y = lightmap[ 1 ] / f_superSample;
+
 						if ( x < 0 ) {
 							x = 0;
 						}
@@ -371,7 +377,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						radLuxel = RAD_LUXEL( lightmapNum, x, y );
 
 						/* ignore unlit/unused luxels */
-						if ( radLuxel[ 0 ] < 0.0f ) {
+						if ( radLuxel[ 0 ] <= 0.0f || radLuxel[ 1 ] <= 0.0f || radLuxel[ 2 ] <= 0.0f ) {
+							/* FIXME: not really sure which element of radLuxel should be checked */
 							continue;
 						}
 
@@ -384,16 +391,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 							textureColor[ 3 ] = 255;
 						}
 						avgcolor = ( textureColor[ 0 ] + textureColor[ 1 ] + textureColor[ 2 ] ) / 3;
-						for ( i = 0; i < 3; i++ ){
-							color[ i ] = ( ( textureColor[ i ] * bounceColorRatio + ( avgcolor * ( 1 - bounceColorRatio ) ) ) / 255 ) * ( radLuxel[ i ] / 255 );
-						/*
-						   Workaround for https://gitlab.com/xonotic/netradiant/-/issues/182
-						   This loop normally uses the l iterator instead of i:
-						   for ( l = 0; l < 3; l++ ){
+						for ( l = 0; l < 3; l++ ){
 							color[ l ] = ( ( textureColor[ l ] * bounceColorRatio + ( avgcolor * ( 1 - bounceColorRatio ) ) ) / 255 ) * ( radLuxel[ l ] / 255 );
-							}
-						*/
-						//Sys_Printf( "%i %i %i %i %i \n", (int) textureColor[ 0 ], (int) textureColor[ 1 ], (int) textureColor[ 2 ], (int) avgcolor, (int) color[ i ] );
 						}
 						AddPointToBounds( color, mins, maxs );
 						VectorAdd( average, color, average );

@@ -1874,11 +1874,12 @@ void SetupGrid( void ){
 	/* clear lightgrid */
 	for ( i = 0; i < numRawGridPoints; i++ )
 	{
-		VectorCopy( ambientColor, rawGridPoints[ i ].ambient[ j ] );
+		VectorCopy( ambientColor, rawGridPoints[ i ].ambient[ 0 ] );
 		rawGridPoints[ i ].styles[ 0 ] = LS_NORMAL;
 		bspGridPoints[ i ].styles[ 0 ] = LS_NORMAL;
 		for ( j = 1; j < MAX_LIGHTMAPS; j++ )
 		{
+			VectorCopy( ambientColor, rawGridPoints[ i ].ambient[ j ] );
 			rawGridPoints[ i ].styles[ j ] = LS_NONE;
 			bspGridPoints[ i ].styles[ j ] = LS_NONE;
 		}
