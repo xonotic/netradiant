@@ -1043,9 +1043,7 @@ void DoMapInfo(){
 
 		for ( EntityBreakdown::iterator i = entitymap.begin(); i != entitymap.end(); ++i )
 		{
-			char tmp[16];
-			sprintf( tmp, "%u", Unsigned( ( *i ).second ) );
-			EntityBreakdownWalker.append(0, (*i).first.c_str(), 1, tmp);
+			EntityBreakdownWalker.append(0, (*i).first.c_str(), 1, Unsigned( ( *i ).second ));
 		}
 	}
 
