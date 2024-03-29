@@ -106,9 +106,34 @@ inline void name_write( char* buffer, name_t name ){
 
 inline name_t name_read( const char* name ){
 	const char* end = name + strlen( name );
+
+#if GDEF_OS_MACOS
+	/* HACK: Apple shipped a clang built for macOS with an optimization enabled
+	that is not available on macOS. This compiler error may then be faced:
+
+	  ld: Undefined symbols:
+	    _memrchr, referenced from:
+	        name_read(char const*) in map.cpp.o
+
+	This is a compiler error:
+
+	> On Mac OSX (macOS version 12.4, sdk version 12.1) llvm can replace call
+	> to strrchr() with call to memrchr() when string length is known at
+	> compile time. This results in link error, because memrchr is not present
+	> in libSystem.
+	> -- https://github.com/llvm/llvm-project/issues/62254
+
+	We workaround this by making the string length not known at build time
+	on macOS to avoid triggering the unavailable compiler optimization. */
+
+	const char* volatile numbers = "1234567890";
+#else
+	const char* numbers = "1234567890";
+#endif
+
 	for ( const char* p = end; end != name; --p )
 	{
-		if ( strrchr( "1234567890", *p ) == NULL ) {
+		if ( strrchr( numbers, *p ) == NULL ) {
 			break;
 		}
 		end = p;
