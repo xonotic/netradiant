@@ -145,7 +145,7 @@ For supported system, bundling dependencies can be done this way:
 ./easy-builder -DBUNDLE_LIBRARIES=ON
 ```
 
-Note: always do bundling on a clean system without unrelated software installed.
+Note: Always do bundling on a clean and fresh system without unrelated software installed.
 
 
 ## Advanced compilation
@@ -160,6 +160,7 @@ This project uses the usual CMake workflow:
 ```sh
 cmake -G "Unix Makefiles" -S. -Bbuild -DCMAKE_BUILD_TYPE=Debug
 cmake --build build -- -j$(nproc)
+cmake --install build
 ```
 
 
@@ -168,6 +169,7 @@ cmake --build build -- -j$(nproc)
 ```sh
 cmake -G "Unix Makefiles" -S. -Bbuild -DCMAKE_BUILD_TYPE=Release
 cmake --build build -- -j$(nproc)
+cmake --install build
 ```
 
 Note: macOS users need to build built-in GtkGLExt before building NetRadiant:
@@ -177,6 +179,7 @@ cmake -G "Unix Makefiles" -S. -Bbuild -DCMAKE_BUILD_TYPE=Release
 cmake --build build -- -j$(nproc) builtins
 cmake -G "Unix Makefiles" -S. -Bbuild
 cmake --build build -- -j$(nproc)
+cmake --install build
 ```
 
 
@@ -186,12 +189,14 @@ The initial build will download the gamepacks and build NetRadiant and tools. If
 
 ```sh
 cmake --build build --target binaries -- -j$(nproc)
+cmake --install build
 ```
 
 You should still periodically update gamepacks:
 
 ```sh
 cmake --build build --target gamepacks
+cmake --install build
 ```
 
 
@@ -259,6 +264,10 @@ Options:
 Target:
 
 * `install` Install files.
+
+```sh
+cmake --install build
+```
 
 
 ## Additonnal information
