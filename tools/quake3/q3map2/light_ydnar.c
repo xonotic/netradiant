@@ -1006,12 +1006,6 @@ static qboolean MapQuad( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert_t *
 		return qfalse;
 	}
 
-	/* prevent division by zero */
-	if ( plane[ lm->axisNum ] == 0 ) {
-		Sys_FPrintf( SYS_WRN, "WARNING: plane[lm->axisNum] == 0\n" );
-		return qfalse;
-	}
-
 	/* 4th point must fall on the plane */
 	dist = DotProduct( plane, dv[ 3 ]->xyz ) - plane[ 3 ];
 	if ( fabs( dist ) > QUAD_PLANAR_EPSILON ) {
