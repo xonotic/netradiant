@@ -270,7 +270,7 @@ cmake --install build
 ```
 
 
-## Additonnal information
+## Additional information
 
 ### About Crunch
 
