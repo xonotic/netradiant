@@ -11,7 +11,6 @@ radiant_tool(q2map
     common/inout.c common/inout.h
     common/l3dslib.c common/l3dslib.h
     common/lbmlib.c common/lbmlib.h
-    common/mathlib.c common/mathlib.h
     common/md4.c common/md4.h
     common/path_init.c
     common/qfiles.h
@@ -53,6 +52,7 @@ target_compile_definitions(q2map
 target_link_libraries(q2map
     ${LIBXML2_LIBRARIES}
     l_net
+    mathlib
 )
 
 radiant_tool(qdata3
@@ -63,7 +63,6 @@ radiant_tool(qdata3
     common/inout.c common/inout.h
     common/l3dslib.c common/l3dslib.h
     common/lbmlib.c common/lbmlib.h
-    common/mathlib.c common/mathlib.h
     common/md4.c common/md4.h
     common/path_init.c
     common/qfiles.h
@@ -88,6 +87,7 @@ target_compile_definitions(qdata3
 target_link_libraries(qdata3
     ${LIBXML2_LIBRARIES}
     l_net
+    mathlib
 )
 
 add_custom_target(quake2)
