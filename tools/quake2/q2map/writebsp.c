@@ -129,8 +129,8 @@ void EmitLeaf( node_t *node ){
 	//
 	// write bounding box info
 	//
-	VectorCopy( (short) node->mins, leaf_p->mins );
-	VectorCopy( (short) node->maxs, leaf_p->maxs );
+	VectorCopy( node->mins, leaf_p->mins );
+	VectorCopy( node->maxs, leaf_p->maxs );
 
 	//
 	// write the leafbrushes
@@ -247,8 +247,8 @@ int EmitDrawNode_r( node_t *node ){
 	n = &dnodes[numnodes];
 	numnodes++;
 
-	VectorCopy( (short) node->mins, n->mins );
-	VectorCopy( (short) node->maxs, n->maxs );
+	VectorCopy( node->mins, n->mins );
+	VectorCopy( node->maxs, n->maxs );
 
 	planeused[node->planenum]++;
 	planeused[node->planenum ^ 1]++;
