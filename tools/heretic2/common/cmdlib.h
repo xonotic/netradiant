@@ -63,13 +63,7 @@
 #define MAX_OS_PATH     1024
 #endif
 #define MEM_BLOCKSIZE 4096
-/*
-   extern	qboolean verbose;
-   #define SYS_VRB 0 // verbose support (on/off)
-   #define SYS_STD 1 // standard print level
-   #define SYS_WRN 2 // warnings
-   #define SYS_ERR 3 // error
- */
+
 // the dec offsetof macro doesnt work very well...
 #define myoffsetof( type,identifier ) ( (size_t)& ( (type *)0 )->identifier )
 
@@ -134,11 +128,7 @@ void    ExtractFileBase( const char *path, char *dest );
 void    ExtractFileExtension( const char *path, char *dest );
 
 int     ParseNum( const char *str );
-/*
-   void Sys_Printf (const char *text, ...);
-   void Sys_FPrintf (int flag, const char *text, ...);
-   void	Error( const char *error, ... );
- */
+
 short   BigShort( short l );
 short   LittleShort( short l );
 int     BigLong( int l );
