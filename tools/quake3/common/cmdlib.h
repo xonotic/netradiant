@@ -95,7 +95,6 @@ void ExpandWildcards( int *argc, char ***argv );
 
 double I_FloatTime( void );
 
-void    Error( const char *error, ... ) GDEF_ATTRIBUTE_NORETURN;
 int     CheckParm( const char *check );
 
 FILE    *SafeOpenWrite( const char *filename );
