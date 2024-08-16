@@ -162,12 +162,15 @@ void ProcessWorldModel( void ){
 	qboolean optimize;
 	xmlNodePtr polyline, leaknode;
 	char level[ 2 ];
+	char lineFilePath[ 1024 ];
 
 	e = &entities[entity_num];
 
 	brush_start = e->firstbrush;
 	brush_end = brush_start + e->numbrushes;
 	leaked = false;
+
+	sprintf( lineFilePath, "%s.lin", source );
 
 	//
 	// perform per-block operations
@@ -238,7 +241,7 @@ void ProcessWorldModel( void ){
 			Sys_FPrintf( SYS_NOXML, "**********************\n" );
 			Sys_FPrintf( SYS_NOXML, "******* leaked *******\n" );
 			Sys_FPrintf( SYS_NOXML, "**********************\n" );
-			polyline = LeakFile( tree );
+			polyline = LeakFile( tree, lineFilePath );
 			leaknode = xmlNewNode( NULL, "message" );
 			xmlNodeAddContent( leaknode, "MAP LEAKED\n" );
 			xmlAddChild( leaknode, polyline );
