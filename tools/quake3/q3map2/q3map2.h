@@ -2107,6 +2107,7 @@ Q_EXTERN float clipDepthGlobal Q_ASSIGN( 2.0f );
 Q_EXTERN qboolean lightmapTriangleCheck Q_ASSIGN( qfalse );
 Q_EXTERN qboolean lightmapExtraVisClusterNudge Q_ASSIGN( qfalse );
 Q_EXTERN qboolean lightmapFill Q_ASSIGN( qfalse );
+Q_EXTERN qboolean backsplashArea Q_ASSIGN( qfalse );
 Q_EXTERN int metaAdequateScore Q_ASSIGN( -1 );
 Q_EXTERN int metaGoodScore Q_ASSIGN( -1 );
 Q_EXTERN float metaMaxBBoxDistance Q_ASSIGN( -1 );
