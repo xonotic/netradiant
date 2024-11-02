@@ -3033,12 +3033,26 @@ int LightMain( int argc, char **argv ){
 			argv[ i ] = NULL;
 			Sys_Printf( "Use %s as surface file\n", surfaceFilePath );
 		}
+		else if ( !strcmp( argv[ i ], "-backsplashMode" ) )
+		{
+			backsplashMode = ( atoi( argv[ i + 1 ] ) != 0 );
+			i++;
+		}
 		/* unhandled args */
 		else
 		{
 			Sys_FPrintf( SYS_WRN, "WARNING: Unknown argument \"%s\"\n", argv[ i ] );
 		}
 
+	}
+
+	if ( backsplashMode )
+	{
+		Sys_Printf( "Using area light as backsplash light (experimental)\n" );
+	}
+	else
+	{
+		Sys_Printf( "Using point light as backsplash light\n" );
 	}
 
 	/* fix up falloff tolerance for sRGB */
