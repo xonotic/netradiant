@@ -1,14 +1,20 @@
-LICENSE ( last update: Wed Feb  8 17:16:40 CST 2006 )
+LICENSE ( last update: Wed April 24 2024 )
 -----------------------------------------------------
 
-There are 3 license types used throughout GtkRadiant source code.
+There are 6 license types used throughout NetRadiant source code.
 
-BSD - modified Berkeley Software Distribution license
+Apache - Apache License, version 2.0
+( see Apache at the root of the tree )
+BSD - 3-Clause Berkeley Software Distribution License
 ( each BSD licensed source file starts with the appropriate header )
-LGPL - GNU Lesser General Public License v2.1
-( see LGPL at the root of the tree )
-GPL - GNU General Public License
+GPL 2.0 - GNU General Public License version 2
 ( see GPL at the root of the tree )
+LGPL 2.1 - GNU Lesser General Public License version 2.1
+( see LGPL at the root of the tree )
+MIT - The MIT License
+( each MIT licensed source file starts with the appropriate header )
+Zlib - The zlib/libpng License
+( each Zlib licensed source file starts with the appropriate header )
 
 How do I check which license applies to a given part of the source code?
 
@@ -16,21 +22,39 @@ Each source file in the tree comes with a license header which explains what
 license applies. To sum up shortly:
 
 GPL: ( except some files contributed by Loki Software under BSD license )
-GtkRadiant Core
-GtkRadiant Modules
-GtkRadiant Libraries
+NetRadiant Core
+NetRadiant Modules
+NetRadiant Libraries
 Quake III Tools
 Quake II Tools
+Heretic2 Tools
 Background2D Plugin
+BrushExport Plugin
+Camera Plugin
 HydraToolz Plugin
+MeshTex Plugin
+ShaderPlug Plugin
+UFO:AI Plugin
+and more...
 
 BSD:
 JPEG Library
-MD5 Library
 DDS Library
 PicoModel Library
-PrtView Plugin
+Profile Library
+and more...
 
-LGPL
+LGPL:
 BobToolz Plugin
 GenSurf Plugin
+PrtView Plugin
+SunPlug Plugin
+
+Apache:
+Etclib Library
+
+MIT:
+TransformPath Library
+
+Zlib:
+MD5 Library
