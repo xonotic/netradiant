@@ -13,7 +13,6 @@ radiant_tool(h2data
     common/inout.c common/inout.h
     common/l3dslib.c common/l3dslib.h
     common/lbmlib.c common/lbmlib.h
-    common/mathlib.c common/mathlib.h
     common/md4.c common/md4.h
     common/path_init.c
     common/polylib.c common/polylib.h
@@ -63,6 +62,7 @@ target_compile_definitions(h2data
 target_link_libraries(h2data
     ${LIBXML2_LIBRARIES}
     l_net
+    mathlib
 )
 
 add_custom_target(heretic2)

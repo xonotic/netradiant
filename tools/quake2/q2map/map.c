@@ -65,7 +65,7 @@ int c_clipbrushes;
    PlaneTypeForNormal
    =================
  */
-int PlaneTypeForNormal( vec3_t normal ){
+int PlaneTypeForNormalQ2( vec3_t normal ){
 	vec_t ax, ay, az;
 
 // NOTE: should these have an epsilon around 1.0?
@@ -153,7 +153,7 @@ int CreateNewFloatPlane( vec3_t normal, vec_t dist ){
 	p = &mapplanes[nummapplanes];
 	VectorCopy( normal, p->normal );
 	p->dist = dist;
-	p->type = ( p + 1 )->type = PlaneTypeForNormal( p->normal );
+	p->type = ( p + 1 )->type = PlaneTypeForNormalQ2( p->normal );
 
 	VectorSubtract( vec3_origin, normal, ( p + 1 )->normal );
 	( p + 1 )->dist = -dist;
@@ -267,7 +267,7 @@ int     FindFloatPlane( vec3_t normal, vec_t dist ){
    PlaneFromPoints
    ================
  */
-int PlaneFromPoints( int *p0, int *p1, int *p2 ){
+int PlaneFromPointsI( int *p0, int *p1, int *p2 ){
 	vec3_t t1, t2, normal;
 	vec_t dist;
 
@@ -663,7 +663,7 @@ void ParseBrush( entity_t *mapent ){
 		//
 		// find the plane number
 		//
-		planenum = PlaneFromPoints( planepts[0], planepts[1], planepts[2] );
+		planenum = PlaneFromPointsI( planepts[0], planepts[1], planepts[2] );
 		if ( planenum == -1 ) {
 			Sys_Printf( "Entity %i, Brush %i: plane with no normal\n"
 						, b->entitynum, b->brushnum );
