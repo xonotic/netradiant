@@ -73,6 +73,25 @@ qboolean VectorIsOnAxialPlane( vec3_t v ){
 	return qfalse;
 }
 
+// Ported from NRC
+static void vector3_cross_C( const vec3_t v1, const vec3_t v2, vec3_t out ){
+	out[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	out[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	out[2] = v1[0] * v2[1] - v1[1] * v2[0];
+}
+
+// Ported from NRC
+static size_t vector3_min_abs_component_index_C( vec3_t v ){
+	const size_t mini = ( fabs( v[1] ) < fabs( v[0] ) )? 1 : 0;
+	return ( fabs( v[2] ) < fabs( v[mini] ) )? 2 : mini;
+}
+
+const vec3_t g_vector3_axis_x_C = { 1, 0, 0 };
+const vec3_t g_vector3_axis_y_C = { 0, 1, 0 };
+const vec3_t g_vector3_axis_z_C = { 0, 0, 1 };
+
+const vec3_t *g_vector3_axes_C[3] = { &g_vector3_axis_x_C, &g_vector3_axis_y_C, &g_vector3_axis_z_C };
+
 /*
    ================
    MakeNormalVectors
@@ -82,10 +101,16 @@ qboolean VectorIsOnAxialPlane( vec3_t v ){
    ================
  */
 void MakeNormalVectors( vec3_t forward, vec3_t right, vec3_t up ){
+#if 0
+	/* This is known to be buggy and to fuse some brushes,
+	see: https://gitlab.com/xonotic/netradiant/-/issues/195 */
+
 	float d;
 
 	// this rotate and negate guarantees a vector
 	// not colinear with the original
+	//! fails with forward( -0.577350259 -0.577350259 0.577350259 )
+	//! colinear right( 0.577350259 0.577350259 -0.577350259 )
 	right[1] = -forward[0];
 	right[2] = forward[1];
 	right[0] = forward[2];
@@ -94,6 +119,12 @@ void MakeNormalVectors( vec3_t forward, vec3_t right, vec3_t up ){
 	VectorMA( right, -d, forward, right );
 	VectorNormalize( right, right );
 	CrossProduct( right, forward, up );
+#else
+	const vec3_t *index = g_vector3_axes_C[ vector3_min_abs_component_index_C( forward ) ];
+	vector3_cross_C( *index, forward, right );
+	VectorNormalize( right, right );
+	CrossProduct( right, forward, up );
+#endif
 }
 
 vec_t VectorLength( const vec3_t v ){
