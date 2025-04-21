@@ -43,11 +43,13 @@ cat <<\EOF
 # Quake2World was renamed as Quetoo.
 # JediAcademy and JediOutcast gamepacks are unusable.
 # Other gamepacks have better version available.
+# Nexuiz has been deleted by icculus - reupload elsewhere welcome.
 
 # JediAcademy    proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JAPack/branches/1.5/
 # JediOutcast    proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/JK2Pack/trunk/
 # Kingpin        unknown      zip     http://download.kingpin.info/kingpin/editing/maps/map_editors/NetRadiant/addon/Kingpinpack.zip
 # Neverball      proprietary  zip     http://ingar.intranifty.net/files/netradiant/gamepacks/NeverballPack.zip
+# Nexuiz         GPL          gitdir  git://git.icculus.org/divverent/nexuiz.git misc/netradiant-NexuizPack master
 # OpenArena      unknown      zip     http://ingar.intranifty.net/files/netradiant/gamepacks/OpenArenaPack.zip
 # Quake2World    GPL          svn     svn://jdolan.dyndns.org/quake2world/trunk/gtkradiant
 # Quake3         proprietary  svn     svn://svn.icculus.org/gtkradiant-gamepacks/Q3Pack/trunk/ 29
@@ -72,7 +74,6 @@ JediAcademy     proprietary  git     https://gitlab.com/netradiant/gamepacks/jed
 JediOutcast     proprietary  git     https://gitlab.com/netradiant/gamepacks/jedioutcast-mapeditor-support.git
 Kingpin         unknown      git     https://gitlab.com/netradiant/gamepacks/kingpin-mapeditor-support.git
 Neverball       proprietary  git     https://gitlab.com/netradiant/gamepacks/neverball-mapeditor-support.git
-Nexuiz          GPL          gitdir  git://git.icculus.org/divverent/nexuiz.git misc/netradiant-NexuizPack master
 OpenArena       GPL          git     https://github.com/NeonKnightOA/oagamepack.git
 Osirion         GPL          zip     http://ingar.intranifty.net/files/netradiant/gamepacks/OsirionPack.zip
 Prey            proprietary  git     https://gitlab.com/netradiant/gamepacks/prey-mapeditor-support.git
