@@ -38,7 +38,7 @@ typedef int fixed16_t;
 typedef unsigned char byte;
 
 #ifndef __cplusplus
-typedef enum {false, true}  qboolean;
+typedef bool qboolean;
 #else
 typedef int qboolean;
 #endif

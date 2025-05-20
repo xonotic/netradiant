@@ -26,6 +26,7 @@
 
 #include "globaldefs.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -48,7 +49,7 @@
 
 #ifndef __BYTEBOOL__
   #define __BYTEBOOL__
-typedef enum {false, true} qboolean;
+typedef bool qboolean;
 typedef unsigned char byte;
 #endif
 
