@@ -181,6 +181,8 @@ void HelpLight()
 		{"-vlight [options] <filename.map>", "Deprecated alias for `-light -fast` ... filename.map"},
 		{"-approx <N>", "Vertex light approximation tolerance (never use in conjunction with deluxemapping)"},
 		{"-areascale <F, `-area` F>", "Scaling factor for area lights (surfacelight)"},
+		{"-backsplashpoint", "Use point light as backsplash light (default)"},
+		{"-backsplasharea", "Use area light as backsplash light"},
 		{"-border", "Add a red border to lightmaps for debugging"},
 		{"-bouncegrid", "Also compute radiosity on the light grid"},
 		{"-bounceonly", "Only compute radiosity"},

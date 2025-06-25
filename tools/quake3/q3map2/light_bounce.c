@@ -598,77 +598,84 @@ static void RadSubdivideDiffuseLight( int lightmapNum, bspDrawSurface_t *ds, raw
 		VectorMA( light->origin, 1.0f, light->normal, light->origin );
 		light->dist = DotProduct( light->origin, normal );
 
-#if 0
-		/* optionally create a point backsplash light */
-		if ( si->backsplashFraction > 0 ) {
-
-			/* allocate a new point light */
-			splash = safe_malloc0( sizeof( *splash ) );
-
-			splash->next = lights;
-			lights = splash;
-
-
-			/* set it up */
-			splash->flags = LIGHT_Q3A_DEFAULT;
-			splash->type = EMIT_POINT;
-			splash->photons = light->photons * si->backsplashFraction;
-
-			splash->fade = 1.0f;
-			splash->si = si;
-			VectorMA( light->origin, si->backsplashDistance, normal, splash->origin );
-			VectorCopy( si->color, splash->color );
-
-			splash->falloffTolerance = falloffTolerance;
-			splash->style = noStyles ? LS_NORMAL : light->style;
-
-			/* add to counts */
-			numPointLights++;
-		}
-#endif
-
-#if 1
-		/* optionally create area backsplash light */
-		//if ( original && si->backsplashFraction > 0 ) {
 		if ( si->backsplashFraction > 0 && !( si->compileFlags & C_SKY ) ) {
-			/* allocate a new area light */
-			splash = safe_malloc( sizeof( *splash ) );
-			memset( splash, 0, sizeof( *splash ) );
-			ThreadLock();
-			splash->next = lights;
-			lights = splash;
-			ThreadUnlock();
+			/* optionally create a backsplash light */
 
-			/* set it up */
-			splash->flags = LIGHT_AREA_DEFAULT;
-			splash->type = EMIT_AREA;
-			splash->photons = light->photons * 7.0f * si->backsplashFraction;
-			splash->add = light->add * 7.0f * si->backsplashFraction;
-			splash->fade = 1.0f;
-			splash->si = si;
-			VectorCopy( si->color, splash->color );
-			VectorScale( splash->color, splash->add, splash->emitColor );
-			splash->falloffTolerance = falloffTolerance;
-			splash->style = noStyles ? LS_NORMAL : si->lightStyle;
-			if ( splash->style < LS_NORMAL || splash->style >= LS_NONE ) {
-				splash->style = LS_NORMAL;
+			if ( backsplashArea ) {
+				/* New backsplash implementation by Jelvan,
+				commit ed4c8c204443726e852a4c8927b3f8d2571cc522:
+
+				> new area lights backsplash algorithm ( by Jelvan ),
+				> hijacking temp area lights ( to simulate volumetric
+				> behavior of source ones )
+
+				This new implementation breaks many legacy maps,
+				see: https://gitlab.com/xonotic/netradiant/-/merge_requests/210 */
+
+				/* allocate a new area light */
+				splash = safe_malloc( sizeof( *splash ) );
+				memset( splash, 0, sizeof( *splash ) );
+				ThreadLock();
+				splash->next = lights;
+				lights = splash;
+				ThreadUnlock();
+
+				/* set it up */
+				splash->flags = LIGHT_AREA_DEFAULT;
+				splash->type = EMIT_AREA;
+				splash->photons = light->photons * 7.0f * si->backsplashFraction;
+				splash->add = light->add * 7.0f * si->backsplashFraction;
+				splash->fade = 1.0f;
+				splash->si = si;
+				VectorCopy( si->color, splash->color );
+				VectorScale( splash->color, splash->add, splash->emitColor );
+				splash->falloffTolerance = falloffTolerance;
+				splash->style = noStyles ? LS_NORMAL : si->lightStyle;
+
+				if ( splash->style < LS_NORMAL || splash->style >= LS_NONE ) {
+					splash->style = LS_NORMAL;
+				}
+
+				/* create a regular winding */
+				splash_w = AllocWinding( rw->numVerts );
+				splash_w->numpoints = rw->numVerts;
+				for ( i = 0; i < rw->numVerts; i++ )
+				{
+					VectorMA( rw->verts[rw->numVerts - 1 - i].xyz, si->backsplashDistance, normal, splash_w->p[ i ] );
+				}
+
+				splash->w = splash_w;
+
+				VectorMA( light->origin, si->backsplashDistance, normal, splash->origin );
+				VectorNegate( normal, splash->normal );
+				splash->dist = DotProduct( splash->origin, splash->normal );
 			}
+			else {
+				/* Legacy backsplash implementation (default), using point lights. */
 
-			/* create a regular winding */
-			splash_w = AllocWinding( rw->numVerts );
-			splash_w->numpoints = rw->numVerts;
-			for ( i = 0; i < rw->numVerts; i++ )
-				VectorMA( rw->verts[rw->numVerts - 1 - i].xyz, si->backsplashDistance, normal, splash_w->p[ i ] );
-			splash->w = splash_w;
+				/* allocate a new point light */
+				splash = safe_malloc0( sizeof( *splash ) );
 
-			VectorMA( light->origin, si->backsplashDistance, normal, splash->origin );
-			VectorNegate( normal, splash->normal );
-            splash->dist = DotProduct( splash->origin, splash->normal );
+				splash->next = lights;
+				lights = splash;
 
-//			splash->flags |= LIGHT_TWOSIDED;
+				/* set it up */
+				splash->flags = LIGHT_Q3A_DEFAULT;
+				splash->type = EMIT_POINT;
+				splash->photons = light->photons * si->backsplashFraction;
+
+				splash->fade = 1.0f;
+				splash->si = si;
+				VectorMA( light->origin, si->backsplashDistance, normal, splash->origin );
+				VectorCopy( si->color, splash->color );
+
+				splash->falloffTolerance = falloffTolerance;
+				splash->style = noStyles ? LS_NORMAL : light->style;
+
+				/* add to counts */
+				numPointLights++;
+			}
 		}
-#endif
-
 	}
 	else
 	{
