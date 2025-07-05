@@ -786,7 +786,7 @@ int MiniMapBSPMain( int argc, char **argv ){
 				"{\n"
 				"\tbackgroundColor 0.0 0.0 0.0 0.333\n"
 				"\tzone {\n"
-				"\t\tbounds 0 0 0 0 0 0\n"
+				"\t\tbounds %f %f %f %f %f %f\n"
 				"\t\timage \"minimaps/%s\" %f %f %f %f\n"
 				"\t}\n"
 				"}\n";
@@ -809,9 +809,8 @@ int MiniMapBSPMain( int argc, char **argv ){
 
 			fprintf( file,
 				minimapSidecarFormat,
-				basename,
-				mins_out[0], mins_out[1],
-				maxs_out[0], maxs_out[1] );
+				mins_out[0], mins_out[1], mins_out[2], maxs_out[0], maxs_out[1], maxs_out[2],
+				basename, mins_out[0], mins_out[1], maxs_out[0], maxs_out[1] );
 
 			fflush( file );
 			fclose( file );
