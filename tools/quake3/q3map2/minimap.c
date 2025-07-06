@@ -456,10 +456,11 @@ void MergeRelativePath( char *out, const char *absolute, const char *relative ){
 }
 
 int MiniMapBSPMain( int argc, char **argv ){
-	char minimapFilename[1024];
-	char basename[1024];
-	char path[1024];
-	char relativeMinimapFilename[1024];
+	const size_t bufferLength = 1024;
+	char minimapFilename[ bufferLength ];
+	char basename[ bufferLength ];
+	char path[ bufferLength ];
+	char relativeMinimapFilename[ bufferLength ];
 	qboolean autolevel;
 	float minimapSharpen;
 	float border;
@@ -779,10 +780,26 @@ int MiniMapBSPMain( int argc, char **argv ){
 	{
 		case MINIMAP_SIDECAR_UNVANQUISHED:
 		{
-			char minimapPathWithoutExt[ 1024 ];
-			char minimapSidecarFilename[ 1024 ];
-			char *minimapSidecarExtension = ".minimap";
-			char *minimapSidecarFormat = ""
+			char minimapBasename[ bufferLength ];
+			char minimapSidecarFilename[ bufferLength ];
+			const char *minimapSidecarExtension = ".minimap";
+			const size_t extensionLength = strlen( minimapSidecarExtension );
+			const size_t bufferWithoutExtensionLength = bufferLength - extensionLength;
+
+			strcpy( minimapBasename, minimapFilename );
+			StripExtension( minimapBasename );
+
+			snprintf( minimapSidecarFilename, bufferWithoutExtensionLength, "%s%s", minimapBasename, minimapSidecarExtension );
+
+			Sys_Printf( "Writing minimap sidecar to %s...", minimapSidecarFilename );
+
+			FILE *file = fopen( minimapSidecarFilename, "w" );
+			if ( file == NULL ) {
+				Sys_FPrintf( SYS_WRN, "WARNING: Unable to open minimap sidecar file %s for writing\n", minimapSidecarFilename );
+				break;
+			}
+
+			const char *minimapSidecarFormat =
 				"{\n"
 				"\tbackgroundColor 0.0 0.0 0.0 0.333\n"
 				"\tzone {\n"
@@ -790,22 +807,6 @@ int MiniMapBSPMain( int argc, char **argv ){
 				"\t\timage \"minimaps/%s\" %f %f %f %f\n"
 				"\t}\n"
 				"}\n";
-
-			strcpy( minimapPathWithoutExt, minimapFilename );
-			StripExtension( minimapPathWithoutExt );
-			snprintf( minimapSidecarFilename,
-				1024 - strlen(minimapSidecarExtension),
-				"%s%s",
-				minimapPathWithoutExt,
-				minimapSidecarExtension );
-
-			Sys_Printf( "Writing minimap sidecar to %s...", minimapSidecarFilename );
-
-			FILE *file = fopen( minimapSidecarFilename, "w" );
-			if ( file == NULL ) {
-				Sys_FPrintf( SYS_WRN, "WARNING: Unable to open minimap sidecarr file %s for writing\n", minimapSidecarFilename );
-				break;
-			}
 
 			fprintf( file,
 				minimapSidecarFormat,
