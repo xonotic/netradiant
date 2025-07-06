@@ -801,7 +801,6 @@ int MiniMapBSPMain( int argc, char **argv ){
 
 			const char *minimapSidecarFormat =
 				"{\n"
-				"\tbackgroundColor 0.0 0.0 0.0 0.333\n"
 				"\tzone {\n"
 				"\t\tbounds %f %f %f %f %f %f\n"
 				"\t\timage \"minimaps/%s\" %f %f %f %f\n"
