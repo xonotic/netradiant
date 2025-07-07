@@ -181,6 +181,7 @@ void HelpLight()
 		{"-vlight [options] <filename.map>", "Deprecated alias for `-light -fast` ... filename.map"},
 		{"-approx <N>", "Vertex light approximation tolerance (never use in conjunction with deluxemapping)"},
 		{"-areascale <F, `-area` F>", "Scaling factor for area lights (surfacelight)"},
+		{"-backsplash <Fscale Fdistance>", "scale area lights backsplash fraction + set distance globally; (distance < -900 to omit distance setting); default = 1 23; real area lights have no backsplash (scale = 0); q3map_backsplash shader keyword overrides this setting"},
 		{"-backsplashpoint", "Use point light as backsplash light (default)"},
 		{"-backsplasharea", "Use area light as backsplash light"},
 		{"-border", "Add a red border to lightmaps for debugging"},
