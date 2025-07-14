@@ -65,7 +65,8 @@ option(BUILD_RADIANT "Build the GUI" ON)
 option(BUILD_TOOLS "Build the tools" ON)
 option(BUILD_CRUNCH "Build Crunch image support" ${DEFAULT_BUILD_CRUNCH})
 option(DOWNLOAD_GAMEPACKS "Download game packs" ON)
-option(USE_WERROR "Build with -Werror -pedantic-errors" OFF)
+# option(USE_WERROR "Build with -Werror -pedantic-errors" OFF)
+option(USE_WERROR "Build with -Werror" OFF)
 option(FHS_INSTALL "Install according to Filesystem Hierarchy Standard" OFF)
 option(FHS_INSTALL_ABSOLUTE "Install using absolute paths (requires FHS_INSTALL)" OFF)
 
@@ -230,12 +231,12 @@ if (BUILD_BINARIES)
 
     if (USE_WERROR)
         addflags("-Werror")
-        addflags("-pedantic-errors")
+        # addflags("-pedantic-errors")
     endif ()
 
     addflags("-Wall")
     addflags("-Wextra")
-    addflags("-pedantic")
+    # addflags("-pedantic")
 
     addflags_c("-Wno-deprecated-declarations") # vfs.c: g_strdown
 
