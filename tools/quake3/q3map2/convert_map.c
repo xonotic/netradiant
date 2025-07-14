@@ -621,7 +621,7 @@ static void ConvertBrush( FILE *f, int num, bspBrush_t *brush, vec3_t origin, qb
 				vec3_t vecs[2];
 				int sv, tv;
 				vec2_t stI, stJ, stK;
-				vec3_t sts[2];
+				vec3_t sts[2] = {};
 				vec2_t shift, scale;
 				vec_t rotate;
 				vec_t D, D0, D1, D2;
