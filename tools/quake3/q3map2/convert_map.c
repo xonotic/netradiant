@@ -68,7 +68,7 @@ void GetBestSurfaceTriangleMatchForBrushside( side_t *buildSide, bspDrawVert_t *
 	bspDrawVert_t *vert[3];
 	winding_t *polygon;
 	plane_t *buildPlane = &mapplanes[buildSide->planenum];
-	int matches = 0;
+	// int matches = 0;
 
 	// first, start out with NULLs
 	bestVert[0] = bestVert[1] = bestVert[2] = NULL;
@@ -146,7 +146,7 @@ void GetBestSurfaceTriangleMatchForBrushside( side_t *buildSide, bspDrawVert_t *
 			}
 			thisarea = WindingArea( polygon );
 			if ( thisarea > 0 ) {
-				++matches;
+				// ++matches;
 			}
 			if ( thisarea > best ) {
 				best = thisarea;
