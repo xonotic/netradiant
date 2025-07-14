@@ -191,7 +191,10 @@ static int _fm_canload( PM_PARAMS_CANLOAD ){
 
 // _fm_load() loads a Heretic 2 model file.
 static picoModel_t *_fm_load( PM_PARAMS_LOAD ){
-	int i, j, dups, dup_index;
+	int i, j, dups;
+#ifdef FM_VERBOSE_DBG
+	int dup_index;
+#endif
 	int fm_file_pos;
 	index_LUT_t     *p_index_LUT, *p_index_LUT2, *p_index_LUT3;
 	index_DUP_LUT_t *p_index_LUT_DUPS;
@@ -508,7 +511,9 @@ static picoModel_t *_fm_load( PM_PARAMS_LOAD ){
 		_pico_printf( PICO_NORMAL, " Couldn't allocate memory!\n" );
 	}
 
+#ifdef FM_VERBOSE_DBG
 	dup_index = 0;
+#endif
 	for ( i = 0; i < fm_head->numXYZ; i++ )
 	{
 		p_index_LUT2 = p_index_LUT[i].next;
@@ -516,7 +521,9 @@ static picoModel_t *_fm_load( PM_PARAMS_LOAD ){
 		{
 			p_index_LUT_DUPS[p_index_LUT2->Vert].OldVert = i;
 			p_index_LUT_DUPS[p_index_LUT2->Vert].ST = p_index_LUT2->ST;
+#ifdef FM_VERBOSE_DBG
 			dup_index++;
+#endif
 			p_index_LUT2 = p_index_LUT2->next;
 		}
 	}
