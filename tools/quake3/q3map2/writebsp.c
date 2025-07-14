@@ -134,6 +134,13 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 		}
 	}
 
+	/* Backup flags before reallocating in case the data is moved,
+	to avoid use-after-free. */
+	bool hadSurfaceFlags = surfaceFlags != NULL;
+	int savedSurfaceFlags = hadSurfaceFlags ? *surfaceFlags : 0;
+	bool hadContentFlags = contentFlags != NULL;
+	int savedContentFlags = hadContentFlags ? *contentFlags : 0;
+
 	/* get shaderinfo */
 	si = ShaderInfoForShader( shader );
 
@@ -142,8 +149,8 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 
 	numBSPShaders++;
 	strcpy( bspShaders[ i ].shader, shader );
-	bspShaders[ i ].surfaceFlags = ( surfaceFlags != NULL ) ? *surfaceFlags : si->surfaceFlags;
-	bspShaders[ i ].contentFlags = ( contentFlags != NULL ) ? *contentFlags : si->contentFlags;
+	bspShaders[ i ].surfaceFlags = hadSurfaceFlags ? savedSurfaceFlags : si->surfaceFlags;
+	bspShaders[ i ].contentFlags = hadContentFlags ? savedContentFlags : si->contentFlags;
 
 	if ( game->texFile )
 	{
