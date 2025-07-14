@@ -35,6 +35,7 @@
 /* dependencies */
 #include "picointernal.h"
 #include "globaldefs.h"
+#include "assert.h"
 
 /* disable warnings */
 #if GDEF_COMPILER_MSVC
@@ -184,9 +185,7 @@ static int _ms3d_canload( PM_PARAMS_CANLOAD ){
 }
 
 static unsigned char *GetWord( unsigned char *bufptr, int *out ){
-	if ( bufptr == NULL ) {
-		return NULL;
-	}
+	assert( bufptr != NULL );
 	*out = _pico_little_short( *(unsigned short *)bufptr );
 	return( bufptr + 2 );
 }
@@ -219,6 +218,12 @@ static picoModel_t *_ms3d_load( PM_PARAMS_LOAD ){
 	PicoSetModelFileName( model, fileName );
 
 	bufptr0 = bufptr = (picoByte_t*) _pico_alloc( bufSize );
+
+	if ( !bufptr )
+	{
+		return NULL;
+	}
+
 	memcpy( bufptr, buffer, bufSize );
 	/* skip header */
 	bufptr += sizeof( TMsHeader );
