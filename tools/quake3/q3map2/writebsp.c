@@ -142,26 +142,13 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 
 	numBSPShaders++;
 	strcpy( bspShaders[ i ].shader, shader );
-	bspShaders[ i ].surfaceFlags = si->surfaceFlags;
+	bspShaders[ i ].surfaceFlags = ( surfaceFlags != NULL ) ? *surfaceFlags : si->surfaceFlags;
+	bspShaders[ i ].contentFlags = ( contentFlags != NULL ) ? *contentFlags : si->contentFlags;
 
 	if ( game->texFile )
 	{
 		/* Smokin'Guns like tex file */
 		bspShaders[ i ].surfaceFlags |= GetSurfaceParm(si->shader);
-	}
-
-	bspShaders[ i ].contentFlags = si->contentFlags;
-
-	/* if not Smokin'Guns like tex file */
-	if ( !game->texFile )
-	{
-	/* handle custom content/surface flags */
-	if ( surfaceFlags != NULL ) {
-		bspShaders[ i ].surfaceFlags = *surfaceFlags;
-	}
-	if ( contentFlags != NULL ) {
-		bspShaders[ i ].contentFlags = *contentFlags;
-	}
 	}
 
 	/* recursively emit any damage shaders */
