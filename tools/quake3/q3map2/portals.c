@@ -676,7 +676,7 @@ int FloodEntities( tree_t *tree ){
 	inside = qfalse;
 	tree->outside_node.occupied = 0;
 
-	tripped = qfalse;
+	tripped = NULL;
 	c_floodedleafs = 0;
 	for ( i = 1; i < numEntities; i++ )
 	{
