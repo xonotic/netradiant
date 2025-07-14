@@ -638,6 +638,8 @@ void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_t *prevstack )
 		//
 		stack.next = NULL;
 	}
+
+	prevstack->next = NULL;
 }
 
 /*
@@ -765,6 +767,8 @@ void RecursivePassageFlow( vportal_t *portal, threaddata_t *thread, pstack_t *pr
 
 		stack.next = NULL;
 	}
+
+	prevstack->next = NULL;
 }
 
 /*
@@ -1029,6 +1033,8 @@ void RecursivePassagePortalFlow( vportal_t *portal, threaddata_t *thread, pstack
 		//
 		stack.next = NULL;
 	}
+
+	prevstack->next = NULL;
 }
 
 /*
