@@ -342,10 +342,10 @@ void vfsShutdown(){
 	while ( g_pakFiles )
 	{
 		VFS_PAKFILE* file = (VFS_PAKFILE*)g_pakFiles->data;
+		g_pakFiles = g_slist_remove( g_pakFiles, file );
 		free( file->unzFilePath );
 		free( file->name );
 		free( file );
-		g_pakFiles = g_slist_remove( g_pakFiles, file );
 	}
 }
 
