@@ -29,7 +29,7 @@ int GetCRNImageSize(const void *buffer, int length, int *x, int *y);
 // Converts a .crn file to RGBA. Stores the pixels in outBuf. Use GetCRNImageSize to get the image
 // size to determine how big outBuf should be. The function will return false if the image does not
 // fit inside outBuf.
-int ConvertCRNtoRGBA(const void *buffer, int length, int outBufLen, void* outBuf);
+int ConvertCRNtoRGBA(const void *buffer, int length, unsigned int outBufLen, void* outBuf);
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
