@@ -3974,10 +3974,10 @@ void Radiant_Restart(){
 	char map_file[ 256 ];
 	bool with_map = false;
 
-	strncpy( exe_file, g_strAppFilePath.c_str(), 256 );
+	strncpy( exe_file, g_strAppFilePath.c_str(), sizeof( exe_file ) - 1 );
 
 	if ( !Map_Unnamed( g_map ) ) {
-		strncpy( map_file, Map_Name( g_map ), 256 );
+		strncpy( map_file, Map_Name( g_map ), sizeof( map_file ) - 1 );
 		with_map = true;
 	}
 
