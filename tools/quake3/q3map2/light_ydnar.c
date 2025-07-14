@@ -1753,6 +1753,7 @@ static qboolean SubmapRawLuxel( rawLightmap_t *lm, int x, int y, float bx, float
 	float       *origin, *origin2, *normal; //%	, *normal2;
 	vec3_t originVecs[ 2 ];                 //%	, normalVecs[ 2 ];
 
+	vec3_t origin_dummy = {};
 
 	/* calulate x vector */
 	if ( ( x < ( lm->sw - 1 ) && bx >= 0.0f ) || ( x == 0 && bx <= 0.0f ) ) {
@@ -1773,6 +1774,8 @@ static qboolean SubmapRawLuxel( rawLightmap_t *lm, int x, int y, float bx, float
 	}
 	else {
 		Sys_FPrintf( SYS_WRN, "WARNING: Spurious lightmap S vector\n" );
+		origin = origin_dummy;
+		origin2 = origin_dummy;
 	}
 
 	VectorSubtract( origin2, origin, originVecs[ 0 ] );
