@@ -43,7 +43,7 @@
  */
 
 vec_t Random( void ){
-	return (vec_t) rand() / RAND_MAX;
+	return (vec_t) rand() / (float) RAND_MAX;
 }
 
 
