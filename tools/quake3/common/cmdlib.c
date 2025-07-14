@@ -357,8 +357,8 @@ void Q_mkdir( const char *path ){
 		}
 #endif // !GDEF_OS_WINDOWS
 		if ( p ) {
-			strncpy( parentbuf, path, sizeof( parentbuf ) );
-			if ( (int) ( p - path ) < (int) sizeof( parentbuf ) ) {
+			strncpy( parentbuf, path, sizeof( parentbuf ) - 1 );
+			if ( (int) ( p - path ) < (int) sizeof( parentbuf ) - 1 ) {
 				parentbuf[p - path] = 0;
 				Sys_Printf( "mkdir: %s: creating parent %s first\n", path, parentbuf );
 				Q_mkdir( parentbuf );
