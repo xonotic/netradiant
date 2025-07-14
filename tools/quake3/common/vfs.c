@@ -272,10 +272,10 @@ void vfsListShaderFiles( char* list, int *num ){
 	char *dirlist;
 	GDir *dir;
 	int i, k;
-	char path[NAME_MAX];
+	char path[PATH_MAX];
 /* search in dirs */
 	for ( i = 0; i < g_numDirs; i++ ){
-		strncpy( path, g_strDirs[ i ], NAME_MAX );
+		strncpy( path, g_strDirs[ i ], PATH_MAX );
 		strcat( path, "scripts/" );
 
 		dir = g_dir_open( path, 0, NULL );
