@@ -472,7 +472,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 	}
 
 	*bufferptr = NULL;
-	strncpy( fixed, filename, sizeof( fixed ) );
+	strncpy( fixed, filename, sizeof( fixed ) - 1 );
 	vfsFixDOSName( fixed );
 	lower = g_ascii_strdown( fixed, -1 );
 
@@ -575,7 +575,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 				Sys_FPrintf( SYS_VRB, "Resolved symbolic link: \"%s\"\n", resolved );
 
 				g_free( lower );
-				strncpy( fixed, resolved, sizeof( fixed ) );
+				strncpy( fixed, resolved, sizeof( fixed ) - 1 );
 				vfsFixDOSName( fixed );
 				lower = g_ascii_strdown( fixed, -1 );
 
