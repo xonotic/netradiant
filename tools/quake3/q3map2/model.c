@@ -548,7 +548,7 @@ void InsertModel( const char *name, int skin, int frame, m4x4_t transform, remap
 			qboolean snpd;
 			vec3_t min = { 999999, 999999, 999999 }, max = { -999999, -999999, -999999 };
 			vec3_t avgDirection = { 0, 0, 0 };
-			int axis;
+			int axis = 0;
 			#define nonax_clip_dbg 0
 
 			/* temp hack */
