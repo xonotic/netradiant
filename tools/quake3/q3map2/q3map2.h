@@ -2632,14 +2632,16 @@ Q_EXTERN qboolean compile_map;
 			{ \
 				Error( # ptr " over 2 GB" ); \
 			} \
-			ptr = realloc( ptr, sizeof( *ptr ) * allocated ); \
-			if ( !ptr ) { \
-				Error( #ptr " out of memory" ); \
+			size_t ptr_size = sizeof( *ptr ); \
+			void *ptr2 = realloc( ptr, ptr_size * allocated ); \
+			if ( !ptr2 ) { \
+				Error( # ptr " out of memory" ); \
 			} \
 			if ( fillWithZeros ) \
 			{ \
-				memset( ptr + ( sizeof( *ptr ) * prevAllocated ), 0 , sizeof( *ptr ) * ( allocated - prevAllocated ) ); \
+				memset( ptr2 + ( ptr_size * prevAllocated ), 0, ptr_size * ( allocated - prevAllocated ) ); \
 			} \
+			ptr = ptr2; \
 		} \
 	} \
 	while ( 0 )
