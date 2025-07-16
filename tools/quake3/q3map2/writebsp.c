@@ -134,6 +134,13 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 		}
 	}
 
+	/* Backup flags before reallocating in case the data is moved,
+	to avoid use-after-free. */
+	bool hadSurfaceFlags = surfaceFlags != NULL;
+	int savedSurfaceFlags = hadSurfaceFlags ? *surfaceFlags : 0;
+	bool hadContentFlags = contentFlags != NULL;
+	int savedContentFlags = hadContentFlags ? *contentFlags : 0;
+
 	/* get shaderinfo */
 	si = ShaderInfoForShader( shader );
 
@@ -142,26 +149,13 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 
 	numBSPShaders++;
 	strcpy( bspShaders[ i ].shader, shader );
-	bspShaders[ i ].surfaceFlags = si->surfaceFlags;
+	bspShaders[ i ].surfaceFlags = hadSurfaceFlags ? savedSurfaceFlags : si->surfaceFlags;
+	bspShaders[ i ].contentFlags = hadContentFlags ? savedContentFlags : si->contentFlags;
 
 	if ( game->texFile )
 	{
 		/* Smokin'Guns like tex file */
 		bspShaders[ i ].surfaceFlags |= GetSurfaceParm(si->shader);
-	}
-
-	bspShaders[ i ].contentFlags = si->contentFlags;
-
-	/* if not Smokin'Guns like tex file */
-	if ( !game->texFile )
-	{
-	/* handle custom content/surface flags */
-	if ( surfaceFlags != NULL ) {
-		bspShaders[ i ].surfaceFlags = *surfaceFlags;
-	}
-	if ( contentFlags != NULL ) {
-		bspShaders[ i ].contentFlags = *contentFlags;
-	}
 	}
 
 	/* recursively emit any damage shaders */
