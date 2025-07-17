@@ -95,7 +95,6 @@ void ExpandWildcards( int *argc, char ***argv );
 
 double I_FloatTime( void );
 
-void    Error( const char *error, ... ) GDEF_ATTRIBUTE_NORETURN;
 int     CheckParm( const char *check );
 
 FILE    *SafeOpenWrite( const char *filename );
@@ -135,10 +134,6 @@ extern qboolean com_eof;
 
 char *copystring( const char *s );
 
-
-void CRC_Init( unsigned short *crcvalue );
-void CRC_ProcessByte( unsigned short *crcvalue, byte data );
-unsigned short CRC_Value( unsigned short crcvalue );
 
 void    CreatePath( const char *path );
 void    QCopyFile( const char *from, const char *to );
