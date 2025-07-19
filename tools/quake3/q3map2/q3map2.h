@@ -2615,6 +2615,14 @@ Q_EXTERN bspAdvertisement_t bspAds[ MAX_MAP_ADVERTISEMENTS ];
 // Used for tex file support, Smokin'Guns globals
 Q_EXTERN qboolean compile_map;
 
+/* The `ptr2 = realloc( ptr, … )` wording may look uselessly complicated
+and people may say `ptr = realloc( ptr, … ) would be more concise.
+But for unknown reasons it has been found this convoluted wording
+where the input variable is not the output variable is fixing
+or working around a buffer overflow bug happening when calling `memset()`
+after the `realloc()` when q3map2 is built with GCC. When it doesn't crash
+because of the buffer overflow, it may corrupt the BSP file data.
+See: https://gitlab.com/xonotic/netradiant/-/merge_requests/216 */
 #define _AUTOEXPAND_BY_REALLOC( ptr, reqitem, allocated, def, fillWithZeros ) \
 	do \
 	{ \
