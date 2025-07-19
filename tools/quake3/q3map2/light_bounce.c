@@ -266,7 +266,8 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 	int i, j, k, l, v, x, y, samples, avgcolor, f_superSample;
 	vec3_t color, mins, maxs;
 	vec4_t textureColor;
-	float alpha, alphaI, bf;
+	// float alpha, alphaI;
+	float bf;
 	vec3_t blend;
 	float st[ 2 ], lightmap[ 2 ], *radLuxel;
 	radVert_t   *rv[ 3 ];
@@ -278,7 +279,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 	ClearBounds( mins, maxs );
 	VectorClear( average );
 	VectorClear( gradient );
-	alpha = 0;
+	// alpha = 0;
 
 	/* dummy check */
 	if ( rw == NULL || rw->numVerts < 3 ) {
@@ -306,7 +307,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 			VectorAdd( average, color, average );
 
 			/* get alpha */
-			alpha += ( textureColor[ 3 ] / 255.0f ) * ( rw->verts[ samples ].color[ lightmapNum ][ 3 ] / 255.0f );
+			// alpha += ( textureColor[ 3 ] / 255.0f ) * ( rw->verts[ samples ].color[ lightmapNum ][ 3 ] / 255.0f );
 		}
 
 		/* set style */
@@ -342,14 +343,14 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						/* create a blended sample */
 						st[ 0 ] = st[ 1 ] = 0.0f;
 						lightmap[ 0 ] = lightmap[ 1 ] = 0.0f;
-						alphaI = 0.0f;
+						// alphaI = 0.0f;
 						for ( l = 0; l < 3; l++ )
 						{
 							st[ 0 ] += ( rv[ l ]->st[ 0 ] * blend[ l ] );
 							st[ 1 ] += ( rv[ l ]->st[ 1 ] * blend[ l ] );
 							lightmap[ 0 ] += ( rv[ l ]->lightmap[ lightmapNum ][ 0 ] * blend[ l ] );
 							lightmap[ 1 ] += ( rv[ l ]->lightmap[ lightmapNum ][ 1 ] * blend[ l ] );
-							alphaI += ( rv[ l ]->color[ lightmapNum ][ 3 ] * blend[ l ] );
+							// alphaI += ( rv[ l ]->color[ lightmapNum ][ 3 ] * blend[ l ] );
 						}
 
 						/* get lightmap xy coords */
@@ -402,7 +403,7 @@ static void RadSample( int lightmapNum, bspDrawSurface_t *ds, rawLightmap_t *lm,
 						VectorAdd( average, color, average );
 
 						/* get alpha */
-						alpha += ( textureColor[ 3 ] / 255 ) * ( alphaI / 255 );
+						// alpha += ( textureColor[ 3 ] / 255 ) * ( alphaI / 255 );
 					}
 				}
 			}

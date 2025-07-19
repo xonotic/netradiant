@@ -303,7 +303,7 @@ void WriteRBSPFile( const char *filename ){
 
 	/* add marker lump */
 	const char marker[] = "I LOVE MY Q3MAP2";
-	AddLump( file, header, 0, marker, strlen( marker ) + 1 );
+	AddLump( file, (bspHeader_t*) header, 0, marker, strlen( marker ) + 1 );
 
 	/* add lumps */
 	AddLump( file, (bspHeader_t*) header, LUMP_SHADERS, bspShaders, numBSPShaders * sizeof( bspShader_t ) );

@@ -2184,6 +2184,7 @@ int PicoRemapModel( picoModel_t *model, char *remapFile ){
 					color[ 0 ] = (picoByte_t)v[ 0 ];
 					color[ 1 ] = (picoByte_t)v[ 1 ];
 					color[ 2 ] = (picoByte_t)v[ 2 ];
+					color[ 3 ] = 0;
 
 					/* set new ambient color */
 					PicoSetShaderAmbientColor( shader,color );
@@ -2202,6 +2203,7 @@ int PicoRemapModel( picoModel_t *model, char *remapFile ){
 					color[ 0 ] = (picoByte_t)v[ 0 ];
 					color[ 1 ] = (picoByte_t)v[ 1 ];
 					color[ 2 ] = (picoByte_t)v[ 2 ];
+					color[ 3 ] = 0;
 
 					/* set new ambient color */
 					PicoSetShaderDiffuseColor( shader,color );
@@ -2220,6 +2222,7 @@ int PicoRemapModel( picoModel_t *model, char *remapFile ){
 					color[ 0 ] = (picoByte_t)v[ 0 ];
 					color[ 1 ] = (picoByte_t)v[ 1 ];
 					color[ 2 ] = (picoByte_t)v[ 2 ];
+					color[ 3 ] = 0;
 
 					/* set new ambient color */
 					PicoSetShaderSpecularColor( shader,color );

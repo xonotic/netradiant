@@ -68,7 +68,7 @@ void GetBestSurfaceTriangleMatchForBrushside( side_t *buildSide, bspDrawVert_t *
 	bspDrawVert_t *vert[3];
 	winding_t *polygon;
 	plane_t *buildPlane = &mapplanes[buildSide->planenum];
-	int matches = 0;
+	// int matches = 0;
 
 	// first, start out with NULLs
 	bestVert[0] = bestVert[1] = bestVert[2] = NULL;
@@ -114,13 +114,13 @@ void GetBestSurfaceTriangleMatchForBrushside( side_t *buildSide, bspDrawVert_t *
 					continue;
 				}
 			}
-			if ( abs( DotProduct( vert[0]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
+			if ( fabs( DotProduct( vert[0]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
 				continue;
 			}
-			if ( abs( DotProduct( vert[1]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
+			if ( fabs( DotProduct( vert[1]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
 				continue;
 			}
-			if ( abs( DotProduct( vert[2]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
+			if ( fabs( DotProduct( vert[2]->xyz, buildPlane->normal ) - buildPlane->dist ) >= distanceEpsilon ) {
 				continue;
 			}
 			// Okay. Correct surface type, correct shader, correct plane. Let's start with the business...
@@ -146,7 +146,7 @@ void GetBestSurfaceTriangleMatchForBrushside( side_t *buildSide, bspDrawVert_t *
 			}
 			thisarea = WindingArea( polygon );
 			if ( thisarea > 0 ) {
-				++matches;
+				// ++matches;
 			}
 			if ( thisarea > best ) {
 				best = thisarea;
@@ -621,7 +621,7 @@ static void ConvertBrush( FILE *f, int num, bspBrush_t *brush, vec3_t origin, qb
 				vec3_t vecs[2];
 				int sv, tv;
 				vec2_t stI, stJ, stK;
-				vec3_t sts[2];
+				vec3_t sts[2] = {};
 				vec2_t shift, scale;
 				vec_t rotate;
 				vec_t D, D0, D1, D2;

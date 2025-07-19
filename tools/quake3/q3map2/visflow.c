@@ -638,6 +638,8 @@ void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_t *prevstack )
 		//
 		stack.next = NULL;
 	}
+
+	prevstack->next = NULL;
 }
 
 /*
@@ -765,6 +767,8 @@ void RecursivePassageFlow( vportal_t *portal, threaddata_t *thread, pstack_t *pr
 
 		stack.next = NULL;
 	}
+
+	prevstack->next = NULL;
 }
 
 /*
@@ -1029,6 +1033,8 @@ void RecursivePassagePortalFlow( vportal_t *portal, threaddata_t *thread, pstack
 		//
 		stack.next = NULL;
 	}
+
+	prevstack->next = NULL;
 }
 
 /*
@@ -1332,7 +1338,8 @@ int AddSeperators( fixedWinding_t *source, fixedWinding_t *pass, qboolean flipcl
    ===============
  */
 void CreatePassages( int portalnum ){
-	int i, j, k, n, numseperators, numsee;
+	int i, j, k, n, numseperators;
+	// int numsee;
 	float d;
 	vportal_t       *portal, *p, *target;
 	leaf_t          *leaf;
@@ -1375,7 +1382,7 @@ void CreatePassages( int portalnum ){
 		}
 		lastpassage = passage;
 
-		numsee = 0;
+		// numsee = 0;
 		//create the passage->cansee
 		for ( j = 0; j < numportals * 2; j++ )
 		{
@@ -1450,7 +1457,7 @@ void CreatePassages( int portalnum ){
 				continue;
 			}
 			passage->cansee[j >> 3] |= ( 1 << ( j & 7 ) );
-			numsee++;
+			// numsee++;
 		}
 	}
 }

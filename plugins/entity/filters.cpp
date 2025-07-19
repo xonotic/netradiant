@@ -27,7 +27,7 @@
 
 class EntityFilterWrapper : public Filter
 {
-bool m_active;
+bool m_active = false;
 bool m_invert;
 EntityFilter& m_filter;
 public:

@@ -272,10 +272,10 @@ void vfsListShaderFiles( char* list, int *num ){
 	char *dirlist;
 	GDir *dir;
 	int i, k;
-	char path[NAME_MAX];
+	char path[PATH_MAX];
 /* search in dirs */
 	for ( i = 0; i < g_numDirs; i++ ){
-		strncpy( path, g_strDirs[ i ], NAME_MAX );
+		strncpy( path, g_strDirs[ i ], PATH_MAX );
 		strcat( path, "scripts/" );
 
 		dir = g_dir_open( path, 0, NULL );
@@ -342,10 +342,10 @@ void vfsShutdown(){
 	while ( g_pakFiles )
 	{
 		VFS_PAKFILE* file = (VFS_PAKFILE*)g_pakFiles->data;
+		g_pakFiles = g_slist_remove( g_pakFiles, file );
 		free( file->unzFilePath );
 		free( file->name );
 		free( file );
-		g_pakFiles = g_slist_remove( g_pakFiles, file );
 	}
 }
 
@@ -472,7 +472,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 	}
 
 	*bufferptr = NULL;
-	strncpy( fixed, filename, sizeof( fixed ) );
+	strncpy( fixed, filename, sizeof( fixed ) - 1 );
 	vfsFixDOSName( fixed );
 	lower = g_ascii_strdown( fixed, -1 );
 
@@ -575,7 +575,7 @@ int vfsLoadFile( const char *filename, void **bufferptr, int index ){
 				Sys_FPrintf( SYS_VRB, "Resolved symbolic link: \"%s\"\n", resolved );
 
 				g_free( lower );
-				strncpy( fixed, resolved, sizeof( fixed ) );
+				strncpy( fixed, resolved, sizeof( fixed ) - 1 );
 				vfsFixDOSName( fixed );
 				lower = g_ascii_strdown( fixed, -1 );
 

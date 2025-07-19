@@ -1625,7 +1625,7 @@ void XYWnd::XY_LoadBackgroundImage( const char *name ){
 	globalOutputStream() << "Loaded background texture " << relative << "\n";
 	g_pParentWnd->ActiveXY()->m_backgroundActivated = true;
 
-	int m_ix, m_iy;
+	int m_ix = 0, m_iy = 1;
 	switch ( g_pParentWnd->ActiveXY()->m_viewType )
 	{
 	case XY:

@@ -351,7 +351,7 @@ bool face_filtered( Face& face ){
 
 class BrushFilterWrapper : public Filter
 {
-bool m_active;
+bool m_active = false;
 bool m_invert;
 BrushFilter& m_filter;
 public:
