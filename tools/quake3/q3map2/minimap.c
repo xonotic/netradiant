@@ -102,7 +102,7 @@ static float MiniMapSample( float x, float y ){
 	float samp;
 	bspBrush_t *b;
 	bspBrushSide_t *s;
-	int cnt;
+	// int cnt;
 
 	org[0] = x;
 	org[1] = y;
@@ -111,7 +111,7 @@ static float MiniMapSample( float x, float y ){
 	dir[1] = 0;
 	dir[2] = 1;
 
-	cnt = 0;
+	// cnt = 0;
 	samp = 0;
 	for ( i = 0; i < minimap.model->numBSPBrushes; ++i )
 	{
@@ -136,7 +136,7 @@ static float MiniMapSample( float x, float y ){
 
 			if ( BrushIntersectionWithLine( b, org, dir, &t0, &t1 ) ) {
 				samp += t1 - t0;
-				++cnt;
+				// ++cnt;
 			}
 		}
 	}

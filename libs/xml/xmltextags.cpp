@@ -143,7 +143,7 @@ bool XmlTagBuilder::AddShaderNode( const char* shader, TextureType textureType, 
 	}
 
 	if ( !xmlXPathNodeSetIsEmpty( nodePtr ) ) {
-		xmlNodePtr newnode, newtext;
+		xmlNodePtr newnode = {}, newtext;
 		xmlNodePtr nodeParent = nodePtr->nodeTab[0];
 
 		// create a new node and set the node attribute (shader path)

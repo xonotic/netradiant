@@ -785,7 +785,7 @@ qtexture_t* evaluateTexture( const TextureExpression& texture, const ShaderParam
 
 float evaluateFloat( const ShaderValue& value, const ShaderParameters& params, const ShaderArguments& args ){
 	const char* result = evaluateShaderValue( value.c_str(), params, args );
-	float f;
+	float f = 0.0f;
 	if ( !string_parse_float( result, f ) ) {
 		globalErrorStream() << "parsing float value failed: " << makeQuoted( result ) << "\n";
 	}

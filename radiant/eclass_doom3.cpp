@@ -507,7 +507,7 @@ static bool EntityClass_parse( EntityClass& entityClass, Tokeniser& tokeniser ){
 			}
 			EntityClassAttribute& attribute = EntityClass_insertAttribute( entityClass, key ).second;
 			attribute.m_type = "string";
-			const char* value;
+			const char* value = NULL;
 			PARSE_RETURN_FALSE_IF_FAIL( EntityClassDoom3_parseString( tokeniser, value ) );
 			if ( string_equal( value, "}" ) ) { // hack for quake4 powerups.def bug
 				globalErrorStream() << "entityDef " << makeQuoted( entityClass.m_name.c_str() ) << " key " << makeQuoted( tmp.c_str() ) << " has no value\n";

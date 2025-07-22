@@ -100,7 +100,7 @@ void LoadCRNBuffer( byte *buffer, int size, byte **pixels, int *width, int *heig
 		Sys_FPrintf( SYS_WRN, "WARNING: Error getting crn imag dimensions.\n");;
 		return;
 	}
-	int outBufSize = *width * *height * 4;
+	unsigned int outBufSize = *width * *height * 4;
 	*pixels = safe_malloc( outBufSize );
 	if ( !ConvertCRNtoRGBA( buffer, size, outBufSize, *pixels) ) {
 		Sys_FPrintf( SYS_WRN, "WARNING: Error decoding crn image.\n", 0 );

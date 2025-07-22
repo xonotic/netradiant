@@ -72,7 +72,8 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
 	int w, h, split;
 	float d[MAX_PATCH_SIZE][MAX_PATCH_SIZE];
 	bspDrawVert_t   *dv, *v1, *v2;
-	int c_front, c_back, c_on;
+	int c_front, c_back;
+	// int c_on;
 	mesh_t  *f, *b;
 	int i;
 	float frac;
@@ -82,7 +83,7 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
 		dv = in->verts;
 		c_front = 0;
 		c_back = 0;
-		c_on = 0;
+		// c_on = 0;
 		for ( h = 0 ; h < in->height ; h++ ) {
 			for ( w = 0 ; w < in->width ; w++, dv++ ) {
 				d[h][w] = DotProduct( dv->xyz, normal ) - dist;
@@ -93,7 +94,7 @@ void SplitMeshByPlane( mesh_t *in, vec3_t normal, float dist, mesh_t **front, me
 					c_back++;
 				}
 				else {
-					c_on++;
+					// c_on++;
 				}
 			}
 		}

@@ -43,7 +43,7 @@
  */
 
 vec_t Random( void ){
-	return (vec_t) rand() / RAND_MAX;
+	return (vec_t) rand() / (float) RAND_MAX;
 }
 
 
@@ -635,7 +635,7 @@ skipEXfile:
 
 	for ( i = 0; i < pk3ShaderfilesN; i++ ){
 		qboolean wantShader = qfalse, wantShaderFile = qfalse, ShaderFileExcluded = qfalse;
-		int shader;
+		int shader = 0;
 		char* reasonShader = NULL;
 		char* reasonShaderFile = NULL;
 
@@ -1647,7 +1647,7 @@ skipEXrefile:
 
 	for ( i = 0; i < pk3ShaderfilesN; i++ ){
 		qboolean wantShader = qfalse;
-		int shader;
+		int shader = 0;
 
 		/* load the shader */
 		sprintf( temp, "%s/%s", game->shaderPath, pk3Shaderfiles + i*65 );

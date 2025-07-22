@@ -364,7 +364,6 @@ void DoSides( int type, int axis ){
 	auto accel = ui::AccelGroup(ui::New);
 	window.add_accel_group( accel );
 
-	auto sides_entry = ui::Entry(ui::New);
 	{
 		auto hbox = create_dialog_hbox( 4, 4 );
 		window.add(hbox);
