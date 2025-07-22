@@ -136,9 +136,9 @@ int EmitShader( const char *shader, int *contentFlags, int *surfaceFlags ){
 
 	/* Backup flags before reallocating in case the data is moved,
 	to avoid use-after-free. */
-	bool hadSurfaceFlags = surfaceFlags != NULL;
+	qboolean hadSurfaceFlags = surfaceFlags != NULL;
 	int savedSurfaceFlags = hadSurfaceFlags ? *surfaceFlags : 0;
-	bool hadContentFlags = contentFlags != NULL;
+	qboolean hadContentFlags = contentFlags != NULL;
 	int savedContentFlags = hadContentFlags ? *contentFlags : 0;
 
 	/* get shaderinfo */
