@@ -485,6 +485,20 @@ qboolean CreateBrushWindings( brush_t *brush ){
 	{
 		/* get side and plane */
 		side = &brush->sides[ i ];
+
+		/* HACK: Workaround, skip planes with bad normals:
+
+		> WARNING: triangle (  1664   2560    256) (  1536   2688    256) (  1584   2640    256) of models/map_catharsis/terrain.ase was not autoclipped
+		> FloatPlane: bad normal
+
+		See: https://gitlab.com/xonotic/netradiant/-/issues/186 */
+		if ( side->planenum == -1 )
+		{
+			Sys_FPrintf( SYS_WRN, "WARNING: UGLY WORKAROUND: Skipping invalid side. This should not happen.\n");
+			Sys_FPrintf( SYS_WRN, "WARNING: FIX ME FOR REAL: https://gitlab.com/xonotic/netradiant/-/issues/186\n" );
+			continue;
+		}
+
 		plane = &mapplanes[ side->planenum ];
 
 		/* make huge winding */
