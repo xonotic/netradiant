@@ -742,6 +742,7 @@ typedef struct shaderInfo_s
 	float subdivisions;                                 /* from a "tesssize xxx" */
 	float backsplashFraction;                           /* floating point value, usually 0.05 */
 	float backsplashDistance;                           /* default 16 */
+	int backsplashType;                                 /* use point or area light as backsplash light */
 	float lightSubdivide;                               /* default 999 */
 	float lightFilterRadius;                            /* ydnar: lightmap filtering/blurring radius for lights created by this shader (default: 0) */
 

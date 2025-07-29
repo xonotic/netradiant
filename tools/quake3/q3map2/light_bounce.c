@@ -602,7 +602,21 @@ static void RadSubdivideDiffuseLight( int lightmapNum, bspDrawSurface_t *ds, raw
 		if ( si->backsplashFraction > 0 && !( si->compileFlags & C_SKY ) ) {
 			/* optionally create a backsplash light */
 
-			if ( backsplashArea ) {
+			qboolean bsArea;
+
+			switch ( si->backsplashType )
+			{
+				case 1:
+					bsArea = qfalse;
+					break;
+				case 2:
+					bsArea = qtrue;
+					break;
+				default:
+					bsArea = backsplashArea;
+			}
+
+			if ( bsArea ) {
 				/* New backsplash implementation by Jelvan,
 				commit ed4c8c204443726e852a4c8927b3f8d2571cc522:
 

@@ -1507,6 +1507,16 @@ static void ParseShaderFile( const char *filename ){
 					si->backsplashDistance = atof( token );
 				}
 
+				/* q3map_backsplashPoint */
+				else if ( !Q_stricmp( token, "q3map_backsplashPoint" ) ) {
+					si->backsplashType = 1;
+				}
+
+				/* q3map_backsplashArea */
+				else if ( !Q_stricmp( token, "q3map_backsplashArea" ) ) {
+					si->backsplashType = 2;
+				}
+
 				/* q3map_floodLight <r> <g> <b> <diste> <intensity> <light_direction_power> */
 				else if ( !Q_stricmp( token, "q3map_floodLight" ) ) {
 					/* get color */
