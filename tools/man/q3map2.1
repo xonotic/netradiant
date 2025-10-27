@@ -1,0 +1,190 @@
+.TH Q3MAP2 1 2025-08-05
+
+.SH NAME
+q3map2 \- a quake BSP compiler
+
+.SH SYNOPSIS
+.BR "" q3map2
+\fIstage\fR
+[common options]
+[stage options]
+\fIfile\fR
+
+.SH DESCRIPTION
+.B q3map2
+is a BSP compiler for games based on the id Tech 3 engine.
+It compiles .map files, which are editable with an editor
+(like GtkRadiant or Netradiant), into .bsp files,
+which are binary files for the game and are not editable.
+.PP
+It currently supports the following games:
+.br
+ * Nexuiz
+.br
+ * OpenArena
+.br
+ * Q3Rally
+.br
+ * Quake 3 Arena/Team Arena
+.br
+ * Quake Live
+.br
+ * Reaction
+.br
+ * Return to Castle Wolfenstien
+.br
+ * Smokin' Guns
+.br
+ * Soldier of Fortune II
+.br
+ * Star Trek Elite Force
+.br
+ * Star Wars Jedi Knight: Jedi Academy
+.br
+ * Star Wars Jedi Knight II: Jedi Outcast
+.br
+ * Tenebrae (Quake1 Engine Modification Project)
+.br
+ * Tremulous
+.br
+ * Unvanquished
+.br
+ * Urban Terror
+.br
+ * WarFork
+.br
+ * War§ow
+.br
+ * Wolfenstein: Enemy Territory
+.br
+ * World of Padman
+.br
+ * Xonotic
+
+.SH STAGE
+The \fIcommand\fR specifies the operation q3map will perform on the given file.
+Only one command can be specified.
+
+.TP
+\fB-bsp\fR
+Compiles a .map file into a .bsp (binary space partition) file for use
+with the Quake III Arena engine. It also writes a .prt (portal information)
+file and a .srf (surface) file. This is the default command: if no command
+is given, \fB-bcp\fR is assumed.
+This command requires \fIfile\fR to be a path to an uncompiled .map file.
+
+.TP
+\fB-vis\fR
+Creates visibility sets based on the portal file. This command requires
+\fIfile\fR to be a path to a .map file, which has been processed with
+the \fB-bcp\fR command.
+
+.TP
+\fB-light\fR
+Calculates lighting data. This command requires \fIfile\fR to be a path to an
+uncompiled .map file. If the \fB-light\fR command is used without additional
+options, less than desirable output will be achieved.
+
+.TP
+\fB-scale\fR <factor>
+Scales a compiled .bsp by the prescribed factor. For example a \fIfactor\fR
+of 0.25 will output a new .bsp that is 25% of the original .bsp's size,
+a \fIfactor\fR of 2.0 will output a new .bsp that is twice as large.
+The scaled output is written to the maps subdirectory of the game base directory.
+This command requires \fIfile\fR to be a path to a compiled .bsp file.
+
+.TP
+\fB-convert\fR
+Converts a compiled .bsp to another format. This command requires \fIfile\fR
+to be a path to a compiled .bsp file.
+
+.TP
+\fB-export\fR
+Exports internal lightmaps from a compiled .bsp to external .tga images.
+This command requires \fIfile\fR to be a path to a compiled .bsp file.
+
+.TP
+\fB-exportents\fR
+Exports internal entities from a compiled .bsp.
+This command requires \fIfile\fR to be a path to a compiled .bsp file.
+
+.TP
+\fB-fixaas\fR
+
+.TP
+\fB-info\fR
+Analyzes a compiled bsp and outputs information to the screen or log.
+This command requires \fIfile\fR to be a path to a compiled .bsp file.
+
+.TP
+\fB-import\fR
+Imports external .tga lightmaps back into a compiled .bsp.
+Imported lightmaps will only work on the unmodified BSP they were exported from.
+This command requires \fIfile\fR to be a path to a compiled .bsp file.
+
+.TP
+\fB-minimap\fR
+
+.SH COMMON OPTIONS
+.TP
+\fB-force\fR
+Allow reading some broken/unsupported BSP files e.g. when decompiling,
+may also crash
+.TP
+\fB-fs_basepath <path>
+Sets the given path as main directory of the game
+(can be used more than once to look in multiple paths)
+.TP
+\fB-fs_forbiddenpath <pattern>
+Pattern to ignore directories, pk3, and pk3dir; example pak?.pk3
+(can be used more than once to look for multiple patterns)
+.TP
+\fB-fs_game <gamename>
+Sets a different game directory name
+(default for Q3A: baseq3, can be used more than once)
+.TP
+\fB-fs_home <dir>
+Specifies where the user home directory is on Linux
+.TP
+\fB-fs_homebase <dir>
+Specifies game home directory relative to user home directory on Linux
+(default for Q3A: .q3a)
+.TP
+\fB-fs_homepath <path>
+Sets the given path as the game home directory name (fs_home + fs_homebase)
+.TP
+\fB-fs_nobasepath
+Do not load base paths in VFS, imply -fs_nomagicpath
+.TP
+\fB-fs_nomagicpath
+Do not try to guess base path magically
+.TP
+\fB-fs_nohomepath
+Do not load home path in VFS
+.TP
+\fB-fs_pakpath <path>
+Specify a package directory (can be used more than once to look
+in multiple paths)
+.TP
+\fB-game\fR <gamename>
+Load settings for the given game (default: quake3).
+Options are: darkplaces, dq, ef, et, etut, ja, jk2, nexuiz, oa, prophecy,
+q3rally, qfusion, quake3, quakelive, reaction, smokinguns, sof2, tenebrae,
+tremulous, unvanquished, warfork, warsow, wolf, wop, xonotic
+.TP
+\fB-threads\fR <number>
+Number of threads used to compile the map. For the fastest compile times
+the number of threads is set to the number of system processors.
+.TP
+\fB-v
+Output verbose information.
+.TP
+\fB-werror
+Make all warnings into errors.
+
+.SH STAGE OPTIONS
+.PP
+There are too many options to list here.
+.PP
+Please run \fBq3map2 -help <stage>\fR to see all the available options
+for a specific \fIstage\fR

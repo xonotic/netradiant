@@ -523,6 +523,11 @@ endif ()
 
 if (BUILD_TOOLS)
     add_subdirectory(tools)
+    if (UNIX)
+        include(GNUInstallDirs)
+        file(GLOB MANPAGES "${PROJECT_SOURCE_DIR}/tools/man/*.1")
+        install(FILES "${MANPAGES}" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+    endif ()
 
     file(GLOB DATA_FILES "${PROJECT_SOURCE_DIR}/setup/data/tools/*")
 
