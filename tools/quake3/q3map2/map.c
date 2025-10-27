@@ -644,7 +644,7 @@ void AddBrushBevels( void ){
 	order = 0;
 	for ( axis = 0; axis < 3; axis++ ) {
 		for ( dir = -1; dir <= 1; dir += 2, order++ ) {
-			// see if the plane is allready present
+			// see if the plane is already present
 			for ( i = 0, s = buildBrush->sides; i < buildBrush->numsides; i++, s++ )
 			{
 				/* ydnar: testing disabling of mre code */
@@ -761,7 +761,7 @@ void AddBrushBevels( void ){
 					// behind this plane, it is a proper edge bevel
 					for ( k = 0; k < buildBrush->numsides; k++ ) {
 
-						// if this plane has allready been used, skip it
+						// if this plane has already been used, skip it
 						if ( PlaneEqual( &mapplanes[buildBrush->sides[k].planenum], normal, dist ) ) {
 							break;
 						}

@@ -121,7 +121,7 @@ void FreeStackWinding( fixedWinding_t *w, pstack_t *stack ){
 
 	}
 	if ( stack->freewindings[i] ) {
-		Error( "FreeStackWinding: allready free" );
+		Error( "FreeStackWinding: already free" );
 	}
 	stack->freewindings[i] = 1;
 }
@@ -481,7 +481,7 @@ void RecursiveLeafFlow( int leafnum, threaddata_t *thread, pstack_t *prevstack )
 			continue;   // can't possibly see it
 		}
 
-		// if the portal can't see anything we haven't allready seen, skip it
+		// if the portal can't see anything we haven't already seen, skip it
 		if ( p->status == stat_done ) {
 			test = (long *)p->portalvis;
 		}

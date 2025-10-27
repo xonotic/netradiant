@@ -206,7 +206,7 @@ static gboolean Gtk_Idle_Print( gpointer data ){
 				}
 			}
 
-			// update console widget immediatly if we're doing something time-consuming
+			// update console widget immediately if we're doing something time-consuming
 	if ( args->contains_newline ) {
 				gtk_text_view_scroll_mark_onscreen( g_console, end );
 

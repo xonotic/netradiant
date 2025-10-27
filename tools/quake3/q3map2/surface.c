@@ -3778,5 +3778,5 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 	for ( i = 0; i < NUM_SURFACE_TYPES; i++ )
 		Sys_FPrintf( SYS_VRB, "%9d %s surfaces\n", numSurfacesByType[ i ], surfaceTypes[ i ] );
 
-	Sys_FPrintf( SYS_VRB, "%9d redundant indexes supressed, saving %d Kbytes\n", numRedundantIndexes, ( numRedundantIndexes * 4 / 1024 ) );
+	Sys_FPrintf( SYS_VRB, "%9d redundant indexes suppressed, saving %d Kbytes\n", numRedundantIndexes, ( numRedundantIndexes * 4 / 1024 ) );
 }
