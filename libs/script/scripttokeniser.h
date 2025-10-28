@@ -205,7 +205,7 @@ bool tokeniseComment( char c ){
 		pop();
 		if ( state() == Tokenise( &ScriptTokeniser::tokeniseToken ) ) {
 			pop();
-			m_emit = true; // emit token immediatly preceding comment
+			m_emit = true; // emit token immediately preceding comment
 		}
 	}
 	return true;
@@ -224,7 +224,7 @@ bool tokeniseEndBlockComment( char c ){
 		pop();
 		if ( state() == Tokenise( &ScriptTokeniser::tokeniseToken ) ) {
 			pop();
-			m_emit = true; // emit token immediatly preceding comment
+			m_emit = true; // emit token immediately preceding comment
 		}
 		break; // dont emit comment
 	case '*':
