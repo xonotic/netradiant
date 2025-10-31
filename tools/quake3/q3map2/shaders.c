@@ -1923,6 +1923,11 @@ static void ParseShaderFile( const char *filename ){
 					si->noFast = qtrue;
 				}
 
+				/* q3map_fast (opposite of q3map_nofast) */
+				else if ( !Q_stricmp( token, "q3map_fast" ) ) {
+					si->fast = qtrue;
+				}
+
 				/* q3map_patchshadows */
 				else if ( !Q_stricmp( token, "q3map_patchShadows" ) ) {
 					si->patchShadows = qtrue;

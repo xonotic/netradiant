@@ -759,6 +759,7 @@ typedef struct shaderInfo_s
 	qb_t forceMeta;                                     /* ydnar: force metasurface path */
 	qb_t noClip;                                        /* ydnar: don't clip into bsp, preserve original face winding */
 	qb_t noFast;                                        /* ydnar: supress fast lighting for surfaces with this shader */
+	qb_t fast;                                          /* ydnar: enforce fast lighting for surfaces with this shader */
 	qb_t invert;                                        /* ydnar: reverse facing */
 	qb_t nonplanar;                                     /* ydnar: for nonplanar meta surface merging */
 	qb_t tcGen;                                         /* ydnar: has explicit texcoord generation */
