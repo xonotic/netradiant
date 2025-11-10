@@ -146,6 +146,7 @@ if (FHS_INSTALL)
     endif ()
 endif ()
 
+set(RADIANT_MAN_DIR ${RADIANT_SHARE_DIR}/man)
 
 set(GAMEPACKS_DOWNLOAD_DIR ${PROJECT_BINARY_DIR}/download CACHE PATH "Where to store downloaded game packs")
 
@@ -523,11 +524,8 @@ endif ()
 
 if (BUILD_TOOLS)
     add_subdirectory(tools)
-    if (UNIX)
-        include(GNUInstallDirs)
-        file(GLOB MANPAGES "${PROJECT_SOURCE_DIR}/tools/man/*.1")
-        install(FILES "${MANPAGES}" DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
-    endif ()
+    file(GLOB MANPAGES "${PROJECT_SOURCE_DIR}/tools/man/*.1")
+    install(FILES "${MANPAGES}" DESTINATION ${RADIANT_MAN_DIR}/man1)
 
     file(GLOB DATA_FILES "${PROJECT_SOURCE_DIR}/setup/data/tools/*")
 
