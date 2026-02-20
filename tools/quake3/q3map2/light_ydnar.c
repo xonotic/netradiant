@@ -563,7 +563,9 @@ static int MapSingleLuxel( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert_t
 
 		/* project the origin onto the plane */
 		d = DotProduct( origin, plane ) - plane[ 3 ];
-		d /= plane[ lm->axisNum ];
+		// working around division by zero
+		vec_t c = plane[ lm->axisNum ];
+		d /= c ? c : 1;
 		origin[ lm->axisNum ] -= d;
 	}
 
