@@ -382,7 +382,7 @@ downloadPack () {
 				${RM_R} "${pack}"
 				# Requires the source repo to enable uploadpack.allowFilter (gitlab and github do).
 				# Not using --sparse as it enables core.sparseCheckoutCone which matches differently and downloads more files.
-				${GIT} clone --no-checkout --depth=1 --filter=tree:0 --revision="$rev" "$source_url" "__$pack"
+				${GIT} clone --no-checkout --depth=1 --filter=tree:0 ${rev:+"--revision=$rev"} "$source_url" "__$pack"
 				(
 					cd "__$pack"
 					${GIT} config core.sparseCheckout true
@@ -401,7 +401,7 @@ downloadPack () {
 						${GIT} pull
 					)
 				else
-					${GIT} clone "${source_url}" "${pack}"
+					${GIT} clone --depth=1 "${source_url}" "${pack}"
 				fi
 				;;
 		esac
