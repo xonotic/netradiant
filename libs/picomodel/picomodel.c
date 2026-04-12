@@ -126,6 +126,19 @@ void PicoSetFreeFileFunc( void ( *func )( void* ) ){
 
 
 /*
+   PicoSetSaveFileFunc()
+   sets the ptr to the file save function
+ */
+
+void PicoSetSaveFileFunc( int ( *func )( const char*, const unsigned char*, int ) ){
+	if ( func != NULL ) {
+		_pico_ptr_save_file = func;
+	}
+}
+
+
+
+/*
    PicoSetPrintFunc()
    sets the ptr to the print function
  */

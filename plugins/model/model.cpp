@@ -684,7 +684,9 @@ typedef PicoModelKey key_type;
 typedef PicoModel value_type;
 public:
 static value_type* construct( const key_type& key ){
+	PicoSetModelSaveRoot( key.first.c_str() );
 	picoModel_t* picomodel = PicoLoadModel( const_cast<char*>( key.first.c_str() ), key.second );
+	PicoSetModelSaveRoot( NULL );
 	value_type* value = new value_type( picomodel );
 	PicoFreeModel( picomodel );
 	return value;
@@ -936,7 +938,9 @@ size_t picoInputStreamReam( void* inputStream, unsigned char* buffer, size_t len
 }
 
 scene::Node& loadPicoModel( const picoModule_t* module, ArchiveFile& file ){
+	PicoSetModelSaveRoot( file.getName() );
 	picoModel_t* model = PicoModuleLoadModelStream( module, &file.getInputStream(), picoInputStreamReam, file.size(), 0, file.getName() );
+	PicoSetModelSaveRoot( NULL );
 	PicoModelNode* modelNode = new PicoModelNode( model );
 	PicoFreeModel( model );
 	return modelNode->node();

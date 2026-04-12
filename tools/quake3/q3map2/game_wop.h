@@ -53,7 +53,7 @@
 {
 	"wop",              /* -game x */
 	"wop",              /* default base game data dir */
-	".WoPadman",        /* unix home sub-dir */
+	".local/share/worldofpadman",        /* unix home sub-dir */
 	"wop",              /* magic path word */
 	"scripts",          /* shader directory */
 	64,                 /* max lightmapped surface verts */

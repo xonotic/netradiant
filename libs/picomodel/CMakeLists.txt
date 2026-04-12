@@ -28,4 +28,5 @@ add_library(picomodel STATIC
         pm_ms3d.c
         pm_obj.c
         pm_terrain.c
+        pm_gltf.c cgltf.h
         )

@@ -1573,6 +1573,7 @@ int                         MiniMapBSPMain( int argc, char **argv );
 
 /* convert_bsp.c */
 int                         ConvertBSPMain( int argc, char **argv );
+mesh_t                      *TessellatePatch( bspDrawSurface_t *ds );
 
 
 /* convert_map.c */
@@ -1584,6 +1585,9 @@ int                         ConvertBSPToASE( char *bspName );
 
 /* convert_obj.c */
 int                         ConvertBSPToOBJ( char *bspName );
+
+/* convert_gltf.c */
+int                         ConvertBSPToGLTF( char *bspName );
 
 /* brush.c */
 sideRef_t                   *AllocSideRef( side_t *side, sideRef_t *next );

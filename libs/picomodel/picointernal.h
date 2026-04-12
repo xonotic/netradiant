@@ -114,6 +114,7 @@ extern void                 *( *_pico_ptr_malloc )( size_t );
 extern void ( *_pico_ptr_free )( void* );
 extern void ( *_pico_ptr_load_file )( const char*, unsigned char**, int* );
 extern void ( *_pico_ptr_free_file )( void* );
+extern int ( *_pico_ptr_save_file )( const char*, const unsigned char*, int );
 extern void ( *_pico_ptr_print )( int, const char* );
 
 
@@ -130,6 +131,7 @@ void            _pico_free( void *ptr );
 /* files */
 void            _pico_load_file( const char *name, unsigned char **buffer, int *bufSize );
 void            _pico_free_file( void *buffer );
+int             _pico_save_file( const char *name, const unsigned char *buffer, int bufSize );
 
 /* strings */
 void            _pico_first_token( char *str );

@@ -48,6 +48,7 @@ void *( *_pico_ptr_malloc    )( size_t ) = malloc;
 void ( *_pico_ptr_free      )( void* ) = free;
 void ( *_pico_ptr_load_file )( const char*, unsigned char**, int* ) = NULL;
 void ( *_pico_ptr_free_file )( void* ) = NULL;
+int ( *_pico_ptr_save_file )( const char*, const unsigned char*, int ) = NULL;
 void ( *_pico_ptr_print     )( int, const char* ) = NULL;
 
 typedef union
@@ -226,6 +227,20 @@ void _pico_free_file( void *buffer ){
 	}
 	/* free the allocated file */
 	_pico_ptr_free_file( buffer );
+}
+
+/* _pico_save_file:
+ * wrapper around the savefile function pointer
+ * returns 1 on success, 0 on failure
+ */
+int _pico_save_file( const char *name, const unsigned char *buffer, int bufSize ){
+	if ( name == NULL || buffer == NULL || bufSize <= 0 ) {
+		return 0;
+	}
+	if ( _pico_ptr_save_file == NULL ) {
+		return 0;
+	}
+	return _pico_ptr_save_file( name, buffer, bufSize );
 }
 
 /* _pico_printf:

@@ -213,6 +213,7 @@ void                        PicoSetMallocFunc( void *( *func )( size_t ) );
 void                        PicoSetFreeFunc( void ( *func )( void* ) );
 void                        PicoSetLoadFileFunc( void ( *func )( const char*, unsigned char**, int* ) );
 void                        PicoSetFreeFileFunc( void ( *func )( void* ) );
+void                        PicoSetSaveFileFunc( int ( *func )( const char*, const unsigned char*, int ) );
 void                        PicoSetPrintFunc( void ( *func )( int, const char* ) );
 
 const picoModule_t          **PicoModuleList( int *numModules );
