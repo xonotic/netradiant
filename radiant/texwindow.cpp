@@ -2294,6 +2294,8 @@ ui::Widget TextureBrowser_constructWindow( ui::Window toplevel ){
 
 	// ui::Widget menu_bar{ui::null};
 	auto toolbar = ui::Toolbar::from( gtk_toolbar_new() );
+	gtk_toolbar_set_style( toolbar, GTK_TOOLBAR_ICONS );
+	gtk_toolbar_set_show_arrow( toolbar, FALSE );
 
 	{ // menu bar
 		// menu_bar = ui::Widget::from(gtk_menu_bar_new());
