@@ -502,7 +502,7 @@ ifeq ($(OS),Win32)
 $(INSTALLDIR)/q3map2.$(EXE): LDFLAGS_EXTRA := -Wl,--large-address-aware,--stack,4194304
 endif
 $(INSTALLDIR)/q3map2.$(EXE): LIBS_EXTRA := $(LIBS_XML) $(LIBS_GLIB) $(LIBS_PNG) $(LIBS_JPEG) $(LIBS_WEBP) $(LIBS_ZLIB)
-$(INSTALLDIR)/q3map2.$(EXE): CPPFLAGS_EXTRA := $(CPPFLAGS_XML) $(CPPFLAGS_GLIB) $(CPPFLAGS_PNG) $(CPPFLAGS_JPEG) $(CPPFLAGS_WEBP) -Itools/quake3/common -Ilibs -Iinclude
+$(INSTALLDIR)/q3map2.$(EXE): CPPFLAGS_EXTRA := $(CPPFLAGS_XML) $(CPPFLAGS_GLIB) $(CPPFLAGS_PNG) $(CPPFLAGS_JPEG) $(CPPFLAGS_WEBP) -Itools/quake3/common -Ilibs -Ilibs/crnrgba -Iinclude
 $(INSTALLDIR)/q3map2.$(EXE): \
 	tools/quake3/common/cmdlib.o \
 	tools/quake3/common/imagelib.o \
@@ -561,6 +561,7 @@ $(INSTALLDIR)/q3map2.$(EXE): \
 	tools/quake3/q3map2/visflow.o \
 	tools/quake3/q3map2/vis.o \
 	tools/quake3/q3map2/writebsp.o \
+	libcrnrgba.$(A) \
 	libddslib.$(A) \
 	libetclib.$(A) \
 	libfilematch.$(A) \
@@ -607,6 +608,10 @@ libpicomodel.$(A): \
 	libs/picomodel/pm_ms3d.o \
 	libs/picomodel/pm_obj.o \
 	libs/picomodel/pm_terrain.o \
+
+libcrnrgba.$(A): CPPFLAGS_EXTRA := -Ilibs -Ilibs/crunch
+libcrnrgba.$(A): \
+	libs/crnrgba/crn_rgba.o \
 
 libddslib.$(A): CPPFLAGS_EXTRA := -Ilibs
 libddslib.$(A): \
