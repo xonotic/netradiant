@@ -51,7 +51,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # Submodules
 #-----------------------------------------------------------------------
 
-if (EXISTS "${PROJECT_SOURCE_DIR}/libs/crunch/inc/crn_decomp.h")
+if (EXISTS "${PROJECT_SOURCE_DIR}/libs/crunch/crn_decomp.h")
     set(DEFAULT_BUILD_CRUNCH ON CACHE INTERNAL "...")
 else ()
     set(DEFAULT_BUILD_CRUNCH OFF CACHE INTERNAL "...")
