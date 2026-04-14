@@ -105,17 +105,6 @@ brew link --force gettext
 ```
 
 
-## Submodules
-
- * Crunch (optional, not built if submodule is not present)
-
-If you have not used `--recursive` option at `git clone` time, you can fetch Crunch this way (run this within the `netradiant` repository):
-
-```sh
-git submodule update --init --recursive
-```
-
-
 ## Simple compilation
 
 It is required to first download the sources using `git` (do not use tarballs) and to have dependencies installed, see [Getting the sources](#getting-the-sources) and [Dependencies](#dependencies) above.
@@ -210,8 +199,6 @@ Options:
   Do not build NetRadiant (default: `ON`, build netradiant graphical editor);
 * `BUILD_TOOLS=OFF`  
   Do not build q3map2 and other tools (default: `ON`, build command line tools);
-* `BUILD_CRUNCH=OFF`  
-  Disable crunch support (default: `ON` if submodule is there, enable crunch support);
 * `RADIANT_ABOUTMSG="Custom build by $(whoami)"`  
   A message shown in the about dialog (default: `Custom build`).
 
