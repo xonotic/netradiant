@@ -384,16 +384,21 @@ downloadPack () {
 				# Requires the source repo to enable uploadpack.allowFilter (gitlab and github do).
 				# Not using --sparse as it enables core.sparseCheckoutCone which matches differently and downloads more files.
 				# Not using --revision as it is not compatible with Ubuntu 24.04 LTS, only branches are supported for now.
-				${GIT} clone --no-checkout --depth=1 --filter=tree:0 ${rev:+"--branch=$rev"} "$source_url" "__$pack"
+				${GIT} clone --no-checkout --depth=1 --filter=tree:0 ${rev:+"--branch=${rev}"} "${source_url}" "__${pack}"
 				(
-					cd "__$pack"
+					cd "__${pack}"
 					${GIT} config core.sparseCheckout true
-					${GIT} config core.sparseCheckoutCone false # default, but in case they change it
-					echo "$subdir" > .git/info/sparse-checkout # git sparse-checkout command is experimental/unstable
+
+				       	# Default, but in case they change it.
+					${GIT} config core.sparseCheckoutCone false
+
+				       	# The git sparse-checkout command is experimental/unstable.
+					echo "${subdir}" > .git/info/sparse-checkout
+
 					${GIT} checkout
 				)
-				${MV} "__$pack/$subdir" "$pack"
-				${RM_R} "__$pack"
+				${MV} "__${pack}/${subdir}" "${pack}"
+				${RM_R} "__${pack}"
 				;;
 			'git')
 				if [ -d "${pack}" ]
