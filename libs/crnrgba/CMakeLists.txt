@@ -2,6 +2,7 @@ add_library(crnrgba STATIC
         crn_rgba.h
         crn_rgba.cpp
         ../crunch/inc/crn_decomp.h
+        ../crunch/inc/crn_defs.h
         ../crunch/inc/crnlib.h
         )
 
