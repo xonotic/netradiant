@@ -1,10 +1,7 @@
 add_subdirectory(cmdlib)
 add_subdirectory(container)
 
-if (BUILD_CRUNCH)
-    add_subdirectory(crnrgba)
-endif ()
-
+add_subdirectory(crnrgba)
 add_subdirectory(ddslib)
 add_subdirectory(debugging)
 add_subdirectory(etclib)

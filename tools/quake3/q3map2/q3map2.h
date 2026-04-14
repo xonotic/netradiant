@@ -66,9 +66,7 @@
 #include "mathlib.h"
 #include "md5lib.h"
 #include "ddslib.h"
-#ifdef BUILD_CRUNCH
 #include "crn_rgba.h"
-#endif // BUILD_CRUNCH
 
 #include "picomodel.h"
 
