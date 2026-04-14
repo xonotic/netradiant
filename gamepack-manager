@@ -378,11 +378,13 @@ downloadPack () {
 				;;
 			'gitdir')
 				local subdir="$(getValue "${name}" 5)"
-				local rev="$(getValue "${name}" 6)" # Any branch, tag or commit id
+			       	# Only branch for now, we would need --revision support for tag or commit id.
+				local rev="$(getValue "${name}" 6)"
 				${RM_R} "${pack}"
 				# Requires the source repo to enable uploadpack.allowFilter (gitlab and github do).
 				# Not using --sparse as it enables core.sparseCheckoutCone which matches differently and downloads more files.
-				${GIT} clone --no-checkout --depth=1 --filter=tree:0 ${rev:+"--revision=$rev"} "$source_url" "__$pack"
+				# Not using --revision as it is not compatible with Ubuntu 24.04 LTS, only branches are supported for now.
+				${GIT} clone --no-checkout --depth=1 --filter=tree:0 ${rev:+"--branch=$rev"} "$source_url" "__$pack"
 				(
 					cd "__$pack"
 					${GIT} config core.sparseCheckout true
