@@ -20,11 +20,11 @@
 #include <stdint.h>
 #ifdef WIN32
 #include <memory.h>
-#elif defined(__APPLE__)
-#include <malloc/malloc.h>
 #elif defined(__FreeBSD__)
 // <malloc.h> has been replaced by <stdlib.h>
 #include <malloc_np.h> // for malloc_usable_size
+#elif defined(__APPLE__)
+#include <malloc/malloc.h>
 #else
 #include <malloc.h>
 #endif
@@ -1456,7 +1456,7 @@ class decoder_tables {
 
     clear();
 
-    memcpy(this, &other, sizeof(*this));
+    memcpy((void*) this, &other, sizeof(*this));
 
     if (other.m_lookup) {
       m_lookup = crnd_new_array<uint32>(m_cur_lookup_size);
@@ -1599,10 +1599,10 @@ namespace crnd {
 void crnd_assert(const char* pExp, const char* pFile, unsigned line) {
   char buf[512];
 
-#if defined(WIN32) && defined(_MSC_VER)
+#if defined(_WIN32)
   sprintf_s(buf, sizeof(buf), "%s(%u): Assertion failure: \"%s\"\n", pFile, line, pExp);
 #else
-  sprintf(buf, "%s(%u): Assertion failure: \"%s\"\n", pFile, line, pExp);
+  snprintf(buf, sizeof(buf), "%s(%u): Assertion failure: \"%s\"\n", pFile, line, pExp);
 #endif
 
   crnd_output_debug_string(buf);
@@ -1616,10 +1616,10 @@ void crnd_assert(const char* pExp, const char* pFile, unsigned line) {
 void crnd_trace(const char* pFmt, va_list args) {
   if (crnd_is_debugger_present()) {
     char buf[512];
-#if defined(WIN32) && defined(_MSC_VER)
+#if defined(_WIN32)
     vsprintf_s(buf, sizeof(buf), pFmt, args);
 #else
-    vsprintf(buf, pFmt, args);
+    vsnprintf(buf, sizeof(buf), pFmt, args);
 #endif
 
     crnd_output_debug_string(buf);
@@ -1928,13 +1928,18 @@ static void* crnd_default_realloc(void* p, size_t size, size_t* pActual_size, bo
   void* p_new;
 
   if (!p) {
+#if defined(__FreeBSD__)
+    // See https://github.com/DaemonEngine/crunch/pull/36
+    p_new = ::aligned_alloc(CRNLIB_MIN_ALLOC_ALIGNMENT, size);
+#else
     p_new = ::malloc(size);
+#endif
 
     if (pActual_size) {
 #ifdef WIN32
       *pActual_size = p_new ? ::_msize(p_new) : 0;
 #elif defined(__APPLE__)
-      *pActual_size = p_new ? malloc_size(p_new) : 0;
+      *pActual_size = p_new ? ::malloc_size(p_new) : 0;
 #else
       *pActual_size = p_new ? malloc_usable_size(p_new) : 0;
 #endif
@@ -2199,7 +2204,7 @@ const crn_header* crnd_get_header(const void* pData, uint32 data_size) {
   return &file_header;
 }
 
-bool crnd_validate_file(const void* pData, uint32 data_size, crn_file_info* pFile_info) {
+bool crnd_validate_header(const void* pData, uint32 data_size, crn_file_info* pFile_info) {
   if (pFile_info) {
     if (pFile_info->m_struct_size != sizeof(crn_file_info))
       return false;
@@ -2218,10 +2223,8 @@ bool crnd_validate_file(const void* pData, uint32 data_size, crn_file_info* pFil
   if (header_crc != pHeader->m_header_crc16)
     return false;
 
-  const uint32 data_crc = crc16((const uint8*)pData + pHeader->m_header_size, pHeader->m_data_size - pHeader->m_header_size);
-  if (data_crc != pHeader->m_data_crc16)
-    return false;
-
+  if (pHeader->m_data_size < pHeader->m_header_size)
+      return false;
   if ((pHeader->m_faces != 1) && (pHeader->m_faces != 6))
     return false;
   if ((pHeader->m_width < 1) || (pHeader->m_width > cCRNMaxLevelResolution))
@@ -2261,6 +2264,20 @@ bool crnd_validate_file(const void* pData, uint32 data_size, crn_file_info* pFil
   }
 
   return true;
+}
+
+bool crnd_validate_file(const void* pData, uint32 data_size, crn_file_info* pFile_info) {
+  if (!crnd_validate_header(pData, data_size, pFile_info))
+    return false;
+
+  // was already validated by crnd_get_header
+  const crn_header* pHeader = static_cast<const crn_header*>(pData);
+
+  if (pHeader->m_data_size > data_size)
+      return false;
+
+  const uint32 data_crc = crc16((const uint8*)pData + pHeader->m_header_size, pHeader->m_data_size - pHeader->m_header_size);
+  return data_crc == pHeader->m_data_crc16;
 }
 
 bool crnd_get_texture_info(const void* pData, uint32 data_size, crn_texture_info* pInfo) {

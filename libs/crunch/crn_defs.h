@@ -113,7 +113,14 @@ uint32 crnd_get_crn_format_bits_per_texel(crn_format fmt);
 // Returns the number of bytes per DXTn block (8 or 16).
 uint32 crnd_get_bytes_per_dxt_block(crn_format fmt);
 
-// Validates the entire file by checking the header and data CRC's.
+// Validates the file header, performing a CRC check on it and verifying that there is
+// e.g. a sane number of levels.
+// pData/data_size need only include the header, but may be the whole file.
+// The crn_file_info.m_struct_size field must be set before calling this function.
+bool crnd_validate_header(const void* pData, uint32 data_size, crn_file_info* pFile_info);
+
+// Validates the entire file by calling crnd_validate_header, then checking the data CRC
+// for the whole file.
 // This is not something you want to be doing much!
 // The crn_file_info.m_struct_size field must be set before calling this function.
 bool crnd_validate_file(const void* pData, uint32 data_size, crn_file_info* pFile_info);

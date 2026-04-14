@@ -226,7 +226,7 @@ struct crn_comp_params {
     m_crn_alpha_selector_palette_size = 0;
 
     m_num_helper_threads = 0;
-    m_userdata0 = 0;
+    m_userdata0 = 1;
     m_userdata1 = 0;
     m_pProgress_func = NULL;
     m_pProgress_func_data = NULL;
