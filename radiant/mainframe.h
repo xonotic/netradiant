@@ -136,7 +136,19 @@ void ReleaseContexts();
 void CreateContexts();
 
 EViewStyle CurrentStyle(){
+#if defined(WORKAROUND_GTK3_SINGLE_WINDOW_LAYOUT)
+	/* HACK: Disable the floating windows layouts because
+	GTK3 doesn't support context sharing accross windows. */
+	switch (m_nCurrentStyle) {
+		case eFloating:
+		case eRegularLeft:
+			return eSingle;
+		default:
+			return m_nCurrentStyle;
+	}
+#else
 	return m_nCurrentStyle;
+#endif
 };
 bool FloatingGroupDialog(){
 	return CurrentStyle() == eFloating || CurrentStyle() == eSplit;
