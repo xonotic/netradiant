@@ -38,6 +38,8 @@
 #include "gtkutil/filechooser.h"
 #include "gtkmisc.h"
 #include "select.h"
+#include "brushmanip.h"
+#include "patchmanip.h"
 #include "map.h"
 #include "preferences.h"
 #include "preferencesystem.h"
@@ -413,6 +415,29 @@ void Entity_createFromSelection( const char* name, const Vector3& origin ){
 		const char* model = misc_model_dialog(MainFrame_getWindow());
 		if ( model != 0 ) {
 			Node_getEntity( node )->setKeyValue( "model", model );
+		}
+	}
+
+	//setting default shader, ie "trigger_*" entities will get the shader "textures/common/trigger"
+	for( unsigned int i = 0; i < 3; i++ )
+	{
+		StringOutputStream matchKey( 256 );
+		matchKey << "EntityDefaultShaderMatch" << ( i + 1 );
+		const char* match = g_pGameDescription->getKeyValue( matchKey.c_str() );
+		if ( string_empty( match ) ) {
+			break;
+		}
+		StringOutputStream shaderKey( 256 );
+		shaderKey << "EntityDefaultShaderName" << ( i + 1 );
+		const char* shader = g_pGameDescription->getKeyValue( shaderKey.c_str() );
+		if ( string_empty( shader ) ) {
+			break;
+		}
+		if( g_pattern_match_simple( match, name ) )
+		{
+			Scene_PatchSetShader_Selected( GlobalSceneGraph(), shader );
+			Scene_BrushSetShader_Selected( GlobalSceneGraph(), shader );
+			break;
 		}
 	}
 }
