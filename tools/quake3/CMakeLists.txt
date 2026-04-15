@@ -61,6 +61,7 @@ set(q3map2_games
 radiant_tool(q3map2
         q3map2/q3map2.rc
 
+	${CMAKE_SOURCE_DIR}/libs/crnrgba/crn_rgba.h
 	${CMAKE_SOURCE_DIR}/libs/cgltf/cgltf.h
 	${CMAKE_SOURCE_DIR}/libs/cgltf/cgltf_write.h
 
