@@ -1750,7 +1750,9 @@ void XYWnd::RenderActive( void ){
 	if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
 		if ( Map_Valid( g_map ) && ScreenUpdates_Enabled() ) {
 			GlobalOpenGL_debugAssertNoErrors();
+#if GTK_TARGET == 2
 			glDrawBuffer( GL_FRONT );
+#endif
 
 			if ( g_xywindow_globals_private.show_outline ) {
 				glMatrixMode( GL_PROJECTION );
@@ -1838,7 +1840,9 @@ void XYWnd::RenderActive( void ){
 				XYWnd::XY_DrawAxis();
 			}
 
+#if GTK_TARGET == 2
 			glDrawBuffer( GL_BACK );
+#endif
 			GlobalOpenGL_debugAssertNoErrors();
 			glwidget_make_current( m_gl_widget );
 		}
@@ -2188,7 +2192,9 @@ void XYWnd::UpdateCameraIcon( void ){
 	if ( glwidget_make_current( m_gl_widget ) != FALSE ) {
 		if ( Map_Valid( g_map ) && ScreenUpdates_Enabled() ) {
 			GlobalOpenGL_debugAssertNoErrors();
+#if GTK_TARGET == 2
 			glDrawBuffer( GL_FRONT );
+#endif
 			{
 				// clear
 				glViewport( 0, 0, m_nWidth, m_nHeight );
@@ -2239,7 +2245,9 @@ void XYWnd::UpdateCameraIcon( void ){
 				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 			}
 
+#if GTK_TARGET == 2
 			glDrawBuffer( GL_BACK );
+#endif
 			GlobalOpenGL_debugAssertNoErrors();
 			glwidget_make_current( m_gl_widget );
 		}
