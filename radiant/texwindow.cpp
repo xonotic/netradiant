@@ -1413,7 +1413,11 @@ void Texture_Draw( TextureBrowser& textureBrowser ){
 
 void TextureBrowser_queueDraw( TextureBrowser& textureBrowser ){
 	if ( textureBrowser.m_gl_widget ) {
+#if GTK_TARGET == 3
+		gtk_gl_area_queue_render( GTK_GL_AREA((GtkWidget *) textureBrowser.m_gl_widget) );
+#else
 		gtk_widget_queue_draw( textureBrowser.m_gl_widget );
+#endif
 	}
 }
 

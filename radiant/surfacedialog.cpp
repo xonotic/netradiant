@@ -98,7 +98,11 @@ ui::Widget g_textoolWin;
 //End Textool globals
 
 void queueDraw(){
+#if GTK_TARGET == 3
+	gtk_gl_area_queue_render( GTK_GL_AREA((GtkWidget *) g_textoolWin) );
+#else
 	gtk_widget_queue_draw( g_textoolWin );
+#endif
 }
 
 }

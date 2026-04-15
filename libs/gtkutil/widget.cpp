@@ -3,6 +3,12 @@
 
 void widget_queue_draw(ui::Widget &widget)
 {
+#if GTK_TARGET == 3
+    if (GTK_IS_GL_AREA(widget)) {
+        gtk_gl_area_queue_render(GTK_GL_AREA((GtkWidget *) widget));
+        return;
+    }
+#endif
     gtk_widget_queue_draw(widget);
 }
 

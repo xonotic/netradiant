@@ -79,7 +79,7 @@ ui::GLArea glwidget_new(bool zbuffer)
 {
     auto self = ui::GLArea::from(GTK_GL_AREA(gtk_gl_area_new()));
     gtk_gl_area_set_has_depth_buffer(self, zbuffer);
-    gtk_gl_area_set_auto_render(self, true); // FIXME
+    gtk_gl_area_set_auto_render(self, false);
 
     self.connect("realize", G_CALLBACK(glwidget_context_created), nullptr);
     return self;
@@ -97,7 +97,8 @@ bool glwidget_make_current(ui::GLArea self)
 void glwidget_swap_buffers(ui::GLArea self)
 {
     g_assert(GTK_IS_GL_AREA(self));
-    gtk_gl_area_queue_render(self);
+    // GtkGLArea automatically presents the back buffer after the
+    // "render" signal handler returns. No explicit swap needed.
 }
 
 #endif
