@@ -27,9 +27,23 @@
 
 #include "generic/callback.h"
 #include "property.h"
+#include "globaldefs.h"
 
 // ignore numlock
 #define ALLOWED_MODIFIERS ( ~( GDK_MOD2_MASK | GDK_LOCK_MASK | GDK_MOD3_MASK | GDK_MOD4_MASK | GDK_MOD5_MASK ) )
+
+// On macOS, remap Command (Meta) to Control so that native
+// macOS shortcuts (Cmd+Z, Cmd+C, etc.) work like Ctrl+ on Linux/Windows.
+inline GdkModifierType normalize_modifiers( GdkModifierType modifiers ){
+#if GDEF_OS_MACOS
+#ifdef GDK_META_MASK
+	if ( modifiers & GDK_META_MASK ) {
+		modifiers = (GdkModifierType)( ( modifiers & ~GDK_META_MASK ) | GDK_CONTROL_MASK );
+	}
+#endif
+#endif
+	return modifiers;
+}
 
 struct Accelerator
 {
