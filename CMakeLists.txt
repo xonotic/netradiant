@@ -262,6 +262,14 @@ if (BUILD_RADIANT)
     message(STATUS "GTK_TARGET: ${GTK_TARGET}")
     add_definitions(-DGTK_TARGET=${GTK_TARGET})
 
+    if (GTK_TARGET EQUAL 3)
+        option(GTK3_SINGLE_WINDOW_LAYOUT "Only allow single-window layouts with GTK3 to avoid unshared GL context bugs" ON)
+
+        if (GTK3_SINGLE_WINDOW_LAYOUT)
+            add_definitions(-DWORKAROUND_GTK3_SINGLE_WINDOW_LAYOUT)
+        endif()
+    endif()
+
     if (WIN32)
         add_definitions(-DWORKAROUND_WINDOWS_FLOATING_WINDOW=1)
 

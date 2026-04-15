@@ -3593,7 +3593,13 @@ void GlobalGL_sharedContextDestroyed(){
 
 void Layout_constructPreferences( PreferencesPage& page ){
 	{
+#if defined(WORKAROUND_GTK3_SINGLE_WINDOW_LAYOUT)
+		/* HACK: Disable the floating windows layouts because
+		GTK3 doesn't support context sharing accross windows. */
+		const char* layouts[] = { "window1.png", "window2-disabled.png", "window3-disabled.png", "window4.png", "window5.png" };
+#else
 		const char* layouts[] = { "window1.png", "window2.png", "window3.png", "window4.png", "window5.png" };
+#endif
 		page.appendRadioIcons(
 			"Window Layout",
 			STRING_ARRAY_RANGE( layouts ),
