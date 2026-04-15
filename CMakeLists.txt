@@ -542,7 +542,22 @@ endif ()
 #-----------------------------------------------------------------------
 
 set(GAMEPACKS_LICENSE_LIST free CACHE STRING "Download game packs by license")
+execute_process(
+    COMMAND "${PROJECT_SOURCE_DIR}/gamepack-manager" --list-licenses
+    OUTPUT_VARIABLE _GAMEPACKS_AVAILABLE_LICENSES
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(REGEX REPLACE "\n" ";" _GAMEPACKS_AVAILABLE_LICENSES "${_GAMEPACKS_AVAILABLE_LICENSES}")
+set_property(CACHE GAMEPACKS_LICENSE_LIST PROPERTY STRINGS none all free ${_GAMEPACKS_AVAILABLE_LICENSES})
+
 set(GAMEPACKS_NAME_LIST none CACHE STRING "Download game packs by name")
+execute_process(
+    COMMAND "${PROJECT_SOURCE_DIR}/gamepack-manager" --list-names
+    OUTPUT_VARIABLE _GAMEPACKS_AVAILABLE_NAMES
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(REGEX REPLACE "\n" ";" _GAMEPACKS_AVAILABLE_NAMES "${_GAMEPACKS_AVAILABLE_NAMES}")
+set_property(CACHE GAMEPACKS_NAME_LIST PROPERTY STRINGS none all ${_GAMEPACKS_AVAILABLE_NAMES})
 
 if (DOWNLOAD_GAMEPACKS)
     add_custom_target(gamepacks ALL
