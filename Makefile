@@ -506,7 +506,7 @@ ifeq ($(OS),Win32)
 $(INSTALLDIR)/q3map2.$(EXE): LDFLAGS_EXTRA := -Wl,--large-address-aware,--stack,4194304
 endif
 $(INSTALLDIR)/q3map2.$(EXE): LIBS_EXTRA := $(LIBS_XML) $(LIBS_GLIB) $(LIBS_PNG) $(LIBS_JPEG) $(LIBS_WEBP) $(LIBS_MINIZIP)
-$(INSTALLDIR)/q3map2.$(EXE): CPPFLAGS_EXTRA := $(CPPFLAGS_XML) $(CPPFLAGS_GLIB) $(CPPFLAGS_PNG) $(CPPFLAGS_JPEG) $(CPPFLAGS_WEBP) $(CPPFLAGS_MINIZIP) -Itools/quake3/common -Ilibs -Ilibs/crnrgba -Iinclude
+$(INSTALLDIR)/q3map2.$(EXE): CPPFLAGS_EXTRA := $(CPPFLAGS_XML) $(CPPFLAGS_GLIB) $(CPPFLAGS_PNG) $(CPPFLAGS_JPEG) $(CPPFLAGS_WEBP) $(CPPFLAGS_MINIZIP) -Itools/quake3/common -Ilibs -Ilibs/crnrgba -Ilibs/cgltf -Iinclude
 $(INSTALLDIR)/q3map2.$(EXE): \
 	tools/quake3/common/cmdlib.o \
 	tools/quake3/common/imagelib.o \
@@ -530,6 +530,7 @@ $(INSTALLDIR)/q3map2.$(EXE): \
 	tools/quake3/q3map2/bsp_info.o \
 	tools/quake3/q3map2/convert_ase.o \
 	tools/quake3/q3map2/convert_bsp.o \
+	tools/quake3/q3map2/convert_gltf.o \
 	tools/quake3/q3map2/convert_obj.o \
 	tools/quake3/q3map2/convert_map.o \
 	tools/quake3/q3map2/decals.o \
@@ -587,7 +588,7 @@ libl_net.$(A): \
 	libs/l_net/l_net.o \
 	$(if $(findstring $(OS),Win32),libs/l_net/l_net_wins.o,libs/l_net/l_net_berkley.o) \
 
-libpicomodel.$(A): CPPFLAGS_EXTRA := -Ilibs
+libpicomodel.$(A): CPPFLAGS_EXTRA := -Ilibs -Ilibs/cgltf
 libpicomodel.$(A): \
 	libs/picomodel/lwo/clip.o \
 	libs/picomodel/lwo/envelope.o \
@@ -605,6 +606,7 @@ libpicomodel.$(A): \
 	libs/picomodel/pm_3ds.o \
 	libs/picomodel/pm_ase.o \
 	libs/picomodel/pm_fm.o \
+	libs/picomodel/pm_gltf.o \
 	libs/picomodel/pm_lwo.o \
 	libs/picomodel/pm_md2.o \
 	libs/picomodel/pm_md3.o \

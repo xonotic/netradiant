@@ -4,10 +4,13 @@ set -u -e -o pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-libs=('crunch')
+libs=('crunch' 'cgltf')
 
 crunch_prefix='https://raw.githubusercontent.com/DaemonEngine/crunch/refs/heads/master/inc/'
 crunch_files=('crn_decomp.h' 'crn_defs.h' 'crnlib.h')
+
+cgltf_prefix='https://raw.githubusercontent.com/jkuhlmann/cgltf/refs/heads/master/'
+cgltf_files=('cgltf.h' 'cgltf_write.h')
 
 for lib in "${libs[@]}"
 do
