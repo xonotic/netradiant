@@ -693,9 +693,22 @@ static void ConvertBrush( FILE *f, int num, bspBrush_t *brush, vec3_t origin, qb
 				//	nt =  cosv * vecs[1][tv];
 				//	vecsrotscaled[1][sv] = ns / scale[1];
 				//	vecsrotscaled[1][tv] = nt / scale[1];
-				scale[0] = 1.0 / sqrt( sts[0][0] * sts[0][0] + sts[0][1] * sts[0][1] );
-				scale[1] = 1.0 / sqrt( sts[1][0] * sts[1][0] + sts[1][1] * sts[1][1] );
-				rotate = atan2( sts[0][1] * vecs[0][sv] - sts[1][0] * vecs[1][tv], sts[0][0] * vecs[0][sv] + sts[1][1] * vecs[1][tv] ) * ( 180.0f / Q_PI );
+				{
+					// sts[0] = gamma0 * (cosv, sinv), where gamma0 = V0/scale[0]
+					// sts[1] = gamma1 * (-sinv, cosv), where gamma1 = V1/scale[1]
+					// Extract rotation from sts[0] direction; gamma0 sign absorbed into angle
+					vec_t ang = atan2( sts[0][1], sts[0][0] );
+					vec_t cosv_e = cos( ang );
+					vec_t sinv_e = sin( ang );
+					// gamma0 always positive (magnitude of sts[0])
+					vec_t gamma0 = sqrt( sts[0][0] * sts[0][0] + sts[0][1] * sts[0][1] );
+					// gamma1 with sign: project sts[1] onto expected direction (-sinv, cosv)
+					vec_t gamma1 = -sts[1][0] * sinv_e + sts[1][1] * cosv_e;
+
+					scale[0] = vecs[0][sv] / gamma0;
+					scale[1] = ( fabs( gamma1 ) > 1e-10 ) ? vecs[1][tv] / gamma1 : 1.0;
+					rotate = ang * ( 180.0f / Q_PI );
+				}
 				shift[0] = buildSide->shaderInfo->shaderWidth * FRAC( sts[0][2] / buildSide->shaderInfo->shaderWidth );
 				shift[1] = buildSide->shaderInfo->shaderHeight * FRAC( sts[1][2] / buildSide->shaderInfo->shaderHeight );
 
