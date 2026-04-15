@@ -20,7 +20,6 @@
             "-DGIT_VERSION=nix" # meh
             "-DDOWNLOAD_GAMEPACKS=OFF"
             "-DBUNDLE_LIBRARIES=OFF"
-            "-DBUILD_CRUNCH=OFF"
             "-DBUILD_RADIANT=OFF"
             "-DBUILD_TOOLS=ON"
             "-DFHS_INSTALL=ON"

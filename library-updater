@@ -1,0 +1,27 @@
+#! /usr/bin/env bash
+
+set -u -e -o pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+libs=('crunch')
+
+crunch_prefix='https://raw.githubusercontent.com/DaemonEngine/crunch/refs/heads/master/inc/'
+crunch_files=('crn_decomp.h' 'crn_defs.h' 'crnlib.h')
+
+for lib in "${libs[@]}"
+do
+	libdir="libs/${lib}"
+	mkdir -p "${libdir}"
+	cd "${libdir}"
+
+	prefix="$(eval "echo \"\${${lib}_prefix}\"")"
+	files=($(eval "echo \"\${${lib}_files[@]}\""))
+
+	for file in "${files[@]}"
+	do
+		url="${prefix}${file}"
+		wget -O "${file}" "${url}"
+		dos2unix "${file}"
+	done
+done

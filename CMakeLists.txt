@@ -51,19 +51,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # Submodules
 #-----------------------------------------------------------------------
 
-if (EXISTS "${PROJECT_SOURCE_DIR}/libs/crunch/inc/crn_decomp.h")
-    set(DEFAULT_BUILD_CRUNCH ON CACHE INTERNAL "...")
-else ()
-    set(DEFAULT_BUILD_CRUNCH OFF CACHE INTERNAL "...")
-endif ()
-
 #-----------------------------------------------------------------------
 # Build options
 #-----------------------------------------------------------------------
 
 option(BUILD_RADIANT "Build the GUI" ON)
 option(BUILD_TOOLS "Build the tools" ON)
-option(BUILD_CRUNCH "Build Crunch image support" ${DEFAULT_BUILD_CRUNCH})
 option(DOWNLOAD_GAMEPACKS "Download game packs" ON)
 # option(USE_WERROR "Build with -Werror -pedantic-errors" OFF)
 option(USE_WERROR "Build with -Werror" OFF)

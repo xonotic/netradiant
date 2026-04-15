@@ -93,15 +93,6 @@ do
 	esac
 done
 
-declare -a fetch_submodules_cmd
-for submodule_file in 'libs/crunch/inc/crn_decomp.h'
-do
-	if ! [ -f "${project_source_dir}/${submodule_file}" ]
-	then
-		fetch_submodules_cmd=(git -C "${project_source_dir}" submodule update --init --recursive)
-	fi
-done
-
 case "$(uname -s)" in
 	'Darwin')
 		cmake_user_opts[${#cmake_user_opts[@]}]='-DBUILTIN_GTKGLEXT=ON -DBUILTIN_GTKTHEME_MOJAVE=ON'
@@ -112,11 +103,6 @@ task_enter_build_dir () {
 	sync
 	mkdir -pv "${build_dir}"
 	cd "${build_dir}"
-}
-
-task_fetch_submodules () {
-	sync
-	"${fetch_submodules_cmd[@]}"
 }
 
 task_configure () {
@@ -152,8 +138,6 @@ task_install () {
 set -x
 
 task_enter_build_dir
-
-task_fetch_submodules
 
 task_configure
 

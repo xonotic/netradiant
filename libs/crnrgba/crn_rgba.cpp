@@ -28,7 +28,7 @@
 #include <algorithm>
 
 #include "ddslib.h"
-#include "../crunch/inc/crn_decomp.h"
+#include "crn_decomp.h"
 
 int LittleLong(int l) {
 #if GDEF_ARCH_ENDIAN_BIG
