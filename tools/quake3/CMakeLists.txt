@@ -27,6 +27,7 @@ find_package(Minizip REQUIRED)
 include_directories(${Minizip_INCLUDE_DIRS})
 
 include_directories(${CMAKE_SOURCE_DIR}/libs/crnrgba)
+include_directories(${CMAKE_SOURCE_DIR}/libs/cgltf)
 include_directories(${CMAKE_SOURCE_DIR}/libs/picomodel)
 
 set(q3map2_games
