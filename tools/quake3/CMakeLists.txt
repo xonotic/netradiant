@@ -27,6 +27,7 @@ find_package(Minizip REQUIRED)
 include_directories(${Minizip_INCLUDE_DIRS})
 
 include_directories(${CMAKE_SOURCE_DIR}/libs/crnrgba)
+include_directories(${CMAKE_SOURCE_DIR}/libs/picomodel)
 
 set(q3map2_games
         q3map2/game_darkplaces.h
@@ -87,6 +88,7 @@ radiant_tool(q3map2
         q3map2/convert_bsp.c
         q3map2/convert_map.c
         q3map2/convert_obj.c
+        q3map2/convert_gltf.c
         q3map2/decals.c
         q3map2/exportents.c
         q3map2/facebsp.c

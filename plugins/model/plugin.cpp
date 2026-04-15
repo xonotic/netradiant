@@ -41,6 +41,7 @@ typedef unsigned char byte;
 #include "string/string.h"
 #include "stream/stringstream.h"
 #include "typesystem.h"
+#include "cmdlib.h"
 
 #include "model.h"
 
@@ -80,6 +81,75 @@ void PicoFreeFileFunc( void* file ){
 	vfsFreeFile( file );
 }
 
+static CopiedString s_modelSaveRoot;
+
+void PicoSetModelSaveRoot( const char *modelVfsPath ){
+	if ( modelVfsPath != NULL ) {
+		const char *root = GlobalFileSystem().findFile( modelVfsPath );
+		if ( root != NULL && root[0] != '\0' ) {
+			s_modelSaveRoot = root;
+			return;
+		}
+	}
+	s_modelSaveRoot = "";
+}
+
+int PicoSaveFileFunc( const char *name, const unsigned char *buffer, int bufSize ){
+	/* resolve VFS-relative name to absolute filesystem path */
+	const char *root = NULL;
+
+	/* prefer the root where the current model was loaded from */
+	if ( !string_empty( s_modelSaveRoot.c_str() ) ) {
+		root = s_modelSaveRoot.c_str();
+	}
+
+	if ( root == NULL || root[0] == '\0' ) {
+		root = GlobalFileSystem().findFile( name );
+	}
+
+	if ( root == NULL || root[0] == '\0' ) {
+		root = GlobalFileSystem().findFile( "" );
+		if ( root == NULL || root[0] == '\0' ) {
+			return 0;
+		}
+	}
+
+	/* construct full path */
+	StringOutputStream fullPath( 256 );
+	fullPath << root << name;
+
+	FILE *f = fopen( fullPath.c_str(), "rb" );
+	if ( f != NULL ) {
+		/* file already exists, skip writing */
+		fclose( f );
+		return 1;
+	}
+
+	/* create intermediate directories if needed */
+	{
+		StringOutputStream dirPath( 256 );
+		dirPath << fullPath.c_str();
+		char *dir = const_cast<char*>( dirPath.c_str() );
+		for ( char *p = dir + 1; *p != '\0'; ++p ) {
+			if ( *p == '/' ) {
+				*p = '\0';
+				Q_mkdir( dir );
+				*p = '/';
+			}
+		}
+	}
+
+	f = fopen( fullPath.c_str(), "wb" );
+	if ( f == NULL ) {
+		globalErrorStream() << "Failed to save file: " << fullPath.c_str() << "\n";
+		return 0;
+	}
+	fwrite( buffer, 1, bufSize, f );
+	fclose( f );
+	globalOutputStream() << "Save file: " << fullPath.c_str() << "\n";
+	return 1;
+}
+
 void pico_initialise(){
 	PicoInit();
 	PicoSetMallocFunc( malloc );
@@ -87,6 +157,7 @@ void pico_initialise(){
 	PicoSetPrintFunc( PicoPrintFunc );
 	PicoSetLoadFileFunc( PicoLoadFileFunc );
 	PicoSetFreeFileFunc( PicoFreeFileFunc );
+	PicoSetSaveFileFunc( PicoSaveFileFunc );
 }
 
 

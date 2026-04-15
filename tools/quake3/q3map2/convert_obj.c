@@ -50,12 +50,25 @@ static void ConvertLightmapToMTL( FILE *f, const char *base, int lightmapNum );
 int objVertexCount = 0;
 int objLastShaderNum = -1;
 static void ConvertSurfaceToOBJ( FILE *f, bspModel_t *model, int modelNum, bspDrawSurface_t *ds, int surfaceNum, vec3_t origin ){
-	int i, v, a, b, c;
+	int i, v, x, y, a, b, c, numVerts, numIndexes;
 	bspDrawVert_t   *dv;
+	mesh_t          *mesh;
 
-	/* ignore patches for now */
-	if ( ds->surfaceType != MST_PLANAR && ds->surfaceType != MST_TRIANGLE_SOUP ) {
+	/* skip unsupported surface types */
+	if ( ds->surfaceType != MST_PLANAR && ds->surfaceType != MST_TRIANGLE_SOUP && ds->surfaceType != MST_PATCH ) {
 		return;
+	}
+
+	/* tessellate patches */
+	if ( ds->surfaceType == MST_PATCH ) {
+		mesh = TessellatePatch( ds );
+		numVerts = mesh->width * mesh->height;
+		numIndexes = ( mesh->width - 1 ) * ( mesh->height - 1 ) * 6;
+	}
+	else {
+		mesh = NULL;
+		numVerts = ds->numVerts;
+		numIndexes = ds->numIndexes;
 	}
 
 	fprintf( f, "g mat%dmodel%dsurf%d\r\n", ds->shaderNum, modelNum, surfaceNum );
@@ -66,6 +79,9 @@ static void ConvertSurfaceToOBJ( FILE *f, bspModel_t *model, int modelNum, bspDr
 		break;
 	case MST_TRIANGLE_SOUP:
 		fprintf( f, "# SURFACETYPE MST_TRIANGLE_SOUP\r\n" );
+		break;
+	case MST_PATCH:
+		fprintf( f, "# SURFACETYPE MST_PATCH\r\n" );
 		break;
 	}
 
@@ -92,11 +108,15 @@ static void ConvertSurfaceToOBJ( FILE *f, bspModel_t *model, int modelNum, bspDr
 		}
 	}
 
-	/* export vertex */
-	for ( i = 0; i < ds->numVerts; i++ )
+	/* export vertices */
+	for ( i = 0; i < numVerts; i++ )
 	{
-		v = i + ds->firstVert;
-		dv = &bspDrawVerts[ v ];
+		if ( mesh ) {
+			dv = &mesh->verts[ i ];
+		}
+		else {
+			dv = &bspDrawVerts[ i + ds->firstVert ];
+		}
 		fprintf( f, "# vertex %d\r\n", i + objVertexCount + 1 );
 		fprintf( f, "v %f %f %f\r\n", dv->xyz[ 0 ], dv->xyz[ 1 ], dv->xyz[ 2 ] );
 		fprintf( f, "vn %f %f %f\r\n", dv->normal[ 0 ], dv->normal[ 1 ], dv->normal[ 2 ] );
@@ -109,19 +129,60 @@ static void ConvertSurfaceToOBJ( FILE *f, bspModel_t *model, int modelNum, bspDr
 	}
 
 	/* export faces */
-	for ( i = 0; i < ds->numIndexes; i += 3 )
-	{
-		a = bspDrawIndexes[ i + ds->firstIndex ];
-		c = bspDrawIndexes[ i + ds->firstIndex + 1 ];
-		b = bspDrawIndexes[ i + ds->firstIndex + 2 ];
-		fprintf( f, "f %d/%d/%d %d/%d/%d %d/%d/%d\r\n",
-				 a + objVertexCount + 1, a + objVertexCount + 1, a + objVertexCount + 1,
-				 b + objVertexCount + 1, b + objVertexCount + 1, b + objVertexCount + 1,
-				 c + objVertexCount + 1, c + objVertexCount + 1, c + objVertexCount + 1
-				 );
+	if ( mesh ) {
+		/* generate triangles from tessellated grid */
+		for ( y = 0; y < mesh->height - 1; y++ )
+		{
+			for ( x = 0; x < mesh->width - 1; x++ )
+			{
+				int r = ( x + y ) & 1;
+				int pw0 = x + y * mesh->width;
+				int pw1 = x + ( y + 1 ) * mesh->width;
+				int pw2 = ( x + 1 ) + ( y + 1 ) * mesh->width;
+				int pw3 = ( x + 1 ) + y * mesh->width;
+
+				if ( r ) {
+					a = pw0; b = pw1; c = pw2;
+				}
+				else {
+					a = pw0; b = pw1; c = pw3;
+				}
+				fprintf( f, "f %d/%d/%d %d/%d/%d %d/%d/%d\r\n",
+						 a + objVertexCount + 1, a + objVertexCount + 1, a + objVertexCount + 1,
+						 b + objVertexCount + 1, b + objVertexCount + 1, b + objVertexCount + 1,
+						 c + objVertexCount + 1, c + objVertexCount + 1, c + objVertexCount + 1
+						 );
+
+				if ( r ) {
+					a = pw0; b = pw2; c = pw3;
+				}
+				else {
+					a = pw3; b = pw1; c = pw2;
+				}
+				fprintf( f, "f %d/%d/%d %d/%d/%d %d/%d/%d\r\n",
+						 a + objVertexCount + 1, a + objVertexCount + 1, a + objVertexCount + 1,
+						 b + objVertexCount + 1, b + objVertexCount + 1, b + objVertexCount + 1,
+						 c + objVertexCount + 1, c + objVertexCount + 1, c + objVertexCount + 1
+						 );
+			}
+		}
+		FreeMesh( mesh );
+	}
+	else {
+		for ( i = 0; i < numIndexes; i += 3 )
+		{
+			a = bspDrawIndexes[ i + ds->firstIndex ];
+			c = bspDrawIndexes[ i + ds->firstIndex + 1 ];
+			b = bspDrawIndexes[ i + ds->firstIndex + 2 ];
+			fprintf( f, "f %d/%d/%d %d/%d/%d %d/%d/%d\r\n",
+					 a + objVertexCount + 1, a + objVertexCount + 1, a + objVertexCount + 1,
+					 b + objVertexCount + 1, b + objVertexCount + 1, b + objVertexCount + 1,
+					 c + objVertexCount + 1, c + objVertexCount + 1, c + objVertexCount + 1
+					 );
+		}
 	}
 
-	objVertexCount += ds->numVerts;
+	objVertexCount += numVerts;
 }
 
 

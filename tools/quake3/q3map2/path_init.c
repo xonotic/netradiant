@@ -617,6 +617,15 @@ void InitPaths( int *argc, char **argv ){
 					while ( temp[ ++j ] != '/' && temp[ j ] != '\0' ) ;
 					temp[ j ] = '\0';
 
+					/* if the last directory component matches the gamePath,
+					   strip it to avoid doubling (e.g. base "wop" + gamePath "wop" = "wop/wop") */
+					{
+						char *lastSlash = strrchr( temp, '/' );
+						if ( lastSlash && !Q_stricmp( lastSlash + 1, game->gamePath ) ) {
+							*lastSlash = '\0';
+						}
+					}
+
 					/* add this as a base path */
 					AddBasePath( temp );
 					break;

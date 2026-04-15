@@ -128,6 +128,27 @@ void PseudoCompileBSP( qboolean need_tree, const char *BSPFilePath, const char *
 }
 
 /*
+   TessellatePatch()
+   tessellates a patch surface into a triangle-ready mesh
+ */
+
+mesh_t *TessellatePatch( bspDrawSurface_t *ds ){
+	mesh_t src, *subdivided, *mesh;
+
+	src.width = ds->patchWidth;
+	src.height = ds->patchHeight;
+	src.verts = &bspDrawVerts[ ds->firstVert ];
+
+	subdivided = SubdivideMesh2( src, 8 );
+	PutMeshOnCurve( *subdivided );
+	mesh = RemoveLinearMeshColumnsRows( subdivided );
+	FreeMesh( subdivided );
+
+	return mesh;
+}
+
+
+/*
    ConvertBSPMain()
    main argument processing function for bsp conversion
  */
@@ -151,7 +172,7 @@ int ConvertBSPMain( int argc, char **argv ){
 
 	/* arg checking */
 	if ( argc < 2 ) {
-		Sys_Printf( "Usage: q3map -convert [-format <ase|obj|map_bp|map>] [-shadersasbitmap|-lightmapsastexcoord|-deluxemapsastexcoord] [-readbsp|-readmap [-meta|-patchmeta]] [-v] <mapname>\n" );
+		Sys_Printf( "Usage: q3map -convert [-format <ase|obj|gltf|map_bp|map>] [-shadersasbitmap|-lightmapsastexcoord|-deluxemapsastexcoord] [-readbsp|-readmap [-meta|-patchmeta]] [-v] <mapname>\n" );
 		return 0;
 	}
 
@@ -167,6 +188,10 @@ int ConvertBSPMain( int argc, char **argv ){
 			}
 			else if ( !Q_stricmp( argv[ i ], "obj" ) ) {
 				convertFunc = ConvertBSPToOBJ;
+				map_allowed = qfalse;
+			}
+			else if ( !Q_stricmp( argv[ i ], "gltf" ) ) {
+				convertFunc = ConvertBSPToGLTF;
 				map_allowed = qfalse;
 			}
 			else if ( !Q_stricmp( argv[ i ], "map_bp" ) ) {
