@@ -48,6 +48,7 @@ set(RADIANTLIST
     main.cpp main.h
     mainframe.cpp mainframe.h
     map.cpp map.h
+    modelbrowser.cpp modelbrowser.h
     mru.cpp mru.h
     nullmodel.cpp nullmodel.h
     parse.cpp parse.h
