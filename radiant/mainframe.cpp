@@ -93,6 +93,7 @@
 #include "surfacedialog.h"
 #include "textures.h"
 #include "texwindow.h"
+#include "modelbrowser.h"
 #include "url.h"
 #include "xywindow.h"
 #include "windowobservers.h"
@@ -3144,6 +3145,8 @@ void MainFrame::Create(){
 	gtk_widget_realize ( GTK_WIDGET( GroupDialog_getWindow() ) );
 
 	g_page_entity = GroupDialog_addPage( "Entities", EntityInspector_constructWindow( GroupDialog_getWindow() ), RawStringExportCaller( "Entities" ) );
+
+	GroupDialog_addPage( "Models", ModelBrowser_constructWindow( GroupDialog_getWindow() ), RawStringExportCaller( "Models" ) );
 
 	if ( FloatingGroupDialog() ) {
 		g_page_console = GroupDialog_addPage( "Console", Console_constructWindow( GroupDialog_getWindow() ), RawStringExportCaller( "Console" ) );
