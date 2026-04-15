@@ -852,8 +852,11 @@ gboolean xywnd_expose( ui::Widget widget, GdkEventExpose* event, XYWnd* xywnd ){
 
 void XYWnd_CameraMoved( XYWnd& xywnd ){
 //	if ( g_xywindow_globals_private.m_bCamXYUpdate ) {
-		//XYWnd_Update( xywnd );
+#if GTK_TARGET == 3
+		XYWnd_Update( xywnd );
+#else
 		xywnd.UpdateCameraIcon();
+#endif
 //	}
 }
 
