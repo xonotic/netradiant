@@ -272,18 +272,18 @@ if (BUILD_RADIANT)
     endif()
 
     # Should be set here because the define is used in libs/
-    set(RADIANT_IQM_PLUGIN_HELP "IQM Plugin used by NetRadiant (iqmmodel, picomodel)")
-    set(RADIANT_IQM_PLUGIN "" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}")
-    if("${RADIANT_IQM_PLUGIN}" STREQUAL "iqmmodel")
-    elseif("${RADIANT_IQM_PLUGIN}" STREQUAL "picomodel")
-    else()
+    if (NOT DEFINED CACHE{RADIANT_IQM_PLUGIN})
         if(APPLE)
-            # The picomodel iqm library is buggy on recent macOS
-            set(RADIANT_IQM_PLUGIN "iqmmodel" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}" FORCE)
+            # The picomodel iqm library is buggy on recent macOS.
+            set(DEFAULT_IQM_PLUGIN "iqmmodel")
         else()
-            set(RADIANT_IQM_PLUGIN "picomodel" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}" FORCE)
+            set(DEFAULT_IQM_PLUGIN "picomodel")
         endif()
     endif()
+
+    set(RADIANT_IQM_AVAILABLE_PLUGINS iqmmodel picomodel)
+    set(RADIANT_IQM_PLUGIN "${DEFAULT_IQM_PLUGIN}" CACHE STRING "IQM Plugin used by NetRadiant: ${RADIANT_IQM_AVAILABLE_PLUGINS}")
+    set_property(CACHE RADIANT_IQM_PLUGIN PROPERTY STRINGS ${RADIANT_IQM_AVAILABLE_PLUGINS})
     add_definitions(-DRADIANT_IQM_PLUGIN_${RADIANT_IQM_PLUGIN}=1)
     add_definitions(-DRADIANT_IQM_PLUGIN="${RADIANT_IQM_PLUGIN}")
 endif ()
