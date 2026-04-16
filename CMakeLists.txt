@@ -14,9 +14,14 @@ set(BUILTINS_PKGCONFIG_DIR "${BUILTINS_INSTALL_DIR}/lib/pkgconfig")
 option(BUILTIN_GTKGLEXT "Builtin GtkGLExt" OFF)
 option(BUILTIN_GTKTHEME_MOJAVE "Builtin Mojave GTK theme" OFF)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_AVAILABLE_BUILD_TYPES Debug Release RelWithDebInfo MinSizeRel)
+
+# It looks like it's always defined but as an empty string by default.
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: ${CMAKE_AVAILABLE_BUILD_TYPES}" FORCE)
 endif()
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_AVAILABLE_BUILD_TYPES})
 
 if (APPLE)
     set(BUILTIN_GTKGLEXT ON)
@@ -272,18 +277,18 @@ if (BUILD_RADIANT)
     endif()
 
     # Should be set here because the define is used in libs/
-    set(RADIANT_IQM_PLUGIN_HELP "IQM Plugin used by NetRadiant (iqmmodel, picomodel)")
-    set(RADIANT_IQM_PLUGIN "" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}")
-    if("${RADIANT_IQM_PLUGIN}" STREQUAL "iqmmodel")
-    elseif("${RADIANT_IQM_PLUGIN}" STREQUAL "picomodel")
-    else()
+    if (NOT DEFINED CACHE{RADIANT_IQM_PLUGIN})
         if(APPLE)
-            # The picomodel iqm library is buggy on recent macOS
-            set(RADIANT_IQM_PLUGIN "iqmmodel" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}" FORCE)
+            # The picomodel iqm library is buggy on recent macOS.
+            set(DEFAULT_IQM_PLUGIN "iqmmodel")
         else()
-            set(RADIANT_IQM_PLUGIN "picomodel" CACHE STRING "${RADIANT_IQM_PLUGIN_HELP}" FORCE)
+            set(DEFAULT_IQM_PLUGIN "picomodel")
         endif()
     endif()
+
+    set(RADIANT_IQM_AVAILABLE_PLUGINS iqmmodel picomodel)
+    set(RADIANT_IQM_PLUGIN "${DEFAULT_IQM_PLUGIN}" CACHE STRING "IQM Plugin used by NetRadiant: ${RADIANT_IQM_AVAILABLE_PLUGINS}")
+    set_property(CACHE RADIANT_IQM_PLUGIN PROPERTY STRINGS ${RADIANT_IQM_AVAILABLE_PLUGINS})
     add_definitions(-DRADIANT_IQM_PLUGIN_${RADIANT_IQM_PLUGIN}=1)
     add_definitions(-DRADIANT_IQM_PLUGIN="${RADIANT_IQM_PLUGIN}")
 endif ()
