@@ -14,9 +14,14 @@ set(BUILTINS_PKGCONFIG_DIR "${BUILTINS_INSTALL_DIR}/lib/pkgconfig")
 option(BUILTIN_GTKGLEXT "Builtin GtkGLExt" OFF)
 option(BUILTIN_GTKTHEME_MOJAVE "Builtin Mojave GTK theme" OFF)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_AVAILABLE_BUILD_TYPES Debug Release RelWithDebInfo MinSizeRel)
+
+# It looks like it's always defined but as an empty string by default.
+if (NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: ${CMAKE_AVAILABLE_BUILD_TYPES}" FORCE)
 endif()
+
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_AVAILABLE_BUILD_TYPES})
 
 if (APPLE)
     set(BUILTIN_GTKGLEXT ON)
