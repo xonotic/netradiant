@@ -60,6 +60,7 @@
 #include "gtkdlgs.h"
 #include "entity.h"
 #include "mainframe.h"
+#include "modelbrowser.h"
 #include "textureentry.h"
 #include "groupdialog.h"
 
@@ -287,7 +288,7 @@ void update(){
 }
 typedef MemberCaller<ModelAttribute, void(), &ModelAttribute::update> UpdateCaller;
 void browse( const BrowsedPathEntry::SetPathCallback& setPath ){
-	const char *filename = misc_model_dialog( m_entry.m_entry.m_frame.window() );
+	const char *filename = ModelBrowser_showChooser( m_entry.m_entry.m_frame.window() );
 
 	if ( filename != 0 ) {
 		setPath( filename );
