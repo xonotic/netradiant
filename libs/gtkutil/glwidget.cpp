@@ -69,10 +69,41 @@ void glwidget_set_shared_context_constructors(
 
 #include <gtk/gtk.h>
 
-static GdkGLContext *glwidget_context_created(ui::GLArea self)
+// Shared GL context for all GtkGLArea widgets.
+// GDK3 docs say contexts on the same display share GL resources, but this
+// doesn't work reliably on all systems/drivers/compositors. To guarantee
+// that textures loaded in one view (e.g. camera) are visible in another
+// (e.g. texture browser), we force all GtkGLArea widgets to use a single
+// GdkGLContext via the "create-context" signal.
+static GdkGLContext *g_shared_gl_context = nullptr;
+
+static GdkGLContext *on_create_context(GtkGLArea *area, gpointer user_data)
 {
+    if (g_shared_gl_context) {
+        return GDK_GL_CONTEXT(g_object_ref(g_shared_gl_context));
+    }
+    // First widget: let the default handler create the context.
+    return NULL;
+}
+
+static void glwidget_context_created(ui::GLArea self)
+{
+    if (!g_shared_gl_context) {
+        g_shared_gl_context = gtk_gl_area_get_context(GTK_GL_AREA(self._handle));
+        if (g_shared_gl_context) {
+            g_object_ref(g_shared_gl_context);
+        }
+    }
     _glwidget_context_created(self, nullptr);
-    return gtk_gl_area_get_context(self);
+}
+
+static void glwidget_context_destroyed(ui::GLArea self)
+{
+    _glwidget_context_destroyed(self, nullptr);
+    if (g_context_count == 0 && g_shared_gl_context) {
+        g_object_unref(g_shared_gl_context);
+        g_shared_gl_context = nullptr;
+    }
 }
 
 ui::GLArea glwidget_new(bool zbuffer)
@@ -81,15 +112,15 @@ ui::GLArea glwidget_new(bool zbuffer)
     gtk_gl_area_set_has_depth_buffer(self, zbuffer);
     gtk_gl_area_set_auto_render(self, false);
 
+    // https://docs.gtk.org/gtk3/signal.GLArea.create-context.html
+    self.connect("create-context", G_CALLBACK(on_create_context), nullptr);
     self.connect("realize", G_CALLBACK(glwidget_context_created), nullptr);
+    self.connect("unrealize", G_CALLBACK(glwidget_context_destroyed), nullptr);
     return self;
 }
 
 bool glwidget_make_current(ui::GLArea self)
 {
-//    if (!g_context_count) {
-//        glwidget_context_created(self);
-//    }
     gtk_gl_area_make_current(self);
     return true;
 }
