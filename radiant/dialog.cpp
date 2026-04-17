@@ -578,6 +578,17 @@ void Dialog::addRadioIcons( ui::VBox vbox, const char* name, StringArrayRange ic
 		radio.show();
         table.attach(radio, {pos, pos + 1, 1, 2}, {0, 0});
 
+#if defined(WORKAROUND_GTK3_SINGLE_WINDOW_LAYOUT)
+		/* HACK: Disable the floating windows layouts because
+		GTK3 doesn't support context sharing accross windows. */
+		const char* disabledWindow2Layout = "window2-disabled.png";
+		if (!strcmp(*icon, "window2-disabled.png")
+                    || !strcmp(*icon, "window3-disabled.png")) {
+			gtk_widget_set_sensitive(GTK_WIDGET(radio), FALSE);
+			gtk_widget_set_opacity(GTK_WIDGET(radio), 0.35);
+			gtk_widget_set_opacity(GTK_WIDGET(image), 0.35);
+		}
+#endif
 		group = gtk_radio_button_get_group( GTK_RADIO_BUTTON( radio ) );
 	}
 
