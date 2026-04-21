@@ -802,7 +802,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 0, 1}, {0, 0});
-							spin.dimensions(16, -2);
+							spin.dimensions(16, -1);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -819,7 +819,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 1, 2}, {0, 0});
-							spin.dimensions(16, -2);
+							spin.dimensions(16, -1);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -836,7 +836,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 2, 3}, {0, 0});
-							spin.dimensions(16, -2);
+							spin.dimensions(16, -1);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -853,7 +853,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 3, 4}, {0, 0});
-							spin.dimensions(16, -2);
+							spin.dimensions(16, -1);
 							gtk_widget_set_can_focus( spin, false );
 						}
 						{
@@ -870,7 +870,7 @@ ui::Window PatchInspector::BuildDialog(){
 							auto spin = ui::SpinButton( adj, 1, 0 );
 							spin.show();
                             table.attach(spin, {1, 2, 4, 5}, {0, 0});
-							spin.dimensions(16, -2);
+							spin.dimensions(16, -1);
 							gtk_widget_set_can_focus( spin, false );
 						}
 					}
