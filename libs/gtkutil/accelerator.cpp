@@ -112,7 +112,8 @@ Accelerator accelerator_for_event_key( guint keyval, guint state ){
 	if ( keyval == GDK_KEY_ISO_Left_Tab ) {
 		keyval = GDK_KEY_Tab;
 	}
-	return Accelerator( keyval, (GdkModifierType)( state & gtk_accelerator_get_default_mod_mask() ) );
+	GdkModifierType modifiers = normalize_modifiers( (GdkModifierType)( state & gtk_accelerator_get_default_mod_mask() ) );
+	return Accelerator( keyval, modifiers );
 }
 
 bool AcceleratorMap_activate( const AcceleratorMap& acceleratorMap, const Accelerator& accelerator ){
@@ -354,7 +355,8 @@ gboolean PressedKeys_key_press(ui::Widget widget, GdkEventKey* event, PressedKey
 	//globalOutputStream() << "pressed: " << event->keyval << "\n";
 	//return event->state == 0 && Keys_press( pressedKeys->keys, event->keyval );
 	//NumLock perspective window fix
-	return ( event->state & ALLOWED_MODIFIERS ) == 0 && Keys_press( pressedKeys->keys, event->keyval );
+	GdkModifierType state = normalize_modifiers( (GdkModifierType) event->state );
+	return ( state & ALLOWED_MODIFIERS ) == 0 && Keys_press( pressedKeys->keys, event->keyval );
 }
 
 gboolean PressedKeys_key_release(ui::Widget widget, GdkEventKey* event, PressedKeys* pressedKeys ){
