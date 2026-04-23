@@ -44,6 +44,7 @@
 #include "stringio.h"
 #include "gtkdlgs.h"
 #include "mainframe.h"
+#include "modelbrowser.h"
 #include "qe3.h"
 #include "commands.h"
 
@@ -570,18 +571,7 @@ const char *getLastModelFolderPath(){
 }
 
 const char *misc_model_dialog( ui::Widget parent ){
-	const char *filename = parent.file_dialog( TRUE, "Choose Model", getLastModelFolderPath(), ModelLoader::Name() );
-
-	if ( filename != NULL ) {
-		g_strLastModelFolder = g_path_get_dirname( filename );
-		// use VFS to get the correct relative path
-		const char *relative = path_make_relative( filename, GlobalFileSystem().findRoot( filename ) );
-		if ( relative == filename ) {
-			globalOutputStream() << "WARNING: could not extract the relative path, using full path instead\n";
-		}
-		return relative;
-	}
-	return 0;
+	return ModelBrowser_showChooser( parent );
 }
 /*
 struct LightRadii {
