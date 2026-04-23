@@ -50,7 +50,7 @@
 #include "mathlib.h"
 #include "inout.h"
 #include "vfs.h"
-#include <unzip.h>
+#include <minizip/unzip.h>
 #include <glib.h>
 #define GARUX_DISABLE_BAD_MINIZ
 #ifndef GARUX_DISABLE_BAD_MINIZ
