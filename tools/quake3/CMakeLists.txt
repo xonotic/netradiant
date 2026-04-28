@@ -24,7 +24,6 @@ find_package(LibXml2 REQUIRED)
 include_directories(${LIBXML2_INCLUDE_DIR})
 
 find_package(Minizip REQUIRED)
-include_directories(${Minizip_INCLUDE_DIRS})
 
 include_directories(${CMAKE_SOURCE_DIR}/libs/crnrgba)
 include_directories(${CMAKE_SOURCE_DIR}/libs/cgltf)
