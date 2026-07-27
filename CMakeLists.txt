@@ -23,7 +23,7 @@ endif()
 
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_AVAILABLE_BUILD_TYPES})
 
-if (APPLE)
+if (YOKAI_TARGET_SYSTEM_MACOS)
     set(BUILTIN_GTKGLEXT ON)
     set(BUILTIN_GTKTHEME_MOJAVE ON)
 endif ()
@@ -53,6 +53,12 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 #-----------------------------------------------------------------------
+# Yokai CMake framework
+#-----------------------------------------------------------------------
+
+include(Yokai/Detection)
+
+#-----------------------------------------------------------------------
 # Submodules
 #-----------------------------------------------------------------------
 
@@ -74,15 +80,15 @@ if (BUILD_RADIANT OR BUILD_TOOLS)
 endif ()
 
 if (BUILD_BINARIES)
-    if (WIN32
-        OR APPLE
-        OR "${CMAKE_SYSTEM_NAME}" STREQUAL "Linux"
-        OR "${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD" )
+    if (YOKAI_TARGET_SYSTEM_WINDOWS
+        OR YOKAI_TARGET_SYSTEM_MACOS
+        OR YOKAI_TARGET_SYSTEM_LINUX
+        OR YOKAI_TARGET_SYSTEM_FREEBSD)
         set(BUNDLING_SUPPORTED ON)
     endif()
 
     if (BUNDLING_SUPPORTED)
-        if(WIN32 AND NOT CMAKE_CROSSCOMPILING)
+        if (YOKAI_TARGET_SYSTEM_WINDOWS AND NOT YOKAI_SYSTEM_CROSS)
             set(BUNDLE_LIBRARIES_DEFAULT ON)
         else ()
             set(BUNDLE_LIBRARIES_DEFAULT OFF)
@@ -108,7 +114,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/install" CACHE PATH "..." FORCE)
 endif ()
 
-if (APPLE)
+if (YOKAI_TARGET_SYSTEM_MACOS)
     set(APPLE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}/NetRadiant.app)
     set(FINAL_INSTALL_PREFIX ${APPLE_INSTALL_PREFIX}/Contents/Prefix)
 else ()
@@ -224,7 +230,7 @@ if (BUILD_BINARIES)
     endmacro ()
 
     addflags("-fno-strict-aliasing")
-    if (NOT WIN32)
+    if (NOT YOKAI_TARGET_SYSTEM_WINDOWS)
         addflags("-fvisibility=hidden")
     endif ()
 
@@ -243,7 +249,7 @@ if (BUILD_BINARIES)
     addflags("-Wno-unused-variable")
     addflags("-Wno-unused-parameter")
 
-    if (APPLE)
+    if (YOKAI_TARGET_SYSTEM_MACOS)
         add_definitions(-DGL_SILENCE_DEPRECATION=1)
     endif()
 
@@ -270,13 +276,13 @@ if (BUILD_RADIANT)
         endif()
     endif()
 
-    if (WIN32)
+    if (YOKAI_TARGET_SYSTEM_WINDOWS)
         add_definitions(-DWORKAROUND_WINDOWS_FLOATING_WINDOW=1)
 
         if (GTK_TARGET EQUAL 2)
             add_definitions(-DWORKAROUND_WINDOWS_GTK2_GLWIDGET=1)
         endif ()
-    elseif (APPLE)
+    elseif (YOKAI_TARGET_SYSTEM_MACOS)
         if (GTK_TARGET EQUAL 2)
             add_definitions(-DWORKAROUND_MACOS_GTK2_DESTROY=1)
             add_definitions(-DWORKAROUND_MACOS_GTK2_GLWIDGET=1)
@@ -286,7 +292,7 @@ if (BUILD_RADIANT)
 
     # Should be set here because the define is used in libs/
     if (NOT DEFINED CACHE{RADIANT_IQM_PLUGIN})
-        if(APPLE)
+        if (YOKAI_TARGET_SYSTEM_MACOS)
             # The picomodel iqm library is buggy on recent macOS.
             set(DEFAULT_IQM_PLUGIN "iqmmodel")
         else()
@@ -335,13 +341,25 @@ endif ()
 if (BUILD_BINARIES)
     add_custom_target(binaries ALL)
 
-    if(APPLE OR ${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
+    if (YOKAI_TARGET_SYSTEM_MACOS)
+        if (YOKAI_HOST_ARCH_AMD64)
+            link_directories(
+                /usr/local/lib
+            )
+        else()
+            link_directories(
+                /opt/homebrew/lib
+            )
+        endif()
+    endif()
+
+    if (YOKAI_TARGET_SYSTEM_FREEBSD)
         link_directories(
             /usr/local/lib
         )
     endif ()
 
-    if (WIN32)
+    if (YOKAI_TARGET_SYSTEM_WINDOWS)
         add_definitions(
             -DWIN32=1
             -D_WIN32=1
@@ -353,7 +371,7 @@ if (BUILD_BINARIES)
     endif ()
 endif ()
 
-if (BUILD_RADIANT AND NOT APPLE AND NOT WIN32)
+if (BUILD_RADIANT AND NOT YOKAI_TARGET_SYSTEM_MACOS AND NOT YOKAI_TARGET_SYSTEM_WINDOWS)
     set(XWINDOWS ON)
     find_package(X11 REQUIRED)
     include_directories(${X11_INCLUDE_DIR})
@@ -399,7 +417,7 @@ endif ()
 if (BUILTIN_GTKGLEXT)
     set(GTKGLEXT_PKGNAMES "gdk-2.0 gtk+-2.0 glib-2.0")
 
-    if (NOT APPLE)
+    if (NOT YOKAI_TARGET_SYSTEM_MACOS)
         set(GTKGLEXT_PKGNAMES "${GTKGLEXT_PKGNAMES} gl")
     endif ()
 
@@ -424,13 +442,13 @@ if (BUILTIN_GTKGLEXT)
         set(CONFIGURE_OPTIONS ${CONFIGURE_OPTIONS} --disable-debug)
     endif ()
 
-    if (APPLE)
+    if (YOKAI_TARGET_SYSTEM_MACOS)
         set(GTKGLEXT_GIT_TAG macos)
     else ()
         set(GTKGLEXT_GIT_TAG fixes)
     endif ()
 
-    if (APPLE)
+    if (YOKAI_TARGET_SYSTEM_MACOS)
         set(GTKGLEXT_CFLAGS "${GTKGLEXT_CFLAGS} -DGL_SILENCE_DEPRECATION=1 -Wno-deprecated-declarations")
     endif ()
 
@@ -513,7 +531,7 @@ if (BUILD_BINARIES)
     macro (radiant_tool name)
         add_dependencies(binaries ${name})
 
-        if (WIN32)
+        if (YOKAI_TARGET_SYSTEM_WINDOWS)
             add_executable(${name} ${ARGN} ${PROJECT_SOURCE_DIR}/include/lib.rc)
         else ()
             add_executable(${name} ${ARGN})
@@ -606,7 +624,7 @@ if (DOWNLOAD_GAMEPACKS)
     )
 endif ()
 
-if (BUILD_BINARIES AND FHS_INSTALL AND NOT WIN32 AND NOT APPLE)
+if (BUILD_BINARIES AND FHS_INSTALL AND NOT YOKAI_TARGET_SYSTEM_WINDOWS AND NOT YOKAI_TARGET_SYSTEM_MACOS)
     install(FILES
         icons/netradiant.png
         DESTINATION ${RADIANT_SHARE_DIR}/pixmaps
@@ -621,7 +639,7 @@ if (BUILD_BINARIES AND FHS_INSTALL AND NOT WIN32 AND NOT APPLE)
     )
 endif ()
 
-if (APPLE)
+if (YOKAI_TARGET_SYSTEM_MACOS)
     install(DIRECTORY
         setup/macos/Contents
         DESTINATION ${APPLE_INSTALL_PREFIX}

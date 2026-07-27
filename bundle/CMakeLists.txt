@@ -1,17 +1,15 @@
-if (WIN32)
-    set(BUNDLE_OS_NAME "windows")
+if (YOKAI_TARGET_SYSTEM_WINDOWS)
     set(BUNDLE_SHARE ON)
-elseif (APPLE)
-    set(BUNDLE_OS_NAME "macos")
+elseif (YOKAI_TARGET_SYSTEM_MACOS)
     set(BUNDLE_SHARE ON)
     set(BUNDLE_ETC ON)
-elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
-    set(BUNDLE_OS_NAME "linux")
-elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "FreeBSD")
-    set(BUNDLE_OS_NAME "freebsd")
+elseif (YOKAI_TARGET_SYSTEM_LINUX)
+elseif (YOKAI_TARGET_SYSTEM_FREEBSD)
 else ()
     set(BUNDLE_OS_NAME "unsupported")
 endif ()
+
+STRING(TOLOWER "${YOKAI_TARGET_SYSTEM_NAME}" BUNDLE_OS_NAME)
 
 add_custom_target(bundle ALL
     COMMAND
