@@ -417,7 +417,7 @@ endif ()
 if (BUILTIN_GTKGLEXT)
     set(GTKGLEXT_PKGNAMES "gdk-2.0 gtk+-2.0 glib-2.0")
 
-    if (NOT YOKAI_TARGET_SYSTEM_MACOS)
+    if (NOT YOKAI_TARGET_SYSTEM_WINDOWS AND NOT YOKAI_TARGET_SYSTEM_MACOS)
         set(GTKGLEXT_PKGNAMES "${GTKGLEXT_PKGNAMES} gl")
     endif ()
 
@@ -426,45 +426,114 @@ if (BUILTIN_GTKGLEXT)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    set(GTKGLEXT_LDFLAGS "$ENV{LDFLAGS} -lm ${GTKGLEXT_LDFLAGS}")
+    set(GTKGLEXT_LDFLAGS "-lm ${GTKGLEXT_LDFLAGS}")
 
     execute_process(COMMAND pkg-config --cflags ${GTKGLEXT_PKGNAMES}
         OUTPUT_VARIABLE GTKGLEXT_CFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    set(GTKGLEXT_CFLAGS "$ENV{CFLAGS} ${GTKGLEXT_CFLAGS}")
+    set(GTKGLEXT_CFLAGS "${GTKGLEXT_CFLAGS}")
 
-
-    set(CONFIGURE_OPTIONS --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf --disable-dependency-tracking --without-x)
+    set(CONFIGURE_OPTIONS --disable-gtk-doc --disable-gtk-doc-html --disable-gtk-doc-pdf --disable-dependency-tracking)
 
     if (CMAKE_BUILD_TYPE MATCHES Release)
         set(CONFIGURE_OPTIONS ${CONFIGURE_OPTIONS} --disable-debug)
     endif ()
 
-    if (YOKAI_TARGET_SYSTEM_MACOS)
+    if (YOKAI_TARGET_SYSTEM_WINDOWS)
+        set(GTKGLEXT_GIT_TAG windows)
+    elseif (YOKAI_TARGET_SYSTEM_MACOS)
         set(GTKGLEXT_GIT_TAG macos)
+        set(CONFIGURE_OPTIONS ${CONFIGURE_OPTIONS} --without-x)
     else ()
         set(GTKGLEXT_GIT_TAG fixes)
     endif ()
 
     if (YOKAI_TARGET_SYSTEM_MACOS)
-        set(GTKGLEXT_CFLAGS "${GTKGLEXT_CFLAGS} -DGL_SILENCE_DEPRECATION=1 -Wno-deprecated-declarations")
+        string(APPEND GTKGLEXT_CFLAGS " -DGL_SILENCE_DEPRECATION=1 -Wno-deprecated-declarations")
+    endif ()
+
+    string(APPEND GTKGLEXT_CFLAGS " -fcommon")
+    string(APPEND GTKGLEXT_CFLAGS " -Wno-error=incompatible-pointer-types")
+
+    set(GTKGLEXT_SOURCE_DIR "${CMAKE_BINARY_DIR}/gtkglext-prefix/src/gtkglext")
+
+    set(EP_BUILD_DIR "" CACHE STRING "Build CMake External Projects in the given directory")
+    mark_as_advanced(EP_BUILD_DIR)
+
+    if ("${EP_BUILD_DIR}" STREQUAL "")
+        set(GTKGLEXT_BUILD_DIR "${CMAKE_BINARY_DIR}/gtkglext-prefix/src/gtkglext-build")
+    else ()
+        set(GTKGLEXT_BUILD_DIR "${EP_BUILD_DIR}/gtkglext-build")
+    endif ()
+
+    # CMake in MSYS2 had the bad habbit to pass every path as C:/*
+    # and configure is confused by this, failing to find some files.
+    if (YOKAI_HOST_SYSTEM_WINDOWS)
+        execute_process(
+            COMMAND cygpath -u "${GTKGLEXT_SOURCE_DIR}"
+            OUTPUT_VARIABLE GTKGLEXT_SOURCE_DIR_INSIDE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        execute_process(
+            COMMAND cygpath -u "${GTKGLEXT_BUILD_DIR}"
+            OUTPUT_VARIABLE GTKGLEXT_BUILD_DIR_INSIDE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        execute_process(
+            COMMAND cygpath -u "${BUILTINS_INSTALL_DIR}"
+            OUTPUT_VARIABLE GTKGLEXT_INSTALL_DIR_INSIDE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    else ()
+        set(GTKGLEXT_SOURCE_DIR_INSIDE "${GTKGLEXT_SOURCE_DIR}")
+        set(GTKGLEXT_BUILD_DIR_INSIDE "${GTKGLEXT_BUILD_DIR}")
+        set(GTKGLEXT_INSTALL_DIR_INSIDE "${BUILTINS_INSTALL_DIR}")
+    endif ()
+
+    list(APPEND GTKGLEXT_ENV
+        "CFLAGS=${GTKGLEXT_CFLAGS}"
+        "LDFLAGS=${GTKGLEXT_LDFLAGS}"
+         NOCONFIGURE=1
+    )
+
+    if (YOKAI_HOST_SYSTEM_WINDOWS)
+        # CMake in MSYS2 has the bad habbit to rewrite ACLOCAL_PATH
+        # and ACLOCAL_FLAGS to some C:/msys64/usr/* paths that are then
+        # read as /msys64/usr/* instead of /usr/* and that breaks automake.
+        # Don't convert the variables (that's fragile here), just reconstruct
+        # the standard ones, they are unlikely to change.
+        set(MSYS_PREFIX "$ENV{MSYSTEM_PREFIX}")
+        string(REGEX REPLACE "^[A-Za-z]:/[^/]*/" "/" MSYS_PREFIX "${MSYS_PREFIX}")
+
+        list(APPEND GTKGLEXT_ENV
+            "ACLOCAL_PATH=${MSYS_PREFIX}/share/aclocal:/usr/share/aclocal"
+            "ACLOCAL_FLAGS=-I${MSYS_PREFIX}/share/aclocal -I/usr/share/aclocal"
+        )
     endif ()
 
     ExternalProject_Add(gtkglext
-        GIT_REPOSITORY https://gitlab.gnome.org/illwieckz/gtkglext.git
-        GIT_TAG ${GTKGLEXT_GIT_TAG}
-        BUILD_IN_SOURCE ON
-        CONFIGURE_COMMAND export CCFLAGS=${GTKGLEXT_CFLAGS}
-        CONFIGURE_COMMAND && export LDFLAGS=${GTKGLEXT_LDFLAGS}
-        CONFIGURE_COMMAND && export NOCONFIGURE=1
-        CONFIGURE_COMMAND && ./autogen.sh
-        CONFIGURE_COMMAND && ./configure --prefix "${BUILTINS_INSTALL_DIR}" ${CONFIGURE_OPTIONS}
-        BUILD_COMMAND $(MAKE)
-        BUILD_COMMAND CFLAGS=${GTKGLEXT_CFLAGS}
-        BUILD_COMMAND LDFLAGS=${GTKGLEXT_LDFLAGS}
-        INSTALL_COMMAND $(MAKE) install
+        GIT_REPOSITORY "https://gitlab.gnome.org/illwieckz/gtkglext.git"
+        SOURCE_DIR "${GTKGLEXT_SOURCE_DIR}"
+        BINARY_DIR "${GTKGLEXT_BUILD_DIR}"
+        GIT_TAG "${GTKGLEXT_GIT_TAG}"
+        CONFIGURE_COMMAND
+            cd "${GTKGLEXT_SOURCE_DIR_INSIDE}"
+            && env ${GTKGLEXT_ENV}
+                autoreconf --force --install
+            && cd "${GTKGLEXT_BUILD_DIR_INSIDE}"
+            && env ${GTKGLEXT_ENV}
+                "${GTKGLEXT_SOURCE_DIR_INSIDE}/configure"
+                --prefix "${GTKGLEXT_INSTALL_DIR_INSIDE}"
+                ${CONFIGURE_OPTIONS}
+        BUILD_COMMAND
+            $(MAKE)
+                ${GTKGLEXT_ENV}
+        INSTALL_COMMAND
+            $(MAKE)
+                install
     )
 
     include_directories("${BUILTINS_INCLUDE_DIR}/gtkglext-1.0")
