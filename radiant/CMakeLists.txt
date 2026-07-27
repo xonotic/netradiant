@@ -1,6 +1,6 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
-if(NOT WIN32 AND NOT APPLE)
+if(NOT YOKAI_TARGET_SYSTEM_WINDOWS AND NOT YOKAI_TARGET_SYSTEM_MACOS)
     set(OpenGL_GL_AVAILABLE_PREFERENCES LEGACY GLVND)
     set(OpenGL_GL_PREFERENCE "LEGACY" CACHE STRING "Linux OpenGL ABI: ${OpenGL_GL_AVAILABLE_PREFERENCES}")
     set_property(CACHE OpenGL_GL_PREFERENCE PROPERTY STRINGS ${OpenGL_GL_AVAILABLE_PREFERENCES})
@@ -100,7 +100,7 @@ set(RADIANTLIST
     xywindow.cpp xywindow.h
 )
 
-if (WIN32)
+if (YOKAI_TARGET_SYSTEM_WINDOWS)
     list(APPEND RADIANTLIST multimon.cpp multimon.h)
 endif ()
 
@@ -160,7 +160,7 @@ endif ()
 #
 # This hack is only wanted for release build and
 # when NetRadiant is not installed system-wide.
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux"
+if (YOKAI_TARGET_SYSTEM_LINUX
     AND "${CMAKE_BUILD_TYPE}" STREQUAL "Release"
     AND NOT FHS_INSTALL)
     target_link_libraries(${RADIANT_BASENAME} -no-pie)
