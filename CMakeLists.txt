@@ -23,29 +23,6 @@ endif()
 
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_AVAILABLE_BUILD_TYPES})
 
-if (YOKAI_TARGET_SYSTEM_MACOS)
-    set(BUILTIN_GTKGLEXT ON)
-    set(BUILTIN_GTKTHEME_MOJAVE ON)
-endif ()
-
-set(BUILTIN_GTKGLEXT_BUILT OFF CACHE INTERNAL "...")
-if (EXISTS "${BUILTINS_PKGCONFIG_DIR}/gtkglext-1.0.pc")
-    set(BUILTIN_GTKGLEXT_BUILT ON)
-endif ()
-
-if (EXISTS "${BUILTINS_INCLUDE_DIR}")
-    include_directories("${BUILTINS_INCLUDE_DIR}")
-endif ()
-
-if (EXISTS "${BUILTINS_LIB_DIR}")
-    set(ENV{LD_LIBRARY_PATH} "$ENV{LD_LIBRARY_PATH}:${BUILTINS_LIB_DIR}")
-    link_directories("${BUILTINS_LIB_DIR}")
-endif ()
-
-if (EXISTS "${BUILTINS_PKGCONFIG_DIR}")
-    set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${BUILTINS_PKGCONFIG_DIR}")
-endif ()
-
 #-----------------------------------------------------------------------
 # CMake modules
 #-----------------------------------------------------------------------
@@ -105,6 +82,46 @@ if (BUILD_BINARIES)
         set(FHS_INSTALL_ABSOLUTE OFF CACHE PATH "Disabled because of FHS_INSTALL is disabled" FORCE)
     endif ()
 endif ()
+
+if (BUILD_RADIANT)
+    if (NOT DEFINED CACHE{GTK_TARGET})
+        find_package(GTK3 QUIET)
+        if (GTK3_FOUND)
+            set(GTK_TARGET 3 CACHE STRING "GTK target")
+        else ()
+            set(GTK_TARGET 2 CACHE STRING "GTK target")
+        endif ()
+    endif ()
+    message(STATUS "GTK_TARGET: ${GTK_TARGET}")
+endif ()
+
+if (BUILD_RADIANT AND GTK_TARGET EQUAL 2)
+	if (YOKAI_TARGET_SYSTEM_WINDOWS OR YOKAI_TARGET_SYSTEM_MACOS)
+		set(BUILTIN_GTKGLEXT ON)
+	endif ()
+
+	if (YOKAI_TARGET_SYSTEM_MACOS)
+		set(BUILTIN_GTKTHEME_MOJAVE ON)
+	endif ()
+
+	set(BUILTIN_GTKGLEXT_BUILT OFF CACHE INTERNAL "...")
+	if (EXISTS "${BUILTINS_PKGCONFIG_DIR}/gtkglext-1.0.pc")
+		set(BUILTIN_GTKGLEXT_BUILT ON)
+	endif ()
+
+	if (EXISTS "${BUILTINS_INCLUDE_DIR}")
+		include_directories("${BUILTINS_INCLUDE_DIR}")
+	endif ()
+
+	if (EXISTS "${BUILTINS_LIB_DIR}")
+		set(ENV{LD_LIBRARY_PATH} "$ENV{LD_LIBRARY_PATH}:${BUILTINS_LIB_DIR}")
+		link_directories("${BUILTINS_LIB_DIR}")
+	endif ()
+
+	if (EXISTS "${BUILTINS_PKGCONFIG_DIR}")
+		set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${BUILTINS_PKGCONFIG_DIR}")
+	endif ()
+endif()
 
 #-----------------------------------------------------------------------
 # Paths
@@ -257,15 +274,6 @@ if (BUILD_BINARIES)
 endif ()
 
 if (BUILD_RADIANT)
-    if (NOT DEFINED CACHE{GTK_TARGET})
-        find_package(GTK3 QUIET)
-        if (GTK3_FOUND)
-            set(GTK_TARGET 3 CACHE STRING "GTK target")
-        else ()
-            set(GTK_TARGET 2 CACHE STRING "GTK target")
-        endif ()
-    endif ()
-    message(STATUS "GTK_TARGET: ${GTK_TARGET}")
     add_definitions(-DGTK_TARGET=${GTK_TARGET})
 
     if (GTK_TARGET EQUAL 3)
