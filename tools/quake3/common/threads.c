@@ -164,13 +164,26 @@ void ThreadUnlock( void ){
 	LeaveCriticalSection( &crit );
 }
 
+struct thread_arg {
+	void (*func)(int);
+	int index;
+};
+
+static DWORD WINAPI thread_wrapper(LPVOID arg)
+{
+	struct thread_arg *a = arg;
+	a->func(a->index);
+	return 0;
+}
+
 /*
    =============
    RunThreadsOn
    =============
  */
 void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
-	int threadid[MAX_THREADS];
+	struct thread_arg args[MAX_THREADS];
+	DWORD threadid[MAX_THREADS];
 	HANDLE threadhandle[MAX_THREADS];
 	int i;
 	int start, end;
@@ -201,8 +214,8 @@ void RunThreadsOn( int workcnt, qboolean showpacifier, void ( *func )( int ) ){
 			    /* ydnar: cranking stack size to eliminate radiosity crash with 1MB stack on win32 */
 				( 4096 * 1024 ),
 
-				(LPTHREAD_START_ROUTINE)func,   // LPTHREAD_START_ROUTINE lpStartAddr,
-				(LPVOID)i,  // LPVOID lpvThreadParm,
+				thread_wrapper, // LPTHREAD_START_ROUTINE lpStartAddr,
+				&args[i],  // LPVOID lpvThreadParm,
 				0,          //   DWORD fdwCreate,
 				&threadid[i] );
 		}
