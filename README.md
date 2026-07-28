@@ -23,7 +23,7 @@ Prebuilt binaries can be found on the [Download page](https://netradiant.gitlab.
 |Wine     |         |          |**Yes**  |                                   |
 |macOS    |**Yes**  |**Yes**   |**Yes**  |_Homebrew, GCC or Clang_           |
 
-NetRadiant is known to build and run properly on Linux, FreeBSD and Windows using MSYS2, and build on macOS with Homebrew (some bugs are known though). Windows build is known to work well on wine, which can be used as a fallback on some system.
+NetRadiant is known to build and run properly on Linux, FreeBSD and Windows using MSYS2, and build and run on macOS with Homebrew. The Windows build is known to work well on wine, which can be used as a fallback on some systems.
 
 At this time library bundling is supported on Linux, FreeBSD, Windows/MSYS2, and macOS/Homebrew. Since bundling copies things from the host, a clean build environment has to be used in order to get a clean bundle. Linux and FreeBSD bundles do not ship GTK: users are expected to have a working GTK environment with GtkGLExt installed, usually installing GtkGLExt is enough to pull everything that is required.
 
@@ -41,7 +41,7 @@ The `git` client can be obtained from your distribution repository or from the G
 A copy of the source tree can be obtained by using the `git` command line client this way:
 
 ```sh
-git clone --recursive https://gitlab.com/xonotic/netradiant.git
+git clone https://gitlab.com/xonotic/netradiant.git
 cd netradiant
 ```
 
@@ -132,7 +132,7 @@ If you need to build a debug build (to get help from a developer, for example), 
 
 By default, build tools and compilers are using the `build/` directory as workspace.
 
-For supported system, bundling dependencies can be done this way:
+For supported system, bundling dependencies can be done this way (it is enabled by default on Windows):
 
 ```sh
 ./easy-builder -DBUNDLE_LIBRARIES=ON
@@ -165,7 +165,7 @@ cmake --build build -- -j$(nproc)
 cmake --install build
 ```
 
-Note: macOS users need to build built-in GtkGLExt before building NetRadiant:
+Note: Windows and macOS users need to build the built-in GtkGLExt before building NetRadiant:
 
 ```sh
 cmake -G "Unix Makefiles" -S. -Bbuild -DCMAKE_BUILD_TYPE=Release
