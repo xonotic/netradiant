@@ -2322,7 +2322,7 @@ void DoFind(){
 	ui::Entry entity{ui::null};
 	ui::Entry brush{ui::null};
 
-	ui::Window window = MainFrame_getWindow().create_dialog_window("Find Brush", G_CALLBACK(dialog_delete_callback ), &dialog );
+	ui::Window window = MainFrame_getWindow().create_dialog_window("Find Entity/Brush", G_CALLBACK(dialog_delete_callback ), &dialog );
 
 	auto accel = ui::AccelGroup(ui::New);
 	window.add_accel_group( accel );

@@ -2408,7 +2408,7 @@ ui::MenuItem create_misc_menu(){
 #endif
     menu.add(create_colours_menu());
 
-	create_menu_item_with_mnemonic( menu, "Find brush...", "FindBrush" );
+	create_menu_item_with_mnemonic( menu, "Find Entity/Brush...", "FindBrush" );
 	create_menu_item_with_mnemonic( menu, "Map Info...", "MapInfo" );
 	// http://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=394
 //  create_menu_item_with_mnemonic(menu, "_Print XY View", makeCallbackF( WXY_Print ));
