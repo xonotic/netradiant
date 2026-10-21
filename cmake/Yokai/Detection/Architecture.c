@@ -1,0 +1,127 @@
+/*
+===========================================================================
+Daemon BSD Source Code
+Copyright (c) 2022-2025, Daemon Developers
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the Daemon developers nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL DAEMON DEVELOPERS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+===========================================================================
+*/
+
+#define REPORT_SLUG "ARCH"
+#include "report.h"
+
+/* The qprocessordetection.h file doesn't detect endianness for some
+platforms including ppc64, but we know how to do it for them. */
+
+#include <stdint.h>
+
+/* This source file includes qprocessordetection.h from Qt:
+
+- https://github.com/qt/qtbase/blob/dev/src/corelib/global/qprocessordetection.h
+  https://raw.githubusercontent.com/qt/qtbase/dev/src/corelib/global/qprocessordetection.h
+
+Always update by downloading new version from Qt, do not edit by hand.
+
+This source file and the qprocessordetection.h header do not contribute to the
+produced engine and game binaries in any way that can be subject to copyright. */
+
+#include "qprocessordetection.h"
+
+/* The architecture names are loosely inspired by Debian conventions:
+	https://wiki.debian.org/ArchitectureSpecificsMemo
+
+Except we don't have the same technical debt so we don't have
+to name i686 as i386 for backward compatibility purpose neither
+care of platform name variants that are meant to distinguish
+platform variants we cannot support anyway. */
+
+/* PNaCl virtual machines. */
+#if defined(__pnacl__)
+	#pragma message(REPORT_NAME("pnacl"))
+
+/* Wasm virtual machines, work in progress. */
+#elif defined(Q_PROCESSOR_WASM)
+	#pragma message(REPORT_NAME("wasm"))
+
+/* Devices like:
+  - IBM PC compatibles and derivatives,
+  - Apple Intel-based mac,
+  - Steam Deck, Atari VCS consoles… */
+
+#elif defined(Q_PROCESSOR_X86_64)
+	#pragma message(REPORT_NAME("amd64"))
+
+#elif defined(Q_PROCESSOR_X86_32)
+	// Assume at least i686. Detecting older revisions would be unlikely to work here
+	// because the revisions are likely configured by flags, but this file is "compiled"
+	// without most command-line flags.
+	#pragma message(REPORT_NAME("i686"))
+
+/* Devices like:
+ - Raspberry Pi,
+ - Apple M1-based mac,
+ - Android phones and tablets… */
+
+#elif defined(Q_PROCESSOR_ARM_64)
+	#pragma message(REPORT_NAME("arm64"))
+
+#elif defined(Q_PROCESSOR_ARM_32) && defined(__ARM_PCS_VFP)
+	#pragma message(REPORT_NAME("armhf"))
+
+#elif defined(Q_PROCESSOR_ARM_32) && !defined(__ARM_PCS_VFP)
+	#pragma message(REPORT_NAME("armel"))
+
+/* Devices like:
+ - Raptor Computing Systems Talos, Blackbird… */
+
+#elif defined(Q_PROCESSOR_POWER_64) && Q_BYTE_ORDER == Q_BIG_ENDIAN
+	#pragma message(REPORT_NAME("ppc64"))
+
+#elif defined(Q_PROCESSOR_POWER_64) && Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+	#pragma message(REPORT_NAME("ppc64el"))
+
+/* Devices like:
+ - SiFive HiFive Unmatched, Horse Creek… */
+
+#elif defined(Q_PROCESSOR_RISCV_64)
+	#pragma message(REPORT_NAME("riscv64"))
+
+/* Devices like:
+ - Loongson 3A6000, 3A5000… */
+#elif defined(Q_PROCESSOR_LOONGARCH_64)
+	#pragma message(REPORT_NAME("loong64"))
+
+/* Remaining native NaCl architecture. */
+
+#elif defined(Q_PROCESSOR_MIPS_32) && Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+	#pragma message(REPORT_NAME("mipsel"))
+
+#else
+	#pragma message(REPORT_NAME("unknown"))
+#endif
+
+// Make the compilation succeeds if architecture is supported.
+int main(int argc, char** argv) {
+	return 0;
+}

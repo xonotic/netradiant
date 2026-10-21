@@ -6,6 +6,10 @@
 set -e # exit if a command fails
 set -o pipefail # Will return the exit status of make if it fails
 
+# In case this is set in the user's environment, we should unset it,
+# or CMake will fail find to some directories.
+unset MSYS2_ARG_CONV_EXCL
+
 project_source_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 build_dir="${project_source_dir}/build${SUBDIR:+/${SUBDIR}}"
@@ -73,6 +77,8 @@ _nproc () {
 job_count="$(_nproc)" 2>/dev/null
 job_count="${job_count:-${_job_count}}"
 
+export CMAKE_BUILD_PARALLEL_LEVEL="${job_count}"
+
 declare -a cmake_user_opts
 while [ ! -z "${1}" ]
 do
@@ -109,30 +115,38 @@ task_configure () {
 	sync
 	cmake \
 		-G'Unix Makefiles' \
+		-S"${project_source_dir}" \
+		-B"${build_dir}" \
 		-D'CMAKE_INSTALL_PREFIX'="${install_dir}" \
 		-D'CMAKE_BUILD_TYPE'="${build_type}" \
-		"${cmake_user_opts[@]}" \
-		"${project_source_dir}"
+		-D'EP_BUILD_DIR'="${EP_BUILD_DIR:-}" \
+		"${cmake_user_opts[@]}"
 }
 
 task_build_builtins () {
 	sync
-	make -j"${job_count}" builtins
+	cmake \
+		--build . \
+		-- builtins
 }
 
 task_discover_builtins () {
 	sync
-	cmake "${project_source_dir}"
+	cmake \
+		"${project_source_dir}"
 }
 
 task_build () {
 	sync
-	make -j"${job_count}"
+	cmake \
+		--build .
 }
 
 task_install () {
 	sync
-	make "${install_target}"
+	cmake \
+		--build . \
+		-- "${install_target}"
 }
 
 set -x

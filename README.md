@@ -15,17 +15,19 @@ Prebuilt binaries can be found on the [Download page](https://netradiant.gitlab.
 
 ## Compatibility matrix
 
-|System   |Build    |Bundle    |Run      |Build requirements                            |
-|---------|---------|----------|---------|----------------------------------------------|
-|Linux    |**Yes**  |**Yes**   |**Yes**  |_GCC or Clang_                                |
-|FreeBSD  |**Yes**  |**Yes**   |**Yes**  |_GCC or Clang_                                |
-|Windows  |**Yes**  |**Yes**   |**Yes**  |_MSYS2/Mingw64 or Mingw32_                    |
-|Wine     |-        |-         |**Yes**  |-                                             |
-|macOS    |**Yes**  |**Yes**   |**Yes**  |_Homebrew, GCC or Clang and builtin GtkGLExt_ |
+|System   |Build    |Bundle    |Run      |Build requirements                 |
+|---------|---------|----------|---------|-----------------------------------|
+|Linux    |**Yes**  |**Yes**   |**Yes**  |_GCC or Clang_                     |
+|FreeBSD  |**Yes**  |**Yes**   |**Yes**  |_GCC or Clang_                     |
+|Windows  |**Yes**  |**Yes**   |**Yes**  |_MSYS2/UCRT64, Mingw64 or Mingw32_ |
+|Wine     |         |          |**Yes**  |                                   |
+|macOS    |**Yes**  |**Yes**   |**Yes**  |_Homebrew, GCC or Clang_           |
 
-NetRadiant is known to build and run properly on Linux, FreeBSD and Windows using MSYS2, and build on macOS with Homebrew (some bugs are known though). Windows build is known to work well on wine, which can be used as a fallback on some system.
+NetRadiant is known to build and run properly on Linux, FreeBSD and Windows using MSYS2, and build and run on macOS with Homebrew. The Windows build is known to work well on wine, which can be used as a fallback on some systems.
 
 At this time library bundling is supported on Linux, FreeBSD, Windows/MSYS2, and macOS/Homebrew. Since bundling copies things from the host, a clean build environment has to be used in order to get a clean bundle. Linux and FreeBSD bundles do not ship GTK: users are expected to have a working GTK environment with GtkGLExt installed, usually installing GtkGLExt is enough to pull everything that is required.
+
+The `easy-builder` script is recommended to build NetRadiant as it also builds dependencies (like GtkGLExt for Windows and macOS).
 
 
 ## Getting the sources
@@ -39,7 +41,7 @@ The `git` client can be obtained from your distribution repository or from the G
 A copy of the source tree can be obtained by using the `git` command line client this way:
 
 ```sh
-git clone --recursive https://gitlab.com/xonotic/netradiant.git
+git clone https://gitlab.com/xonotic/netradiant.git
 cd netradiant
 ```
 
@@ -68,22 +70,24 @@ This is enough to build NetRadiant but you may also install those extra packages
 
 ### MSYS2:
 
-Under MSYS2, the mingw shell must be used.
+Under MSYS2, the UCRT64 flavour is recommended and then the UCRT64 shell must be used.
 
-If you use MSYS2 over SSH, add `mingw64` to the path this way (given you compile for 64 bit Windows, replace with `mingw32` if you target 32 bit Windows instead): 
+If you use another MSYS2 environment, you can open an URCT64 shell this way:
 
 ```sh
-export PATH="/mingw64/bin:${PATH}"
+MSYSTEM=UCRT64 bash -l
 ```
 
 Install the dependencies this way:
 
 ```sh
-pacman -S --needed base-devel git subversion unzip \
-    mingw-w64-$(uname -m)-{ntldd-git,toolchain,cmake,make,gtk2,gtkglext,libwebp,minizip-git}
+pacman -S --needed base-devel git subversion unzip autoconf automake libtool \
+    mingw-w64-ucrt-$(uname -m)-{ntldd-git,toolchain,cmake,make,gtk2,gtk-doc,libwebp,minizip-git}
 ```
 
-Explicitely use `mingw-w64-x86_64-` or `mingw-w64-i686-` prefix instead of `mingw-w64-$(uname -m)` if you need to target a non-default architecture.
+If you're not building for UCRT64 (for another architecture or a different C runtime), you must switch the related shell accordingly and instead of `mingw-w64-ucrt-$(uname -m)-` you may use the `mingw-w64-x86_64-` or `mingw-w64-i686-` prefix that fits your needs.
+
+If you're building on a network share on Windows, you may have to workaround an MSYS2 bug by setting the `EP_BUILD_DIR=/tmp/netradiant` environment variable **first** before building NetRadiant.
 
 
 ### FreeBSD:
@@ -128,7 +132,7 @@ If you need to build a debug build (to get help from a developer, for example), 
 
 By default, build tools and compilers are using the `build/` directory as workspace.
 
-For supported system, bundling dependencies can be done this way:
+For supported system, bundling dependencies can be done this way (it is enabled by default on Windows):
 
 ```sh
 ./easy-builder -DBUNDLE_LIBRARIES=ON
@@ -161,7 +165,7 @@ cmake --build build -- -j$(nproc)
 cmake --install build
 ```
 
-Note: macOS users need to build built-in GtkGLExt before building NetRadiant:
+Note: Windows and macOS users need to build the built-in GtkGLExt before building NetRadiant:
 
 ```sh
 cmake -G "Unix Makefiles" -S. -Bbuild -DCMAKE_BUILD_TYPE=Release
