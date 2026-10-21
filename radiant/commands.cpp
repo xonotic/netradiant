@@ -299,7 +299,7 @@ bool accelerator_window_key_press( ui::Window widget, GdkEventKey *event, gpoint
 	}
 
 	// 8. build an Accelerator
-	Accelerator newAccel( event->keyval, (GdkModifierType) event->state );
+	Accelerator newAccel( event->keyval, normalize_modifiers( (GdkModifierType) event->state ) );
 
 	// 8. verify the key is still free, show a dialog to ask what to do if not
 	class VerifyAcceleratorNotTaken : public CommandVisitor
