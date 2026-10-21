@@ -73,6 +73,9 @@
 #include "qerplugin.h"
 #include "os/file.h"
 
+#define STRING(x) #x
+#define XSTRING(x) STRING(x)
+#define UI_STRING "GTK" XSTRING(GTK_TARGET)
 
 
 // =============================================================================
@@ -504,7 +507,9 @@ void DoAbout(){
 				hbox.pack_start( about_vbox, FALSE, FALSE, 0 );
 
 				AddParagraph( about_vbox,
-					RADIANT_NAME " " RADIANT_VERSION_STRING " (" __DATE__ ")\n"
+					RADIANT_NAME " " RADIANT_VERSION_STRING
+					" on " UI_STRING
+					" (" __DATE__ ")\n"
 					RADIANT_ABOUTMSG );
 				AddParagraph( about_vbox,
 					"Get news and latest build at "
